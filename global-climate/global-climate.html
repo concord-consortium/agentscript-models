@@ -1,0 +1,404 @@
+<meta http-equiv="content-type" content="text/html; charset=UTF8">
+<html>
+  <head>
+    <title>AgentScript Model</title>
+    <script src="../lib/agentscript/agentscript.js"></script>
+    <script src="../lib/agentscript/coffee-script.js"></script>
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/themes/base/jquery-ui.css" type="text/css" media="all" />
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js"></script>
+    <script src="http://lab.concord.org/vendor/d3/d3.js"></script>
+    <script src="../lib/lab.grapher.js"></script>
+    <script type="text/coffeescript" src="global-climate-model.coffee"></script>
+    <script type="text/javascript">
+      var modelLoaded = $.Deferred();
+
+      $.when(modelLoaded).done(function() {
+        climateModel = new ClimateModel("layers", 12, -24, 24, -15, 15, true);
+        climateModel.start();
+        setupControls();
+      });
+    </script>
+
+    <style type="text/css">
+      body { font: 13px sans-serif; }
+      #content {
+        margin: 0em;
+        padding: 0em; }
+      p { font-size: 1.5em;
+        margin-left: 1.0em }
+      ul {
+        list-style-type: none;
+        margin: 0.3em 0em;
+        padding-left: 0em;
+        width: 100%; }
+        ul li {
+          display: table-cell;
+          vertical-align: middle;
+          margin: 0em;
+          padding: 0em 0.3em 0em 0.3em; }
+      #model {
+        display: table-cell;
+        margin: 0em 0.5em 0em 0.5em;
+        width: 600px; }
+      #layers {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        margin: 0em;
+        padding: 0em; }
+      #playback-controls {
+        position: absolute;
+        top: 385px;
+        left: 10px;
+        width: 588px;
+        font-size: 1.1em;
+        display: inline-block;
+        background-color: #f8f8f8; }
+      #playback-controls li, button, span {
+        font-size: 1.1em; }
+      #controls {
+        display: table-cell;
+        vertical-align: top;
+        margin: 0em 0.5em 0em 0.5em;
+        padding: 0em;
+        font-size: 1.0em; }
+      #controls label, span {
+        font-size: 1.0em;
+        vertical-align: top; }
+      #controls button {
+        font-size: 1.0em;
+        vertical-align: middle; }
+      #controls .output {
+        font-size: 1.0em;
+        vertical-align: middle; }
+      #controls span.digits3 {
+        font-size: 1.0em;
+        margin: 0em;
+        padding: 0em;
+        float: right;
+        text-align: left;
+        width: 2em; }
+      #controls span.slider-units {
+        font-size: 90%;
+        font-style: italic; }
+
+      div.graph {
+         background-color: #ddf2ff;
+         border-radius: 0.25em;
+         width: 360px;
+         height: 140px;
+      }
+
+      .graph {
+        position: relative;
+        background: rgba(255, 255, 255, 0); }
+        .graph:focus {
+          outline: #76d2b8 solid 0.2em; }
+        .graph div.background {
+          position: absolute;
+          background: #efefef; }
+        .graph div.button-layer {
+          position: absolute;
+          text-align: right; }
+          .graph div.button-layer a {
+            opacity: 0.3;
+            color: black;
+            font-size: 120%; }
+          .graph div.button-layer a:hover {
+            opacity: 1; }
+        .graph canvas.overlay {
+          position: absolute;
+          background: rgba(0, 255, 0, 0.05); }
+
+      svg.graph:focus {
+        outline: #76d2b8 solid 0.2em; }
+      svg.graph text.title {
+        font-size: 0.9em; }
+      svg.graph text.ylabel {
+        font-size: 0.8em; }
+      svg.graph text.xlabel {
+        font-size: 0.8em; }
+      svg.graph text.axis {
+        font-size: 0.8em; }
+        svg.graph text.axis:focus {
+          outline: #76d2b8 solid 0.2em; }
+      svg.graph rect.draggable-axis {
+        fill: rgba(255, 255, 255, 0); }
+        svg.graph rect.draggable-axis:hover {
+          fill: rgba(196, 196, 196, 0.2); }
+
+      circle, .line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 2px; }
+      circle {
+        fill: white;
+        fill-opacity: 0.2;
+        cursor: move; }
+        circle.selected {
+          fill: #ff7f0e;
+          stroke: #ff7f0e; }
+        circle:hover {
+          fill: #ff7f0e;
+          stroke: #707f0e; }
+        circle.selected:hover {
+          fill: #ff7f0e;
+          stroke: #ff7f0e; }
+    </style>
+  </head>
+  <body>
+    <div id="content">
+      <div id="model">
+        <canvas id="canvas" >Your browser does not support HTML5 Canvas.</canvas>
+        <div id="layers"></div>
+      </div>
+      <div id="controls">
+        <div id='temperature-graph' class="graph"></div>
+        <div id='co2-graph' class="graph"></div>
+        <ul>
+          <li>
+            <button id="add-co2-button">Add CO2</button>
+            <button id="subtract-co2-button">Subtract CO2</button>
+          </li>
+          <li>
+            <span id="co2-output" class="output digits3"></span>
+          </li>
+          <li class="output">
+            Temperature: <span id="temperature-output"></span>
+          </li>
+        </ul>
+        <ul>
+          <li>
+            <label for="albedo-slider">Albedo:</label>
+            <span class="slider-units">0 <input id="albedo-slider" type="range" min="0" max="1" step="0.01"/> 1</span>
+          </li>
+        </ul>
+        <ul>
+          <li>
+            <label for="sun-brightness-slider">Sun Brightness:</label>
+            <span class="slider-units">0 <input id="sun-brightness-slider" type="range" min="0" max="200" step="1"/> 200</span>
+          </li>
+        </ul>
+        <ul>
+          <li>
+            <button id="add-clouds-button">Add Cloud</button>
+            <button id="subtract-clouds-button">Subtract Cloud</button>
+          </li>
+          <li>
+            <span id="co2-output" class="output digits3"></span>
+          </li>
+        </ul>
+        <ul>
+          <li>
+            <button id="follow-sunray-button">Follow Energy Packet</button>
+            <button id="follow-co2-button">Follow CO2</button>
+          </li>
+        </ul>
+        <ul>
+          <li>
+            <button id="hide-button">Hide 90% of elements</button>
+          </li>
+          <li>
+            <button id="erupt-button">Erupt!</button>
+          </li>
+        </ul>
+      </div>
+      <div id="playback-controls">
+        <ul>
+          <li>
+            <button id="reset-button">Reset</button>
+          </li>
+          <li>
+            <button id="play-button">Play</button>
+          </li>
+          <li>
+            <button id="step-button">Step</button>
+          </li>
+          <li>
+            <button id="stop-button">Stop</button>
+          </li>
+          <li>
+            <span class="slider-units">Slow <input id="speed-slider" type="range" min="0" max="10" step="1"/> Fast</span>
+          </li>
+          Model Ticks: <span id="tick-counter"></span>
+        </ul>
+      </div>
+    </div>
+    <script>
+      var addCO2Button = document.getElementById("add-co2-button"),
+          subtractCO2Button = document.getElementById("subtract-co2-button"),
+          albedoSlider = document.getElementById("albedo-slider"),
+          sunBrightnessSlider = document.getElementById("sun-brightness-slider"),
+          speedSlider = document.getElementById("speed-slider"),
+          co2Output = document.getElementById("co2-output"),
+          temperatureOutput = document.getElementById("temperature-output"),
+          addCloudsButton = document.getElementById("add-clouds-button"),
+          subtractCloudsButton = document.getElementById("subtract-clouds-button"),
+          followSunrayButton = document.getElementById("follow-sunray-button"),
+          followCO2Button = document.getElementById("follow-co2-button"),
+          hideButton = document.getElementById("hide-button"),
+          eruptButton = document.getElementById("erupt-button"),
+          resetButton = document.getElementById("reset-button"),
+          playButton = document.getElementById("play-button"),
+          stopButton = document.getElementById("stop-button"),
+          stepButton = document.getElementById("step-button"),
+          tickCounter = document.getElementById("tick-counter"),
+          temperatureFormatter = d3.format("3.1f"),
+          countFormatter = d3.format("3f"),
+          ticks = 0,
+          lastTick = 0,
+          temperatureGraph,
+          co2Graph;
+
+      function setupControls() {
+        albedoSlider.value = climateModel.getAlbedo();
+        sunBrightnessSlider.value = climateModel.getSunBrightness();
+        speedSlider.value = 5;
+      }
+
+      addCO2Button.onclick = function() {
+        climateModel.addCO2();
+      }
+
+      subtractCO2Button.onclick = function() {
+        climateModel.subtractCO2();
+      }
+
+      addCloudsButton.onclick = function() {
+        climateModel.addCloud();
+      }
+
+      subtractCloudsButton.onclick = function() {
+        climateModel.subtractCloud();
+      }
+
+      followSunrayButton.onclick = function() {
+        climateModel.addSunraySpotlight();
+      }
+
+      followCO2Button.onclick = function() {
+        if (this.textContent === "Follow CO2") {
+          climateModel.addCO2Spotlight();
+          this.textContent = "Stop following";
+        } else {
+          climateModel.removeSpotlight();
+          this.textContent = "Follow CO2";
+        }
+      }
+
+      hideButton.onclick = function() {
+        if (this.textContent === "Hide 90% of elements") {
+          climateModel.hide90();
+          this.textContent = "Show all elements";
+        } else {
+          climateModel.showAll();
+          this.textContent = "Hide 90% of elements";
+        }
+      }
+
+      eruptButton.onclick = function() {
+        climateModel.erupt();
+      }
+
+      albedoSlider.onchange = function() {
+        climateModel.setAlbedo(+albedoSlider.value);
+      }
+
+      sunBrightnessSlider.onchange = function() {
+        climateModel.setSunBrightness(+sunBrightnessSlider.value);
+      }
+
+      speedSlider.onchange = function() {
+        // scale value, 0=10, 5=60, 10=500
+        var val = speedSlider.value,
+            frequency = val <= 5 ? (val * 10)+10 : (val-5)*88 + 60;
+        climateModel.setStepFrequency(frequency);
+      }
+
+      resetButton.onclick = function() {
+        lastTick = 0;
+        temperatureGraph.reset();
+        co2Graph.reset();
+        climateModel.setup();
+      }
+
+      playButton.onclick = function() {
+        climateModel.start();
+      }
+
+      stopButton.onclick = function() {
+        climateModel.stop();
+      }
+
+      stepButton.onclick = function() {
+        climateModel.stop();
+        climateModel.animate();
+        updateTickCounter();
+      }
+
+      function updateTickCounter() {
+        ticks = climateModel.ticks;
+        tickCounter.textContent = ticks;
+      }
+
+      temperatureGraph = Lab.grapher.Graph('#temperature-graph',
+        {
+          title:  "Temperature vs Time (model ticks)",
+          xlabel: "Time (ticks)",
+          ylabel: "Temperature",
+          xmax:   2000,
+          xmin:   0,
+          ymax:   40,
+          ymin:   -10,
+          xTickCount: 4,
+          yTickCount: 5,
+          xFormatter: "3.3r",
+          sample: 1,
+          realTime: true,
+          fontScaleRelativeToParent: true
+        });
+
+      co2Graph = Lab.grapher.Graph('#co2-graph',
+        {
+          title:  "CO2 vs Time (model ticks)",
+          xlabel: "Time (ticks)",
+          ylabel: "CO2",
+          xmax:   2000,
+          xmin:   0,
+          ymax:   100,
+          ymin:   0,
+          xTickCount: 4,
+          yTickCount: 5,
+          xFormatter: "3.3r",
+          sample: 1,
+          realTime: true,
+          fontScaleRelativeToParent: true
+        });
+
+      lastTick = 0;
+
+      d3.timer(function(elapsed) {
+        if (typeof climateModel !== "undefined") {
+          var temperature = climateModel.getTemperature(),
+              co2Count = climateModel.getCO2Count(),
+              tick = climateModel.ticks,
+              ticksElapsed = tick - lastTick;
+          temperatureOutput.textContent = temperatureFormatter(temperature);
+          co2Output.textContent = countFormatter(co2Count);
+          if (!climateModel.animStop && ticksElapsed) {
+            while (ticksElapsed--) {  // duplicate data if multiple model steps passed
+              temperatureGraph.addSamples([temperature]);
+              co2Graph.addSamples([co2Count]);
+            }
+            updateTickCounter();
+            lastTick = tick;
+          }
+        }
+      });
+
+    </script>
+  </body>
+</html>
