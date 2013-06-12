@@ -1,0 +1,29 @@
+#model {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 747px;
+  height: 243px;
+}
+
+#mouse-catcher {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: none;
+}
+
+#controls {
+  display: none;
+  position: absolute;
+  top: 250px;
+  left: 5px;
+}
+
+#draw-button-type-options {
+  position: absolute;
+  width: 100px;
+}

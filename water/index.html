@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <title>Water Model</title>
+    <link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="../lib/agentscript/agentscript.js"></script>
+    <script src="../lib/agentscript/coffee-script.js"></script>
+
+    <link href="css/water.css" rel="stylesheet" type="text/css" />
+    <script src="js/water-model.coffee" type="text/coffeescript"></script>
+    <script src="js/water-controls.coffee" type="text/coffeescript"></script>
+  </head>
+  <body>
+    <div id="controls">
+      <div id="playback"
+        <span><a href="#" onclick="ABM.model.start(); return false;">Start</a></span> |
+        <span><a href="#" onclick="ABM.model.stop(); return false;">Stop</a></span> |
+        <!-- <span><a href="#" onclick="ABM.model.reset(); return false;">Reset</a></span> -->
+        <span>Reset</span>
+      </div>
+      <div id="buttons">
+        <div id="draw-button-set">
+          <input type="checkbox" id="fill-button" /><label for="fill-button">Fill</label>
+          <input type="checkbox" id="draw-button" /><label for="draw-button">Draw</label>
+          <button id="draw-button-type">Select a type</button>
+        </div>
+        <ul id="draw-button-type-options">
+          <li><a href="#">Yellow</a></li>
+          <li><a href="#">Red</a></li>
+          <li><a href="#">Violet</a></li>
+          <li><a href="#">Green</a></li>
+          <li><a href="#">Black</a></li>
+        </ul>
+      </div>
+    </div>
+    <div id="model">
+      <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+      <div id="layers"></div>
+      <div id="mouse-catcher"></div>
+    </div>
+    <script>
+      $(document).one('controls-ready', function() {
+        WaterControls.setup();
+      });
+    </script>
+  </body>
+</html>
