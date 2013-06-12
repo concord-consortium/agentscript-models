@@ -1,0 +1,3 @@
+[submodule "lib/agentscript"]
+	path = lib/agentscript
+	url = git://github.com/concord-consortium/agentscript.git
