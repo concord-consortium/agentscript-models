@@ -34,7 +34,7 @@ class WaterModel extends ABM.Model
       when 90  then a.p.n4[3]
       when 180 then a.p.n4[1]
       when 270 then a.p.n4[0]
-      else a.p.n4[2]
+      else a.p.n4[0]
 
   isPatchFree: (p)->
     return p.agentsHere().length == 0
