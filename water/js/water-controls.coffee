@@ -98,7 +98,9 @@ window.WaterControls =
           p.type = @patchType
         else
           console.log("Failed to find patch for: (" + c.x + ", " + c.y + ")")
+      ABM.model.refreshPatches = true
       ABM.model.draw()
+      ABM.model.refreshPatches = false
       cStart = cEnd
     $("#mouse-catcher").show()
     $("#mouse-catcher").bind 'mousedown', ->

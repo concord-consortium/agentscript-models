@@ -1,6 +1,7 @@
 class WaterModel extends ABM.Model
   setup: ->
     @showFPS = true
+    @setCacheAgentsHere()
 
     # init all the patches as sky color
     for p in @patches
@@ -8,6 +9,7 @@ class WaterModel extends ABM.Model
       p.type = "sky"
 
     @draw()
+    @refreshPatches = false
 
   step: ->
     if @ticks % 2 == 1
@@ -51,7 +53,6 @@ class WaterModel extends ABM.Model
     return Math.floor(Math.random()*n)
 
   moveFallingWater: ->
-    @setCacheAgentsHere()
     for a in @agents.breed("falling-water")
       # TODO evaporation
 
