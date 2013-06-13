@@ -1,7 +1,6 @@
 class WaterModel extends ABM.Model
   setup: ->
     @showFPS = true
-    @setCacheAgentsHere()
 
     # init all the patches as sky color
     for p in @patches
@@ -12,6 +11,7 @@ class WaterModel extends ABM.Model
     @refreshPatches = false
 
   step: ->
+    @setCacheAgentsHere() if @ticks == 1
     # after about 4000 agents, things start not working correctly
     if @agents.length < 4000
       @agents.create 5, (a)=>
@@ -22,12 +22,12 @@ class WaterModel extends ABM.Model
         p = null
         while not @isPatchFree(p)
           px = @random(@patches.maxX - @patches.minX) + @patches.minX
-          p = @patches.patchXY px, (@patches.maxY-1)
-        a.y = p.y
-        a.x = p.x
+          p = @patches.patchXY px, @patches.maxY
+        a.moveTo p
         a.heading = ABM.util.degToRad(270)
 
-    @moveFallingWater()
+    for a in @agents.breed("falling-water")
+      @moveFallingWater(a)
     return true # avoid inadventently returning a large array of things
 
   isOnSurface: (p)->
@@ -58,56 +58,32 @@ class WaterModel extends ABM.Model
   random: (n)->
     return Math.floor(Math.random()*n)
 
-  moveFallingWater: ->
-    for a in @agents.breed("falling-water")
-      # TODO evaporation
+  moveFallingWater: (a)->
+    ps = []
+    for i in [{ idx: 1, priority: 0 }, { idx: 0, priority: 1}, { idx: 2, priority: 1}, { idx: 3, priority: 2}, {idx: 4, priority: 2}]
+      i.patch = a.p.n[i.idx]
+      continue unless i.patch?
+      i.resistance = @resistance(i.patch)
+      i.priority += 1 unless i.patch.type is "sky"
+      if i.idx == 3 and not @isPatchFree(a.p.n[4])
+        i.priority -= 1
+      else if i.idx == 4 and not @isPatchFree(a.p.n[3])
+        i.priority -= 1
+      if @isPatchFree(i.patch) and @random(i.resistance) == 0
+        ps[i.priority] ||= []
+        ps[i.priority].push i
 
-      # only move water that's not at the bottom of the model
-      if a.y > @patches.minY
-        if @isOnSurface(a.p)
-          # you reach here if the dot is in the surface. Now move it, giving preference for motion within the surface
-          if @random(@resistance(a.p)) == 0
-            a.heading = ABM.util.degToRad(90 * @random(4))
-            nextPatch = @getNextPatch(a)
-            if @isPatchFree(nextPatch)
-              if nextPatch.type is "sky" and a.heading != ABM.util.degToRad(270)
-                # move to the free patch
-                a.moveTo(nextPatch)
-              else if isOnSurface(nextPatch)
-                a.forward 1
-              else if @random(Math.round(@resistance(nextPatch)/@resistance(a.p))) == 0
-                a.forward 1
-        else
-          # you get here is the dot is NOT in the surface layer (and not on the bottom), so it can be rain or in the rock
-          a.heading = ABM.util.degToRad(270)
-          nextPatch = @getNextPatch(a)
-          if @isPatchFree(nextPatch)
-            # you get here if there are no dots on the patch ahead
-            if nextPatch.type is "sky"
-              a.forward 1
-            else
-              a.heading = if @random(2) == 0 then 0 else ABM.util.degToRad(180)
-              possSkyPatch = @getNextPatch(a)
-              if possSkyPatch.type is "sky"
-                a.forward 1
-                # bubble upward
-                # a.heading = ABM.util.degToRad(90)
-                # while not @isPatchFree(a.p)
-                #   a.forward 1
-              else if @random(@resistance(nextPatch)) == 0
-                a.heading = ABM.util.degToRad(180 + @random(181))
-                a.forward 1
-          else
-            # you get here if there are dots on the patch ahead, so the dot cannot move forward
-            a.heading = if @random(2) == 0 then 0 else ABM.util.degToRad(180)
-            nextPatch = @getNextPatch(a)
-            if @isPatchFree(nextPatch)
-              if nextPatch.type is "sky"
-                a.moveTo(nextPatch)
-              else if @random(@resistance(nextPatch)) == 0
-                a.moveTo(nextPatch)
+    n = -1
+    while not destinations? and n++ < 5
+      destinations = ps[n]
 
-    return true # avoid inadventently returning a large array of things
+    if destinations?
+      dest = destinations[@random(destinations.length)]
+      if dest?
+        a.moveTo dest.patch
+        return true
 
-APP=new WaterModel "layers", 3, -124, 124, -40, 40, true
+    return false
+
+APP=new WaterModel "layers", 2, -200, 199, -65, 64, false
 APP.setRootVars()

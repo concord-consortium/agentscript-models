@@ -2,8 +2,8 @@
   position: absolute;
   top: 5px;
   left: 5px;
-  width: 747px;
-  height: 243px;
+  width: 800px;
+  height: 260px;
 }
 
 #mouse-catcher {
@@ -19,7 +19,7 @@
 #controls {
   display: none;
   position: absolute;
-  top: 250px;
+  top: 270px;
   left: 5px;
 }
 

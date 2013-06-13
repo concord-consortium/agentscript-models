@@ -1,6 +1,7 @@
 window.WaterControls =
   drawStyle: "draw"  # draw or fill
   drawColor: [255,0,0]
+  patchType: "rock1"
   setup: ->
     if ABM.model?
       $("#controls").show()
@@ -90,7 +91,12 @@ window.WaterControls =
             continue if pt.x > ABM.model.patches.maxX or pt.x < ABM.model.patches.minX
             points.push pt
       else
-        points.push cEnd
+        if @drawStyle is "fill"
+          # also include all the points below this one
+          for y in [(cEnd.y)..(ABM.model.patches.minY)]
+            points.push {x: cEnd.x, y: y}
+        else
+          points.push cEnd
       for c in points
         p = ABM.model.patches.patchXY c.x, c.y
         if p?
@@ -103,8 +109,9 @@ window.WaterControls =
       ABM.model.refreshPatches = false
       cStart = cEnd
     $("#mouse-catcher").show()
-    $("#mouse-catcher").bind 'mousedown', ->
+    $("#mouse-catcher").bind 'mousedown', (evt)->
       mouseDown = true
+      drawEvt(evt)
     $("#mouse-catcher").bind 'mouseup', ->
       mouseDown = false
       cStart = null
@@ -124,11 +131,11 @@ window.WaterControls =
   patchCoords: (x,y)->
     patches = ABM.model.patches
     minX = patches.minX
-    minY = patches.minY
+    maxY = patches.maxY
     size = patches.size
 
     pX = Math.floor(x/size) + minX
-    pY = -(Math.floor(y/size) + minY)
+    pY = maxY - Math.floor(y/size)
     return {x: pX, y: pY}
 
 $(document).trigger('controls-ready')
