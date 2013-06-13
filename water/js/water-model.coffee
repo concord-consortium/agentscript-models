@@ -43,7 +43,7 @@ class WaterModel extends ABM.Model
       else a.p.n4[0]
 
   isPatchFree: (p)->
-    return p.agentsHere().length == 0
+    return p? and p.agentsHere().length == 0
 
   resistance: (p)->
     # 1/resistance is the prob of moving, it is like a resistance to flow
