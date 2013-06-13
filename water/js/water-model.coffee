@@ -12,17 +12,23 @@ class WaterModel extends ABM.Model
     @refreshPatches = false
 
   step: ->
-    if @ticks % 2 == 1
-      @agents.create 10, (a)=>
+    # after about 4000 agents, things start not working correctly
+    if @agents.length < 4000
+      @agents.create 5, (a)=>
         a.shape = "circle"
         a.color = [0,0,255]
         a.breed = "falling-water"
         a.size = 1
-        a.y = @patches.maxY
-        a.x = @random(@patches.maxX - @patches.minX) + @patches.minX
+        p = null
+        while not @isPatchFree(p)
+          px = @random(@patches.maxX - @patches.minX) + @patches.minX
+          p = @patches.patchXY px, (@patches.maxY-1)
+        a.y = p.y
+        a.x = p.x
         a.heading = ABM.util.degToRad(270)
 
     @moveFallingWater()
+    return true # avoid inadventently returning a large array of things
 
   isOnSurface: (p)->
     return p.type is not "sky" and p.n4[0].type is "sky"
@@ -100,6 +106,8 @@ class WaterModel extends ABM.Model
                 a.moveTo(nextPatch)
               else if @random(@resistance(nextPatch)) == 0
                 a.moveTo(nextPatch)
+
+    return true # avoid inadventently returning a large array of things
 
 APP=new WaterModel "layers", 3, -124, 124, -40, 40, true
 APP.setRootVars()
