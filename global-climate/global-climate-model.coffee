@@ -1,10 +1,13 @@
 class ClimateModel extends ABM.Model
   u = ABM.util # static variable
   setup: -> # called by Model ctor
-    @ticks = 1
+    @anim.ticks = 1
     @refreshPatches = true
-    @agents.setDefaultShape "arrow"
     @agentBreeds "sunrays heat IR CO2 clouds"
+
+    @patches.usePixels() # 24fps
+    @agents.setUseSprites() # 24->46-48fps
+    @anim.setRate 100, true
 
     # remove all existing agents
     while @agents.length
@@ -21,6 +24,12 @@ class ClimateModel extends ABM.Model
     @numClouds = 0
     @hiding90 = false
     @showFPS = false
+
+    @agents.setDefaultSize @agentSize
+    @agents.setDefaultShape "arrow"
+    @sunrays.setDefaultColor [255,255,0]
+    @heat.setDefaultShape "circle"
+    @IR.setDefaultColor [200, 32, 200]
 
     @spacePatches =        (p for p in @patches when p.y == @patches.maxY)
     @skyTopPatches =       (p for p in @patches when p.y <  @patches.maxY && p.y > @skyTop)
@@ -60,15 +69,15 @@ class ClimateModel extends ABM.Model
     @temperature
 
   getCO2Count : ->
-    @CO2().length
+    @CO2.length
 
   addCO2: ->
-    @createCO2( Math.max 1, Math.round @CO2().length*0.1 )
+    @createCO2( Math.max 1, Math.round @CO2.length*0.1 )
 
   subtractCO2: ->
-    quant = Math.ceil @CO2().length*0.1
+    quant = Math.ceil @CO2.length*0.1
     while quant--
-      @CO2().oneOf().die()
+      @CO2.oneOf().die()
 
   updateAlbedoOfSurface: ->
     p.color = [Math.floor(196 * @albedo), Math.floor(255 * @albedo), Math.floor(196 * @albedo)]   for p in @earthSurfacePatches
@@ -88,16 +97,14 @@ class ClimateModel extends ABM.Model
     heading = a.heading % Math.PI*2
     heading > 0 && heading < Math.PI
 
-  transformToIR: (a) ->
-    a.breed = "IR"
+  transformToIR: (_a) ->
+    a = _a.changeBreed(@IR)[0]
     a.heading = -@sunlightHeading
     # a.heading = u.randomFloat2(2.6, 0.5)
     # a.heading = u.randomCentered(Math.PI/4) + Math.PI/2
-    a.color = [200, 32, 200]
-    a.shape = "arrow"
 
-  transformToHeat: (a) ->
-    a.breed = "heat"
+  transformToHeat: (_a) ->
+    a = _a.changeBreed(@heat)[0]
     a.y = @earthTop-1
     a.heading = u.randomFloat2(-0.5, -Math.PI+0.5)
     a.shape = "circle"
@@ -109,8 +116,7 @@ class ClimateModel extends ABM.Model
   #
   createCO2: (num, location, heading) ->
     while num--
-      @agents.create 1, (a) =>
-        a.breed = "CO2"
+      @CO2.create 1, (a) =>
         a.size = @agentSize
         a.color = [0, 255, 0]
         a.shape ="pentagon"
@@ -119,7 +125,7 @@ class ClimateModel extends ABM.Model
         a.setXY x, y
 
   runCO2: ->
-    for a in @CO2()
+    for a in @CO2
       if a
         a.heading = a.heading + u.randomCentered(Math.PI/9)
         a.forward 0.1
@@ -131,7 +137,7 @@ class ClimateModel extends ABM.Model
           a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
 
   addCO2Spotlight: ->
-    agents = @CO2().getWithProp "hidden", false
+    agents = @CO2.getWithProp "hidden", false
     if agents.any()
       a = agents.oneOf()
       @setSpotlight a
@@ -140,10 +146,10 @@ class ClimateModel extends ABM.Model
   # IR
   #
   runIR: ->
-    for a in @IR()
+    for a in @IR
       if a
         a.forward 0.5
-        if @CO2().inRadius(a, 1).any()
+        if @CO2.inRadius(a, 1).any()
           a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
         a.die() if a.heading == -@sunlightHeading && a.y > (14)
         if a.y <= @earthTop
@@ -154,7 +160,7 @@ class ClimateModel extends ABM.Model
   #
   runHeat: ->
     @updateTemperature()
-    for a in @heat()
+    for a in @heat
       if a
         a.heading = a.rotate(u.randomCentered(0.3))
         a.forward u.randomFloat2(0.05, 0.2)
@@ -170,7 +176,7 @@ class ClimateModel extends ABM.Model
     u.randomInt(100) < (temperature * 20) && u.randomInt(20) < 2
 
   updateTemperature: ->
-    @temperature = 0.99 * @temperature + 0.01 * (-7 + 0.5 * @heat().length)
+    @temperature = 0.99 * @temperature + 0.01 * (-7 + 0.5 * @heat.length)
 
   leaveToSpace: (a) ->
     heading = a.heading % Math.PI
@@ -182,11 +188,8 @@ class ClimateModel extends ABM.Model
   createHeat: (num) ->
     while num--
       [x,y] = @getRandomLocation(@patches.minY, @earthTop)
-      @agents.create 1, (a) =>
-        a.breed = "heat"
-        a.size = @agentSize
+      @heat.create 1, (a) =>
         a.heading = u.randomFloat2(-0.5, -Math.PI+0.5)
-        a.shape = "circle"
         randomLightness = u.randomInt2(32, 128)
         a.color = [255, randomLightness, randomLightness]
         a.setXY x, y
@@ -205,9 +208,10 @@ class ClimateModel extends ABM.Model
 
   setupClouds: (num) ->
     hiddenClouds = {}
-    for a in @clouds()
-      if a.hidden then hiddenClouds[a.cloudNum] = true
-      a.die()
+    for a in @clouds
+      if a
+        if a.hidden then hiddenClouds[a.cloudNum] = true
+        a.die()
     numHiddenClouds = Object.keys(hiddenClouds).length
     i = 0
     while i < num
@@ -217,7 +221,7 @@ class ClimateModel extends ABM.Model
   hide90Clouds: ->
     cloudsToHide = Math.floor @numClouds * 0.9
     hiddenClouds = {}
-    for a in @clouds()
+    for a in @clouds
       cloudNum = a.cloudNum
       if hiddenClouds[cloudNum] or Object.keys(hiddenClouds).length < cloudsToHide
         a.hidden = true
@@ -231,8 +235,7 @@ class ClimateModel extends ABM.Model
     x = 2 * u.randomFloat(@patches.maxX) + @patches.minX
     cloudParts = 3 + u.randomInt(16)
     while cloudParts--
-      @agents.create 1, (a) =>
-        a.breed = "clouds"
+      @clouds.create 1, (a) =>
         a.cloudNum = cloudNum
         a.color = [255,255,255]
         a.size = @agentSize + 0.5 + u.randomFloat(1)
@@ -242,7 +245,7 @@ class ClimateModel extends ABM.Model
         a.setXY x + u.randomFloat(5) - 4,  y + (u.randomFloat(u.randomFloat(3)))
 
   runClouds: ->
-    for a in @clouds()
+    for a in @clouds
       if a
         a.forward 0.3 * (0.1 + (3 + a.cloudNum) / 10)
 
@@ -250,7 +253,7 @@ class ClimateModel extends ABM.Model
   # Sunshine
   #
   runSunshine: ->
-    for a in @sunrays()
+    for a in @sunrays
       if a
         a.forward 0.5
         @leaveToSpace(a)
@@ -259,17 +262,17 @@ class ClimateModel extends ABM.Model
     @encounterEarth()
 
   reflectSunshineFromClouds: ->
-    for a in @sunrays()
+    for a in @sunrays
       if a
-        if @clouds().inRadius(a, 1).any()
+        if @clouds.inRadius(a, 1).any()
           heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
           if @headingUp a
             heading = -heading
           a.heading = heading
 
   encounterEarth: ->
-    for a in @sunrays()
-      if a.y <= @earthTop
+    for a in @sunrays
+      if a? and a.y <= @earthTop
         if @albedo * 100 > u.randomInt(100)
           @reflectOffHorizontalPlane(a)
         else
@@ -278,10 +281,7 @@ class ClimateModel extends ABM.Model
   createSunshine: ->
     modelWidth = @patches.maxX - @patches.minX
     if 0.1 * @sunBrightness > u.randomInt(50)
-      @agents.create 1, (a) =>
-        a.breed = "sunrays"
-        a.size = @agentSize
-        a.color = [255,255,0]
+      @sunrays.create 1, (a) =>
         a.heading = @sunlightHeading
         a.setXY @patches.minX + u.randomFloat(modelWidth), @patches.maxY
         a.hidden = unless @hiding90 and Math.random() > 0.1 then false else true
@@ -289,14 +289,14 @@ class ClimateModel extends ABM.Model
   addSunraySpotlight: ->
     # try to add spotlight to a sunray at very top heading downwards
     foundOne = false
-    for a in @sunrays().shuffle()
+    for a in @sunrays.shuffle()
       if not @headingUp(a) and a.y > @patches.maxY-5 and not a.hidden
         foundOne = true
         @setSpotlight a
         break
     if not foundOne
       # if we did not find one, add spotlight to random VISIBLE sunray
-      agents = @sunrays().getWithProp "hidden", false
+      agents = @sunrays.getWithProp "hidden", false
       if agents.any()
         a = agents.oneOf()
         @setSpotlight a
@@ -325,14 +325,14 @@ class ClimateModel extends ABM.Model
 
   erupt: ->
     for i in [0...15]
-      @createCO2 1, [-17, -1.5], Math.PI
+      @createCO2 1, [-17, -1.5], Math.PI/2
 
   #
   # Global Functions
   #
   hide90: ->
     @hiding90 = true
-    for agentSet in [@sunrays(), @CO2(), @IR(), @heat()]
+    for agentSet in [@sunrays, @CO2, @IR, @heat]
       for a in agentSet[Math.ceil(agentSet.length/10)..]
         a.hidden = true unless a is @spotlightAgent
 

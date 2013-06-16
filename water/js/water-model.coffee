@@ -26,7 +26,7 @@ class WaterModel extends ABM.Model
         a.moveTo p
         a.heading = ABM.util.degToRad(270)
 
-    for a in @agents.breed("falling-water")
+    for a in @agents
       @moveFallingWater(a)
     return true # avoid inadventently returning a large array of things
 

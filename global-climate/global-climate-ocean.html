@@ -25,6 +25,9 @@
 
         @agentBreeds "vapor"
 
+        @vapor.setDefaultShape "circle"
+        @vapor.setDefaultColor [0, 0, 255]
+
         # globals
         @oceanLeft = -5
         @oceanBottom = -15
@@ -47,13 +50,13 @@
         @createHeat(22)
 
       getVaporCount : ->
-        @vapor().length
+        @vapor.length
 
       getAtmosphereCO2Count : ->
-        @CO2().with("o.y > #{@earthTop}").length
+        @CO2.with("o.y > #{@earthTop}").length
 
       getOceanCO2Count : ->
-        @CO2().with("o.y <= #{@earthTop}").length
+        @CO2.with("o.y <= #{@earthTop}").length
 
       updateAlbedoOfSurface: ->
         earthAlbedo = (Math.floor(a+@albedo*100) for a in [96, 155, 96])
@@ -65,7 +68,7 @@
       # CO2
       #
       runCO2: ->
-        for a in @CO2()
+        for a in @CO2
           if a
             a.heading = a.heading + u.randomCentered(Math.PI/9)
             if a.y <= @oceanBottom                          # stop at bottom of ocean
@@ -96,18 +99,14 @@
       #
       createVapor: (num) ->
         while num--
-          @agents.create 1, (a) =>
-            a.breed = "vapor"
-            a.size = @agentSize
-            a.color = [0, 0, 255]
-            a.shape ="circle"
+          @vapor.create 1, (a) =>
             a.heading = u.randomCentered(Math.PI)
             a.hidden = unless @hiding90 and Math.random() > 0.1 then false else true
             [x,y] = @getRandomLocation(@earthTop+1, @skyTop)
             a.setXY x, y
 
       runVapor: ->
-        for a in @vapor()
+        for a in @vapor
           if a
             a.heading = a.heading + u.randomCentered(Math.PI/9)
             a.forward 0.1
@@ -125,7 +124,7 @@
 
         if count > target
           for i in [count-1..target]
-            @vapor()[i].die()
+            @vapor[i].die()
         else
           @createVapor target-count
 
@@ -134,10 +133,10 @@
       # IR
       #
       runIR: ->
-        for a in @IR()
+        for a in @IR
           if a
             a.forward 0.5
-            if @CO2().inRadius(a, 1).any() or @vapor().inRadius(a, 1).any()
+            if @CO2.inRadius(a, 1).any() or @vapor.inRadius(a, 1).any()
               a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
             a.die() if a.heading == -@sunlightHeading && a.y > (14)
             if a.y <= @earthTop
@@ -148,7 +147,7 @@
       #
       runHeat: ->
         @updateTemperature()
-        for a, i in @heat()
+        for a, i in @heat
           if a
             # random walk
             a.rotate(u.randomCentered(0.3))
@@ -185,7 +184,7 @@
       #
       hide90: ->
         super
-        for agentSet in [@vapor()]
+        for agentSet in [@vapor]
           for a in agentSet[Math.ceil(agentSet.length/10)..]
             a.hidden = true
 
@@ -202,9 +201,9 @@
         @runVapor()
 
         # less-frequent functions
-        if @ticks % 20 is 0
+        if @anim.ticks % 20 is 0
           @emitCO2()
-        if @ticks % 30 is 0
+        if @anim.ticks % 30 is 0
           @updateVapor()
 
 
@@ -507,7 +506,7 @@
         // scale value, 0=10, 5=60, 10=500
         var val = speedSlider.value,
             frequency = val <= 5 ? (val * 10)+10 : (val-5)*88 + 60;
-        climateModel.setStepFrequency(frequency);
+        climateModel.anim.setRate(frequency, true);
       }
 
       resetButton.onclick = function() {
@@ -532,7 +531,7 @@
       }
 
       function updateTickCounter() {
-        ticks = climateModel.ticks;
+        ticks = climateModel.anim.ticks;
         tickCounter.textContent = ticks;
       }
 
@@ -578,7 +577,7 @@
               atmosphereCO2Count = climateModel.getAtmosphereCO2Count(),
               oceanCO2Count = climateModel.getOceanCO2Count(),
               vaporCount = climateModel.getVaporCount(),
-              tick = climateModel.ticks,
+              tick = climateModel.anim.ticks,
               ticksElapsed = tick - lastTick;
           temperatureOutput.textContent = temperatureFormatter(temperature);
           co2Output.textContent = countFormatter(atmosphereCO2Count);

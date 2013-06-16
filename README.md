@@ -22,3 +22,9 @@ Then
     git submodule update --init
 
 You can then find the index at file://path.to.agentscript-models/index.html
+
+## GitHub pages
+
+The live version of this site can be found at [http://concord-consortium.github.io/agentscript-models/](http://concord-consortium.github.io/agentscript-models/)
+
+To update this site, merge your changes into the gh-pages branch and push.

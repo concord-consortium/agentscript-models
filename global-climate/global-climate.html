@@ -315,7 +315,7 @@
         // scale value, 0=10, 5=60, 10=500
         var val = speedSlider.value,
             frequency = val <= 5 ? (val * 10)+10 : (val-5)*88 + 60;
-        climateModel.setStepFrequency(frequency);
+        climateModel.anim.setRate(frequency, true);
       }
 
       resetButton.onclick = function() {
@@ -340,7 +340,7 @@
       }
 
       function updateTickCounter() {
-        ticks = climateModel.ticks;
+        ticks = climateModel.anim.ticks;
         tickCounter.textContent = ticks;
       }
 
@@ -384,7 +384,7 @@
         if (typeof climateModel !== "undefined") {
           var temperature = climateModel.getTemperature(),
               co2Count = climateModel.getCO2Count(),
-              tick = climateModel.ticks,
+              tick = climateModel.anim.ticks,
               ticksElapsed = tick - lastTick;
           temperatureOutput.textContent = temperatureFormatter(temperature);
           co2Output.textContent = countFormatter(co2Count);

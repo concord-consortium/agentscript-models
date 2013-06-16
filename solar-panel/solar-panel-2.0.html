@@ -21,7 +21,10 @@
         window.SolarPanelModel = this
         @refreshPatches = false
         @agents.setDefaultShape "arrow"
+        @agents.setDefaultSize 5
         @agentBreeds "photons"
+
+        @anim.setRate 100, true
 
         # globals
         @angle = 30
@@ -67,9 +70,7 @@
         @percentHit
 
       makePhoton: ->
-        @agents.create 1, (a) =>
-          a.breed = "photons"
-          a.size = 5
+        @photons.create 1, (a) =>
           a.color = u.randomColor()
           a.penDown = false
           # the photon starts off-screen, by definition, so it must be hidden.
@@ -97,7 +98,7 @@
         a.x < @patches.maxX && a.x > @patches.minX && a.y < @patches.maxY && a.y > @patches.minY
 
       movePhotons: ->
-        for a in @photons()
+        for a in @photons
           if a
             dx = @stepSize * Math.cos(a.heading)
             dy = @stepSize * Math.sin(a.heading)
@@ -132,7 +133,7 @@
       #
       step: ->
         @makePhoton() if @lightBeam
-        l = @photons().length
+        l = @photons.length
         @movePhotons()
         if @missCount > 0
           @percentHit = 100 * @hitCount / (@missCount + @hitCount)
@@ -368,7 +369,7 @@
       }
 
       function updateTickCounter() {
-        ticks = SolarPanelModel.ticks;
+        ticks = SolarPanelModel.anim.ticks;
         tickCounter.textContent = ticks;
       }
 
@@ -403,7 +404,7 @@
           percentHitOutput.textContent = percentHitFormatter(percentHit);
           angleOutput.textContent = countFormatter(angle);
           if (!SolarPanelModel.animStop) {
-            graph.addPoints([percentHit]);
+            graph.addSamples([percentHit]);
             updateTickCounter();
           }
         }
