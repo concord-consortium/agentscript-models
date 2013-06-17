@@ -1,4 +1,9 @@
 class WaterModel extends ABM.Model
+  DOWN:  ABM.util.degToRad(270)
+  LEFT:  ABM.util.degToRad(180)
+  UP:    ABM.util.degToRad(90)
+  CONE:  ABM.util.degToRad(110)
+  RIGHT: 0
   setup: ->
     @anim.setRate 30, false
 
@@ -30,7 +35,7 @@ class WaterModel extends ABM.Model
           px = @random(@patches.maxX - @patches.minX) + @patches.minX
           p = @patches.patchXY px, @patches.maxY
         a.moveTo p
-        a.heading = ABM.util.degToRad(270)
+        a.heading = @DOWN
 
     for a in @agents
       @moveFallingWater(a)
