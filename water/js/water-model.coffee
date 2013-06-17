@@ -85,25 +85,47 @@ class WaterModel extends ABM.Model
 
   moveFallingWater: (a)->
     ps = []
+    resistanceModifier = 1
     for i in [{ idx: 1, priority: 0 }, { idx: 0, priority: 1}, { idx: 2, priority: 1}, { idx: 3, priority: 2}, {idx: 4, priority: 2}]
       i.patch = a.p.n[i.idx]
       continue unless i.patch?
-      i.resistance = @resistance(i.patch)
+      continue unless @isPatchFree(i.patch)
+
+      preferred = false
       i.priority += 1 unless i.patch.type is "sky"
-      if i.idx == 3 and not @isPatchFree(a.p.n[4])
+      # if the patch to the right is occupied, bump up either of the left patches in priority and preference
+      if (i.idx == 3 or i.idx == 2) and not @isPatchFree(a.p.n[4])
         i.priority -= 1
-      else if i.idx == 4 and not @isPatchFree(a.p.n[3])
+        resistanceModifier = 0.2
+        preferred = true
+        a.heading = @LEFT
+      # if the patch to the left is occupied, bump up either of the right patches in priority and preference
+      else if (i.idx == 4 or i.idx == 0) and not @isPatchFree(a.p.n[3])
         i.priority -= 1
-      if @isPatchFree(i.patch) and @random(i.resistance) == 0
+        resistanceModifier = 0.2
+        preferred = true
+        a.heading = @RIGHT
+
+      if @random(Math.round(@resistance(i.patch)*resistanceModifier)) == 0
         ps[i.priority] ||= []
         ps[i.priority].push i
+        ps[i.priority].push {patch: i.patch} if preferred
+        ps[i.priority].push {patch: i.patch} if preferred
 
     n = -1
     while not destinations? and n++ < 5
       destinations = ps[n]
 
     if destinations?
-      dest = destinations[@random(destinations.length)]
+      # if one is the direction we're heading, chose it. Otherwise, randomly select.
+      dests = []
+      for d in destinations
+        if ABM.util.inCone a.heading, @CONE, 2, a.x, a.y, d.patch.x, d.patch.y
+          dests.push d
+
+      if dests.length == 0
+        dests = destinations
+      dest = destinations[@random(dests.length)]
       if dest?
         a.moveTo dest.patch
         return true
