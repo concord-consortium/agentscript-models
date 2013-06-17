@@ -1,4 +1,4 @@
-<html>
+r<html>
   <head>
     <title>Water Model</title>
     <link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
@@ -22,15 +22,16 @@
       <div id="buttons">
         <div id="draw-button-set">
           <input type="checkbox" id="fill-button" /><label for="fill-button">Fill</label>
-          <input type="checkbox" id="draw-button" /><label for="draw-button">Draw</label>
-          <button id="draw-button-type">Select a type</button>
+          <!-- <input type="checkbox" id="draw-button" /><label for="draw-button">Draw</label> -->
+          <button id="draw-button-type"><span class="layer-option rock1"></span></button>
         </div>
         <ul id="draw-button-type-options">
-          <li><a href="#">Yellow</a></li>
-          <li><a href="#">Red</a></li>
-          <li><a href="#">Violet</a></li>
-          <li><a href="#">Green</a></li>
-          <li><a href="#">Black</a></li>
+          <li class="header">Permeability</li>
+          <li><a href="#"><span class="layer-option soil"></span><span class="label">Easy flow</span></a></li>
+          <li><a href="#"><span class="layer-option rock1"></span></a></li>
+          <li><a href="#"><span class="layer-option rock2"></span></a></li>
+          <li><a href="#"><span class="layer-option rock3"></span></a></li>
+          <li><a href="#"><span class="layer-option rock4"></span><span class="label">No flow</span></a></li>
         </ul>
       </div>
     </div>

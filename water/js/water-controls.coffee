@@ -5,24 +5,23 @@ window.WaterControls =
   setup: ->
     if ABM.model?
       $("#controls").show()
-      $("#draw-button").button()
-      .click =>
-        $("#fill-button").click() if $("#fill-button")[0].checked
-        if `this.checked`
-          @drawStyle = "draw"
-          @draw()
-        else
-          @stopDraw()
+      # $("#draw-button").button()
+      # .click =>
+      #   $("#fill-button").click() if $("#fill-button")[0].checked
+      #   if `this.checked`
+      #     @drawStyle = "draw"
+      #     @draw()
+      #   else
+      #     @stopDraw()
       $("#fill-button").button()
       .click =>
-        $("#draw-button").click() if $("#draw-button")[0].checked
+        # $("#draw-button").click() if $("#draw-button")[0].checked
         if `this.checked`
           @drawStyle = "fill"
           @draw()
         else
           @stopDraw()
       $("#draw-button-type").button
-        text: false
         icons:
           primary: "ui-icon-triangle-1-s"
       .click ->
@@ -36,29 +35,34 @@ window.WaterControls =
       $("#draw-button-set").buttonset()
       $("#draw-button-type-options").hide().menu
         select: (evt, ui)=>
-          @setDrawColor ui.item.text()
+          window.drawColor = ui.item
+          layerOption = ui.item.find(".layer-option")
+          $("#draw-button-type .ui-button-text").html(layerOption.clone())
+          @setDrawColor layerOption.prop('className').split(/\s+/)
     else
       console.log("delaying...")
       setTimeout =>
         @setup()
       , 500
 
-  setDrawColor: (colorStr)->
-    if colorStr is "Red"
+  setDrawColor: (colors = [])->
+    if $.inArray("rock1", colors) > -1
       @drawColor = [255,0,0]
       @patchType = "rock1"
-    else if colorStr is "Violet"
+    else if $.inArray("rock2", colors) > -1
       @drawColor = [117,117,176]
       @patchType = "rock2"
-    else if colorStr is "Green"
+    else if $.inArray("rock3", colors) > -1
       @drawColor = [0,255,0]
       @patchType = "rock3"
-    else if colorStr is "Black"
+    else if $.inArray("rock4", colors) > -1
       @drawColor = [0,0,0]
       @patchType = "rock4"
-    else if colorStr is "Yellow"
+    else if $.inArray("soil", colors) > -1
       @drawColor = [255,255,0]
       @patchType = "soil"
+    else
+      console.log "Invalid layer option!", colors
 
   draw: ->
     mouseDown = false
