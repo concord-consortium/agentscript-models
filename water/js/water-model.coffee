@@ -11,6 +11,11 @@ class WaterModel extends ABM.Model
     @draw()
     @refreshPatches = false
 
+  customReset: ->
+    @reset()
+    @setup()
+    @anim.draw()
+
   step: ->
     console.log @anim.toString() if @anim.ticks % 100 is 0
     # too many agents will make it really slow
