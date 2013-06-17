@@ -1,19 +1,20 @@
 class WaterModel extends ABM.Model
   setup: ->
-    @showFPS = true
+    @anim.setRate 30, false
 
     # init all the patches as sky color
     for p in @patches
       p.color = [205, 237, 252]
       p.type = "sky"
 
+    @setCacheAgentsHere()
     @draw()
     @refreshPatches = false
 
   step: ->
-    @setCacheAgentsHere() if @ticks == 1
-    # after about 4000 agents, things start not working correctly
-    if @agents.length < 4000
+    console.log @anim.toString() if @anim.ticks % 100 is 0
+    # too many agents will make it really slow
+    if @agents.length < 8000
       @agents.create 5, (a)=>
         a.shape = "circle"
         a.color = [0,0,255]
