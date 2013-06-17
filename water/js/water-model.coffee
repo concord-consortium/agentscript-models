@@ -16,8 +16,8 @@ class WaterModel extends ABM.Model
     @draw()
     @refreshPatches = false
 
-  customReset: ->
-    @reset()
+  reset: ->
+    super
     @setup()
     @anim.draw()
 
