@@ -64,6 +64,18 @@ window.WaterControls =
     else
       console.log "Invalid layer option!", colors
 
+  fillBelow: (x,y,points)->
+    # also include all the points below this one, up to the first patch that is not the same type as the current patch
+    startType = ABM.model.patches.patchXY(x, y)?.type
+    done = false
+    for dy in [(y)..(ABM.model.patches.minY)]
+      continue if done
+      p = ABM.model.patches.patchXY x, dy
+      if p.type is startType
+        points.push {x: x, y: dy}
+      else
+        done = true
+
   draw: ->
     mouseDown = false
     cStart = null
@@ -84,9 +96,7 @@ window.WaterControls =
           continue if pt.y > ABM.model.patches.maxY or pt.y < ABM.model.patches.minY
           points.push pt
           if @drawStyle is "fill"
-            # also include all the points below this one
-            for y in [(pt.y)..(ABM.model.patches.minY)]
-              points.push {x: pt.x, y: y}
+            @fillBelow pt.x, pt.y, points
         if @drawStyle is "draw" and m != 0
           for y in [(cStart.y)..(cEnd.y)]
             continue if y > ABM.model.patches.maxY or y < ABM.model.patches.minY
@@ -96,9 +106,7 @@ window.WaterControls =
             points.push pt
       else
         if @drawStyle is "fill"
-          # also include all the points below this one
-          for y in [(cEnd.y)..(ABM.model.patches.minY)]
-            points.push {x: cEnd.x, y: y}
+          @fillBelow cEnd.x, cEnd.y, points
         else
           points.push cEnd
       for c in points
