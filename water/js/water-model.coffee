@@ -21,6 +21,11 @@ class WaterModel extends ABM.Model
     @setup()
     @anim.draw()
 
+  start: ->
+    super
+    for p in @patches
+      p.isOnSurface = @isOnSurface(p)
+
   step: ->
     console.log @anim.toString() if @anim.ticks % 100 is 0
     # too many agents will make it really slow
@@ -42,7 +47,14 @@ class WaterModel extends ABM.Model
     return true # avoid inadventently returning a large array of things
 
   isOnSurface: (p)->
-    return p.type is not "sky" and p.n4[0].type is "sky"
+    # The first patch of a layer is the "surface".
+    # We are the surface if the patch immediately above or diagonally above isn't the same type.
+    # However, don't use surface dynamics if we're under an impermeable layer (rock4).
+    isSurface = (p.type isnt p.n[6]?.type and p.n[6]?.type isnt "rock4") or
+           (p.type isnt p.n[5]?.type and p.n4[5]?.type isnt "rock4") or
+           (p.type isnt p.n[7]?.type and p.n4[7]?.type isnt "rock4")
+
+    return isSurface
 
   getNextPatch: (a)->
     dir = Math.round(ABM.util.radToDeg(a.heading))
@@ -57,13 +69,15 @@ class WaterModel extends ABM.Model
     return p? and p.agentsHere().length == 0
 
   resistance: (p)->
-    # 1/resistance is the prob of moving, it is like a resistance to flow
+    # 1/resistance is the prob of moving, it is like a resistance to flow.
+    # If the patch is the top patch of a layer, resist water flow more than usual to
+    # encourage travel along layer surfaces.
     return switch p.type
-      when "soil"  then (if @isOnSurface(p) then  2 else 2)
-      when "rock1" then (if @isOnSurface(p) then  4 else 8)
-      when "rock2" then (if @isOnSurface(p) then  8 else 18)
-      when "rock3" then (if @isOnSurface(p) then 16 else 26)
-      when "rock4" then (if @isOnSurface(p) then 32 else 1000000)
+      when "soil"  then (if p.isOnSurface then  32 else   4)
+      when "rock1" then (if p.isOnSurface then  64 else   8)
+      when "rock2" then (if p.isOnSurface then 128 else  16)
+      when "rock3" then (if p.isOnSurface then 256 else  32)
+      when "rock4" then 1000000
       else 1
 
   random: (n)->
