@@ -4,6 +4,8 @@ window.WaterControls =
   patchType: "rock1"
   setup: ->
     if ABM.model?
+      $(".icon-pause").hide()
+      $(".icon-play").show()
       $("#controls").show()
       # $("#draw-button").button()
       # .click =>
@@ -13,6 +15,13 @@ window.WaterControls =
       #     @draw()
       #   else
       #     @stopDraw()
+      $("#play-pause-button").button()
+      .click =>
+        @startStopModel()
+      $("#reset-button").button()
+      .click =>
+        @resetModel()
+      $("#playback").buttonset()
       $("#fill-button").button()
       .click =>
         # $("#draw-button").click() if $("#draw-button")[0].checked
@@ -139,6 +148,20 @@ window.WaterControls =
     $("#mouse-catcher").unbind('mousemove')
     $("#mouse-catcher").unbind('mouseup')
 
+  startStopModel: ->
+    if ABM.model.anim.animStop
+      ABM.model.start()
+      $(".icon-pause").show()
+      $(".icon-play").hide()
+    else
+      ABM.model.stop()
+      $(".icon-pause").hide()
+      $(".icon-play").show()
+
+  resetModel: ->
+    ABM.model.reset()
+    $(".icon-pause").hide()
+    $(".icon-play").show()
 
   patchCoords: (x,y)->
     patches = ABM.model.patches

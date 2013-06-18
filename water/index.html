@@ -2,6 +2,7 @@ r<html>
   <head>
     <title>Water Model</title>
     <link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
     <script src="../lib/agentscript/agentscript.js"></script>
@@ -13,10 +14,14 @@ r<html>
   </head>
   <body>
     <div id="controls">
-      <div id="playback"
-        <span><a href="#" onclick="ABM.model.start(); return false;">Start</a></span> |
-        <span><a href="#" onclick="ABM.model.stop(); return false;">Stop</a></span> |
-        <span><a href="#" onclick="ABM.model.reset(); return false;">Reset</a></span>
+      <div id="playback">
+        <button id="reset-button">
+          <i class="icon-step-backward"></i>
+        </button>
+        <button id="play-pause-button">
+          <i class="icon-play"></i>
+          <i class="icon-pause"></i>
+        </button>
       </div>
       <div id="buttons">
         <div id="draw-button-set">
