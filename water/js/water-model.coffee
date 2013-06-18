@@ -6,6 +6,7 @@ class WaterModel extends ABM.Model
   RIGHT: 0
   setup: ->
     @anim.setRate 30, false
+    @setFastPatches()
 
     # init all the patches as sky color
     for p in @patches
@@ -34,7 +35,7 @@ class WaterModel extends ABM.Model
         a.shape = "circle"
         a.color = [0,0,255]
         a.breed = "falling-water"
-        a.size = 1
+        a.size = 2
         p = null
         while not @isPatchFree(p)
           px = @random(@patches.maxX - @patches.minX) + @patches.minX
@@ -132,5 +133,5 @@ class WaterModel extends ABM.Model
 
     return false
 
-APP=new WaterModel "layers", 2, -200, 199, -65, 64, false
+APP=new WaterModel "layers", 1, -400, 399, -130, 129, false
 APP.setRootVars()
