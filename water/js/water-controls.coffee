@@ -76,14 +76,15 @@ window.WaterControls =
     else
       console.log "Invalid layer option!", colors
 
+  startType: null
   fillBelow: (x,y,points)->
     # also include all the points below this one, up to the first patch that is not the same type as the current patch
-    startType = ABM.model.patches.patchXY(x, y)?.type
+    @startType ||= ABM.model.patches.patchXY(x, y)?.type
     done = false
     for dy in [(y)..(ABM.model.patches.minY)]
       continue if done
       p = ABM.model.patches.patchXY x, dy
-      if p.type is startType
+      if p.type is @startType
         points.push {x: x, y: dy}
       else
         done = true
@@ -106,9 +107,10 @@ window.WaterControls =
           pt = {x: x}
           pt.y = Math.round(m * (x - cEnd.x) + cEnd.y)  # point-slope form, solve for y
           continue if pt.y > ABM.model.patches.maxY or pt.y < ABM.model.patches.minY
-          points.push pt
           if @drawStyle is "fill"
             @fillBelow pt.x, pt.y, points
+          else
+            points.push pt
         if @drawStyle is "draw" and m != 0
           for y in [(cStart.y)..(cEnd.y)]
             continue if y > ABM.model.patches.maxY or y < ABM.model.patches.minY
@@ -136,13 +138,15 @@ window.WaterControls =
     $("#mouse-catcher").bind 'mousedown', (evt)->
       mouseDown = true
       drawEvt(evt)
-    $("#mouse-catcher").bind 'mouseup', ->
+    $("#mouse-catcher").bind 'mouseup', =>
       mouseDown = false
       cStart = null
-    $("#mouse-catcher").bind 'mouseleave', (evt)->
+      @startType = null
+    $("#mouse-catcher").bind 'mouseleave', (evt)=>
       drawEvt(evt)
       mouseDown = false
       cStart = null
+      @startType = null
     $("#mouse-catcher").bind 'mousemove', drawEvt
 
   stopDraw: ->
