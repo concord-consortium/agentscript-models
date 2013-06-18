@@ -17,14 +17,20 @@ window.WaterControls =
       #     @stopDraw()
       $("#play-pause-button").button()
       .click =>
+        @stopDraw(false)
         @startStopModel()
       $("#reset-button").button()
       .click =>
+        @stopDraw()
         @resetModel()
       $("#playback").buttonset()
+      $("#erase-button").button()
+      .click =>
+        @stopDraw()
+        @erase()
       $("#fill-button").button()
       .click =>
-        # $("#draw-button").click() if $("#draw-button")[0].checked
+        @stopDraw()
         if `this.checked`
           @drawStyle = "fill"
           @draw()
@@ -50,7 +56,7 @@ window.WaterControls =
           $("label[for='fill-button'] .ui-button-text").html(layerOption.clone())
           @setDrawColor layerOption.prop('className').split(/\s+/)
           # automatically put us into fill mode when we select a layer type
-          $("#fill-button").click() unless $("#fill-button")[0].checked
+          @stopDraw() and $("#fill-button").click() unless $("#fill-button")[0].checked
     else
       console.log("delaying...")
       setTimeout =>
@@ -149,11 +155,48 @@ window.WaterControls =
       @startType = null
     $("#mouse-catcher").bind 'mousemove', drawEvt
 
-  stopDraw: ->
+  erase: ->
+    $("#mouse-catcher").show()
+    $("#mouse-catcher").bind 'mousedown', (evt)=>
+      # get the patch under the cursor,
+      # find all the contiguous patches of the same type,
+      # set them to the type of the first non-similar patch above them
+      pt = @patchCoords evt.offsetX, evt.offsetY
+      originalPatch = ABM.model.patches.patchXY(pt.x,pt.y)
+      return unless originalPatch?
+      originalPatchType = originalPatch.type
+      patches = [originalPatch]
+      fillTypes = {}
+      findFillType = (p)->
+        x = p.x
+        return fillTypes[x] if fillTypes[x]
+        for y in [(p.y)..(ABM.model.patches.maxY)]
+          nextP = ABM.model.patches.patchXY(x,y)
+          if nextP? and p.type isnt nextP.type
+            fillTypes[x] = {type: nextP.type, color: nextP.color}
+            return fillTypes[x]
+      while patches.length > 0
+        patch = patches.shift()
+        continue if patch.type isnt originalPatchType
+        fType = findFillType(patch)
+        patch.type = fType.type
+        patch.color = fType.color
+        for n in patch.n4
+          if n? and n.type is originalPatchType
+            patches.push n
+      ABM.model.refreshPatches = true
+      ABM.model.draw()
+      ABM.model.refreshPatches = false
+
+  stopDraw: (alsoStopModel=true)->
+    $("#fill-button").click() if $("#fill-button")[0].checked
+    $("#erase-button").click() if $("#erase-button")[0].checked
+    @startStopModel() if alsoStopModel and not ABM.model.anim.animStop
     $("#mouse-catcher").hide()
+    $("#mouse-catcher").unbind('mouseup')
     $("#mouse-catcher").unbind('mousedown')
     $("#mouse-catcher").unbind('mousemove')
-    $("#mouse-catcher").unbind('mouseup')
+    $("#mouse-catcher").unbind('mouseleave')
 
   startStopModel: ->
     if ABM.model.anim.animStop

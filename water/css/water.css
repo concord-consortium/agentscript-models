@@ -82,9 +82,18 @@ span.layer-option {
   display: inline-block;
 }
 
-#playback i {
+#draw-button-set {
+  display: inline-block;
+}
+
+#edit-button-set {
+  display: inline-block;
+  margin-left: 15px;
+}
+
+#controls i {
   color: #939598;
-  font-size: 1.2em;
+  font-size: 1.25em;
   vertical-align: middle;
 }
 
