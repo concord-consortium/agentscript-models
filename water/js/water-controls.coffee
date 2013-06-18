@@ -165,6 +165,7 @@ window.WaterControls =
       originalPatch = ABM.model.patches.patchXY(pt.x,pt.y)
       return unless originalPatch?
       originalPatchType = originalPatch.type
+      return if originalPatchType is "sky"
       patches = [originalPatch]
       fillTypes = {}
       findFillType = (p)->
@@ -175,6 +176,8 @@ window.WaterControls =
           if nextP? and p.type isnt nextP.type
             fillTypes[x] = {type: nextP.type, color: nextP.color}
             return fillTypes[x]
+        fillTypes[x] = {type: "sky", color: [205, 237, 252]}
+        return fillTypes[x]
       while patches.length > 0
         patch = patches.shift()
         continue if patch.type isnt originalPatchType
