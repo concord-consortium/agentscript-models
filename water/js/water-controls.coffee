@@ -31,6 +31,7 @@ window.WaterControls =
         else
           @stopDraw()
       $("#draw-button-type").button
+        text: false
         icons:
           primary: "ui-icon-triangle-1-s"
       .click ->
@@ -46,8 +47,10 @@ window.WaterControls =
         select: (evt, ui)=>
           window.drawColor = ui.item
           layerOption = ui.item.find(".layer-option")
-          $("#draw-button-type .ui-button-text").html(layerOption.clone())
+          $("label[for='fill-button'] .ui-button-text").html(layerOption.clone())
           @setDrawColor layerOption.prop('className').split(/\s+/)
+          # automatically put us into fill mode when we select a layer type
+          $("#fill-button").click() unless $("#fill-button")[0].checked
     else
       console.log("delaying...")
       setTimeout =>
