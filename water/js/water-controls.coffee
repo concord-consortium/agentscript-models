@@ -192,8 +192,8 @@ window.WaterControls =
       ABM.model.refreshPatches = false
 
   stopDraw: (alsoStopModel=true)->
-    $("#fill-button").click() if $("#fill-button")[0].checked
-    $("#erase-button").click() if $("#erase-button")[0].checked
+    $("#fill-button").click() if $("#fill-button")[0]?.checked
+    $("#erase-button").click() if $("#erase-button")[0]?.checked
     @startStopModel() if alsoStopModel and not ABM.model.anim.animStop
     $("#mouse-catcher").hide()
     $("#mouse-catcher").unbind('mouseup')
