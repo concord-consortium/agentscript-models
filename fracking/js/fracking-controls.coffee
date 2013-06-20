@@ -7,11 +7,9 @@ class FrackingControls
       $("#controls").show()
       $("#play-pause-button").button()
       .click =>
-        @stopDraw(false)
         @startStopModel()
       $("#reset-button").button()
       .click =>
-        @stopDraw()
         @resetModel()
       $("#playback").buttonset()
     else
