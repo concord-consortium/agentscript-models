@@ -3,6 +3,7 @@ class FrackingControls
     # do stuff
     if ABM.model?
       @setupPlayback()
+      @setupDrilling()
     else
       console.log("delaying...")
       setTimeout =>
@@ -20,6 +21,16 @@ class FrackingControls
       .click =>
         @resetModel()
       $("#playback").buttonset()
+
+  setupDrilling: ->
+    timerId = null
+    $("#mouse-catcher").mousedown (evt)=>
+      @stopModel()
+      timerId = setInterval ->
+        ABM.model.drill ABM.model.patches.patchAtPixel(evt.offsetX, evt.offsetY)
+      , 100
+    .bind 'mouseup mouseleave', ->
+      clearInterval timerId if timerId?
 
   startStopModel: ->
     @stopModel() unless @startModel()

@@ -36,6 +36,8 @@ class FrackingModel extends ABM.Model
       when "water" then [ 52,  93, 169]
       when "shale" then [237, 237,  49]
       when "rock"  then [157, 110,  72]
+      when "well"  then [141, 141, 141]
+      when "wellWall" then [87, 87, 87]
 
   setupGlobals: ->
     @airDepth   = Math.round(@patches.minY + @patches.maxY * 0.8)
@@ -85,5 +87,54 @@ class FrackingModel extends ABM.Model
       a.trapped = (@u.randomInt(100) <= 14)
       a.shape = "triangle"
       a.hidden = not @DEBUG
+
+  drill: (p)->
+    # drill at the specified patch
+    well = @findNearbyWell(p)
+    if well?
+      # if we're up in the land area, go vertically
+      if p.y > @landDepth and p.y <= @airDepth
+        # drill one deeper
+        @drillVertical(well, well.depth-1)
+      else
+        # TODO drill horizontally
+        console.log "drilling horizontally (" + p.x + ", " + p.y + ")"
+    else if p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
+      well = {x: p.x, depth: p.y} # TODO some richer well object... ?
+      # start a new vertical well as long as we're not too close to the wall
+      for y in [@airDepth..(p.y)]
+        @drillVertical(well, y)
+    @draw()
+
+  drillVertical: (well, y)->
+    return if y < @patches.minY
+
+    #draw the well
+    for x in [(well.x - 1)..(well.x + 1)]
+      pw = @patches.patchXY x, y
+      pw.well = well
+      pw.type = "well"
+
+    # and the well walls
+    for x in [(well.x - 2), (well.x + 2)]
+      pw = @patches.patchXY x, y
+      pw.well = well
+      pw.type = "wellWall"
+
+    # Also expose the color of the 5 patches to either side
+    for x in [(well.x - 7)..(well.x + 7)]
+      @setPatchColor @patches.patchXY x, y
+
+    well.depth = y
+
+  findNearbyWell: (p)->
+    if p.type is "well" or p.type is "wellWall"
+      return p.well
+    else
+      # look within an N patch radius of us for a well or wellWall patch
+      near = @patches.patchRect p, 5, 5, true
+      for pn in near
+        if pn.type is "well" or pn.type is "wellWall"
+          return pn.well
 
 window.FrackingModel = FrackingModel
