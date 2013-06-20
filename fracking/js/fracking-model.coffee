@@ -11,6 +11,7 @@ class FrackingModel extends ABM.Model
   setup: ->
     @anim.setRate 30, false
     @setFastPatches()
+    @agentBreeds "gas"
 
     @setupGlobals()
     @setupPatches()
@@ -70,7 +71,7 @@ class FrackingModel extends ABM.Model
         @setPatchColor(p) if @DEBUG
 
   setupGas: ->
-    @agents.create 4000, (a)=>
+    @gas.create 4000, (a)=>
       placed = false
       while not placed or a.p.type isnt "shale"
         x = 2 + @u.randomInt(@width - 4)
