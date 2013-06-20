@@ -22,14 +22,25 @@ class FrackingControls
       $("#playback").buttonset()
 
   startStopModel: ->
+    @stopModel() unless @startModel()
+
+  stopModel: ->
     if ABM.model.anim.animStop
-      ABM.model.start()
-      $(".icon-pause").show()
-      $(".icon-play").hide()
+      return false
     else
       ABM.model.stop()
       $(".icon-pause").hide()
       $(".icon-play").show()
+      return true
+
+  startModel: ->
+    if ABM.model.anim.animStop
+      ABM.model.start()
+      $(".icon-pause").show()
+      $(".icon-play").hide()
+      return true
+    else
+      return false
 
   resetModel: ->
     ABM.model.reset()
