@@ -2,6 +2,14 @@ class FrackingControls
   setup: ->
     # do stuff
     if ABM.model?
+      @setupPlayback()
+    else
+      console.log("delaying...")
+      setTimeout =>
+        @setup()
+      , 500
+
+  setupPlayback: ->
       $(".icon-pause").hide()
       $(".icon-play").show()
       $("#controls").show()
@@ -12,11 +20,6 @@ class FrackingControls
       .click =>
         @resetModel()
       $("#playback").buttonset()
-    else
-      console.log("delaying...")
-      setTimeout =>
-        @setup()
-      , 500
 
   startStopModel: ->
     if ABM.model.anim.animStop
