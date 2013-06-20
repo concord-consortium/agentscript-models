@@ -100,7 +100,7 @@ window.WaterControls =
     cStart = null
     drawEvt = (evt)=>
       return unless mouseDown
-      cEnd = @patchCoords evt.offsetX, evt.offsetY
+      cEnd = ABM.model.patches.patchAtPixel evt.offsetX, evt.offsetY
       points = []
       if cStart? and (cStart.x != cEnd.x or cStart.y != cEnd.y)
         # Paint all the patches in a line between this and the last patch red
@@ -161,8 +161,7 @@ window.WaterControls =
       # get the patch under the cursor,
       # find all the contiguous patches of the same type,
       # set them to the type of the first non-similar patch above them
-      pt = @patchCoords evt.offsetX, evt.offsetY
-      originalPatch = ABM.model.patches.patchXY(pt.x,pt.y)
+      originalPatch = ABM.model.patches.patchAtPixel evt.offsetX, evt.offsetY
       return unless originalPatch?
       originalPatchType = originalPatch.type
       return if originalPatchType is "sky"
@@ -215,15 +214,5 @@ window.WaterControls =
     ABM.model.reset()
     $(".icon-pause").hide()
     $(".icon-play").show()
-
-  patchCoords: (x,y)->
-    patches = ABM.model.patches
-    minX = patches.minX
-    maxY = patches.maxY
-    size = patches.size
-
-    pX = Math.floor(x/size) + minX
-    pY = maxY - Math.floor(y/size)
-    return {x: pX, y: pY}
 
 $(document).trigger('controls-ready')
