@@ -98,10 +98,11 @@ class FrackingModel extends ABM.Model
         # drill one deeper
         @drillVertical(well)
       else
-        # TODO drill horizontally
-        console.log "drilling horizontally (" + p.x + ", " + p.y + ")"
+        well.toTheRight = well.x <= p.x unless well.toTheRight?
+        # drill horizontally
+        @drillHorizontal(well)
     else if p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
-      well = {x: p.x, depth: @airDepth} # TODO some richer well object... ?
+      well = {x: p.x, depth: @airDepth, goneHorizontal: false, toTheRight: null} # TODO some richer well object... ?
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
         @drillVertical(well)
@@ -129,6 +130,53 @@ class FrackingModel extends ABM.Model
       @setPatchColor @patches.patchXY x, y
 
     well.depth = y
+
+  drillHorizontal: (well)->
+    if not well.goneHorizontal
+      pivotX = if well.toTheRight then well.x + 2 else well.x - 2
+      pivot = @patches.patchXY pivotX, well.depth
+
+      for x in [(well.x - 7)..(well.x + 7)]
+        for y in [(well.depth - 1)..(well.depth - 8)]
+          p = @patches.patchXY x, y
+          if (well.toTheRight and x <= pivot.x) or (not well.toTheRight and x >= pivot.x)
+            d = @distance(pivot, p)
+            if d > 3.9 and d < 4.5
+              p.type = "wellWall"
+            else if d <= 3.9
+              p.type = "well"
+          @setPatchColor p
+      well.depth = well.depth - 2
+      well.x = well.x + (if well.toTheRight then 2 else -2)
+
+      well.goneHorizontal = true
+    else
+      x = well.x + (if well.toTheRight then 1 else -1)
+      return if x > (@patches.maxX - 1) or x < (@patches.minX + 1)
+
+      #draw the well
+      for y in [(well.depth - 1)..(well.depth + 1)]
+        pw = @patches.patchXY x, y
+        pw.well = well
+        pw.type = "well"
+
+      # and the well walls
+      for y in [(well.depth - 2), (well.depth + 2)]
+        pw = @patches.patchXY x, y
+        pw.well = well
+        pw.type = "wellWall"
+
+      # Also expose the color of the 5 patches to top/bottom
+      for y in [(well.depth - 7)..(well.depth + 7)]
+        @setPatchColor @patches.patchXY x, y
+
+      well.x = x
+
+  distance: (p1, p2)->
+    dx = p2.x - p1.x
+    dy = p2.y - p1.y
+    d = Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2))
+    return d
 
   findNearbyWell: (p)->
     if p.type is "well" or p.type is "wellWall"
