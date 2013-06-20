@@ -30,6 +30,7 @@ class FrackingModel extends ABM.Model
     # other stuff
 
   setPatchColor: (p)->
+    return unless p?
     p.color = switch p.type
       when "air"   then [ 93, 126, 186]
       when "land"  then [ 29, 159, 120]
