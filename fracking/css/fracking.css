@@ -1,0 +1,48 @@
+#model {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 800px;
+  height: 445px;
+}
+
+#mouse-catcher {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: none;
+}
+
+#controls {
+  display: none;
+  position: absolute;
+  top: 450px;
+  left: 5px;
+}
+
+#playback {
+  display: inline-block;
+}
+
+#interaction {
+  display: inline-block;
+  margin-left: 20px;
+}
+
+#controls i {
+  color: #939598;
+  font-size: 1.25em;
+  vertical-align: middle;
+}
+
+#reset-button {
+  border-bottom-left-radius: 0.7em;
+}
+
+#play-pause-button {
+  min-width: 3.2em;
+  border-bottom-right-radius: 0.7em;
+}
