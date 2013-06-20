@@ -102,7 +102,7 @@ class FrackingModel extends ABM.Model
         # drill horizontally
         @drillHorizontal(well)
     else if p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
-      well = {x: p.x, depth: @airDepth, goneHorizontal: false, toTheRight: null} # TODO some richer well object... ?
+      well = {x: p.x, depth: @airDepth+1, goneHorizontal: false, toTheRight: null} # TODO some richer well object... ?
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
         @drillVertical(well)
