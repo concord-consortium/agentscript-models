@@ -95,19 +95,21 @@ class FrackingModel extends ABM.Model
       # if we're up in the land area, go vertically
       if p.y > @landDepth and p.y <= @airDepth
         # drill one deeper
-        @drillVertical(well, well.depth-1)
+        @drillVertical(well)
       else
         # TODO drill horizontally
         console.log "drilling horizontally (" + p.x + ", " + p.y + ")"
     else if p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
-      well = {x: p.x, depth: p.y} # TODO some richer well object... ?
+      well = {x: p.x, depth: @airDepth} # TODO some richer well object... ?
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
-        @drillVertical(well, y)
+        @drillVertical(well)
     @draw()
 
-  drillVertical: (well, y)->
-    return if y < @patches.minY
+  drillVertical: (well)->
+    y = well.depth - 1
+    return if y < (@patches.minY - 5)
+    return if well.goneHorizontal
 
     #draw the well
     for x in [(well.x - 1)..(well.x + 1)]
