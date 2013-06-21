@@ -11,6 +11,7 @@ class FrackingModel extends ABM.Model
   exploding: []
   shaleFractibility: 42
   rockFractibility: 10
+  wells: []
   setup: ->
     @anim.setRate 30, false
     @setFastPatches()
@@ -44,6 +45,8 @@ class FrackingModel extends ABM.Model
       when "wellWall" then [87, 87, 87]
       when "exploding" then [215, 50, 41]
       when "open"      then [0, 0, 0]
+      when "cleanWaterWell" then [45, 141, 190]
+      when "cleanWaterOpen" then [45, 141, 190]
 
   setupGlobals: ->
     @airDepth   = Math.round(@patches.minY + @patches.maxY * 0.8)
@@ -119,6 +122,7 @@ class FrackingModel extends ABM.Model
           @drillHorizontal(well)
     else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
       well = new Well(p.x,@airDepth+1)
+      @wells.push well
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
         @drillVertical(well)
@@ -224,6 +228,41 @@ class FrackingModel extends ABM.Model
       @processExploding currentExploding
     , 50
 
+  filling: []
+  processFilling: (ps)->
+    for p in ps
+      for pn in p.n4
+        if pn?
+          switch pn.type
+            when "open"
+              pn.type = "cleanWaterOpen"
+              @setPatchColor pn
+              @filling.push pn
+    @draw()
+    @fill() if @filling.length > 0
+
+  fill: ->
+    return unless @filling.length > 0
+    currentFilling = @u.clone @filling
+    @filling = []
+    setTimeout =>
+      @processFilling currentFilling
+    , 50
+
+  flood: ->
+    for well in @wells
+      continue if well.capped
+      for p in well.patches
+        p.type = "cleanWaterWell"
+        @setPatchColor p
+
+      for p in well.walls
+        # fill all the open patches nearby
+        @filling.push p
+
+    @draw()
+    @fill()
+
   distance: (p1, p2)->
     dx = p2.x - p1.x
     dy = p2.y - p1.y
@@ -250,6 +289,7 @@ class Well
   head: {x: 0, y: 0}
   patches: []
   walls: []
+  capped: false
 
   constructor: (@x,@depth)->
     @head.x = @x
