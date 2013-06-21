@@ -22,16 +22,17 @@ class FrackingControls
         @resetModel()
       $("#playback").buttonset()
 
+  timerId: null
   setupDrilling: ->
-    timerId = null
+    return if @timerId?
     target = $("#mouse-catcher")
     target.bind 'mousedown', (evt)=>
       @stopModel()
-      timerId = setInterval ->
+      @timerId = setInterval =>
         ABM.model.drill ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
       , 100
-    .bind 'mouseup mouseleave', ->
-      clearInterval timerId if timerId?
+    .bind 'mouseup mouseleave', =>
+      clearInterval @timerId if @timerId?
 
   startStopModel: ->
     @stopModel() unless @startModel()
