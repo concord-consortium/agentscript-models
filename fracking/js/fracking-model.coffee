@@ -8,6 +8,9 @@ class FrackingModel extends ABM.Model
   baseDepth: 0
   width: 0
   height: 0
+  exploding: []
+  shaleFractibility: 42
+  rockFractibility: 10
   setup: ->
     @anim.setRate 30, false
     @setFastPatches()
@@ -39,6 +42,8 @@ class FrackingModel extends ABM.Model
       when "rock"  then [157, 110,  72]
       when "well"  then [141, 141, 141]
       when "wellWall" then [87, 87, 87]
+      when "exploding" then [215, 50, 41]
+      when "open"      then [0, 0, 0]
 
   setupGlobals: ->
     @airDepth   = Math.round(@patches.minY + @patches.maxY * 0.8)
@@ -175,11 +180,50 @@ class FrackingModel extends ABM.Model
         pw.well = well
         pw.type = "wellWall"
 
+      # set up "exploding" patches every 20
+      if Math.abs(x - well.head.x) % 20 == 0
+        for y in [(well.depth-7)..(well.depth-3)]
+          pw = @patches.patchXY x, y
+          pw.type = "exploding"
+          @exploding.push pw
+        for y in [(well.depth+7)..(well.depth+3)]
+          pw = @patches.patchXY x, y
+          pw.type = "exploding"
+          @exploding.push pw
+
       # Also expose the color of the 5 patches to top/bottom
       for y in [(well.depth - 7)..(well.depth + 7)]
         @setPatchColor @patches.patchXY x, y
 
       well.x = x
+
+  processExploding: (ps)->
+    for p in ps
+      for pn in p.n4
+        if pn?
+          switch pn.type
+            when "shale"
+              if @u.randomInt(100) < @shaleFractibility
+                pn.type = "exploding"
+                @setPatchColor pn
+                @exploding.push pn
+            when "rock"
+              if @u.randomInt(100) < @rockFractibility
+                pn.type = "exploding"
+                @setPatchColor pn
+                @exploding.push pn
+      p.type = "open"
+      @setPatchColor p
+    @draw()
+    @explode() if @exploding.length > 0
+
+  explode: ->
+    return unless @exploding.length > 0
+    currentExploding = @u.clone @exploding
+    @exploding = []
+    setTimeout =>
+      @processExploding currentExploding
+    , 50
 
   distance: (p1, p2)->
     dx = p2.x - p1.x

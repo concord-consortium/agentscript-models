@@ -4,6 +4,7 @@ class FrackingControls
     if ABM.model?
       @setupPlayback()
       @setupDrilling()
+      @setupOperations()
     else
       console.log("delaying...")
       setTimeout =>
@@ -65,6 +66,10 @@ class FrackingControls
       $("#drill-down").click() if $("#drill-down")[0]?.checked
     if source isnt "right"
       $("#drill-right").click() if $("#drill-right")[0]?.checked
+
+  setupOperations: ->
+    $("#explosion").button().click =>
+      ABM.model.explode()
 
   startStopModel: ->
     @stopModel() unless @startModel()
