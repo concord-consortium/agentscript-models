@@ -31,6 +31,16 @@
   margin-left: 20px;
 }
 
+#drilling {
+  display: inline-block;
+}
+
+#drilling-header {
+  text-align: center;
+  font-weight: bold;
+  font-variant: small-caps;
+}
+
 #controls i {
   color: #939598;
   font-size: 1.25em;

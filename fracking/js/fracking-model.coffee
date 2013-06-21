@@ -92,19 +92,25 @@ class FrackingModel extends ABM.Model
       a.shape = "triangle"
       a.hidden = not @DEBUG
 
+  drillDirection: null
   drill: (p)->
+    return unless @drillDirection?
     # drill at the specified patch
     well = @findNearbyWell(p)
     if well?
-      # if we're up in the land area, go vertically
-      if p.y > @landDepth and p.y <= @airDepth
+      # if we're up in the land area, go verticall
+      # if p.y > @landDepth and p.y <= @airDepth
+      if @drillDirection is "down" and not well.goneHorizontal
         # drill one deeper
         @drillVertical(well)
-      else
-        well.toTheRight = well.x <= p.x unless well.toTheRight?
-        # drill horizontally
-        @drillHorizontal(well)
-    else if p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
+      else if @drillDirection isnt "down"
+        if not well.toTheRight?
+          well.toTheRight = (@drillDirection is "right")
+
+        if (@drillDirection is "right" and well.toTheRight) or (@drillDirection is "left" and not well.toTheRight)
+          # drill horizontally
+          @drillHorizontal(well)
+    else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
       well = {x: p.x, depth: @airDepth+1, goneHorizontal: false, toTheRight: null, head: {x: p.x, y: @airDepth+1}} # TODO some richer well object... ?
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]

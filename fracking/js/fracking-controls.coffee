@@ -24,6 +24,29 @@ class FrackingControls
 
   timerId: null
   setupDrilling: ->
+    $("#drill-left").button().click =>
+      @stopDrilling("left")
+      if $("#drill-left")[0]?.checked
+        ABM.model.drillDirection = "left"
+      else 
+        ABM.model.drillDirection = null
+
+    $("#drill-down").button().click =>
+      @stopDrilling("down")
+      if $("#drill-down")[0]?.checked
+        ABM.model.drillDirection = "down"
+      else 
+        ABM.model.drillDirection = null
+
+    $("#drill-right").button().click =>
+      @stopDrilling("right")
+      if $("#drill-right")[0]?.checked
+        ABM.model.drillDirection = "right"
+      else 
+        ABM.model.drillDirection = null
+
+    $("#drilling-buttons").buttonset()
+
     target = $("#mouse-catcher")
     target.bind 'mousedown', (evt)=>
       return if @timerId?
@@ -34,6 +57,14 @@ class FrackingControls
     .bind 'mouseup mouseleave', =>
       clearInterval @timerId if @timerId?
       @timerId = null
+
+  stopDrilling: (source)->
+    if source isnt "left"
+      $("#drill-left").click() if $("#drill-left")[0]?.checked
+    if source isnt "down"
+      $("#drill-down").click() if $("#drill-down")[0]?.checked
+    if source isnt "right"
+      $("#drill-right").click() if $("#drill-right")[0]?.checked
 
   startStopModel: ->
     @stopModel() unless @startModel()
