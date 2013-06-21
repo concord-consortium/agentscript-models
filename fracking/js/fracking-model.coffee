@@ -108,6 +108,7 @@ class FrackingModel extends ABM.Model
       if @drillDirection is "down" and not well.goneHorizontal
         # drill one deeper
         @drillVertical(well)
+        @drillVertical(well)
       else if @drillDirection isnt "down"
         if not well.toTheRight?
           well.toTheRight = (@drillDirection is "right")
@@ -115,10 +116,12 @@ class FrackingModel extends ABM.Model
         if (@drillDirection is "right" and well.toTheRight) or (@drillDirection is "left" and not well.toTheRight)
           # drill horizontally
           @drillHorizontal(well)
+          @drillHorizontal(well)
     else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
       well = {x: p.x, depth: @airDepth+1, goneHorizontal: false, toTheRight: null, head: {x: p.x, y: @airDepth+1}} # TODO some richer well object... ?
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
+        @drillVertical(well)
         @drillVertical(well)
     @draw()
 
