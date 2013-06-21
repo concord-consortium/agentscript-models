@@ -54,22 +54,25 @@ class FrackingModel extends ABM.Model
       p.type = "n/a"
       p.color = [255,255,255]
       # continue if p.isOnEdge()
+      waterLowerDepth = (@waterDepth + @height * Math.sin(@u.degToRad(1.5*p.x - (@width / 4))) / 20)
+      shaleUpperDepth = (@oilDepth + @height * Math.sin(@u.degToRad(0.9 * p.x)) / 15)
+      shaleLowerDepth = (@baseDepth + @height * 0.9 * Math.sin(@u.degToRad((1.8 * p.x) + 45)) / 25 + (p.x / 14))
       if p.y > @airDepth
         p.type = "air"
         @setPatchColor(p)
       else if p.y > @landDepth and p.y <= @airDepth
         p.type = "land"
         @setPatchColor(p)
-      else if p.y > (@waterDepth + @height * Math.sin(@u.degToRad(1.5*p.x - (@width / 4))) / 20) and (p.y <= @landDepth)
+      else if @landDepth >= p.y > waterLowerDepth
         p.type = "water"
         @setPatchColor(p) if @DEBUG
-      else if (p.y > @oilDepth + @height * Math.sin(@u.degToRad(0.9 * p.x)) / 15) and (p.y <= @waterDepth + @height * Math.sin(@u.degToRad(1.5 * p.x - (@width / 4))) / 20)
+      else if waterLowerDepth >= p.y > shaleUpperDepth
         p.type = "rock"
         @setPatchColor(p) if @DEBUG
-      else if (p.y > @baseDepth + @height * 0.9 * Math.sin(@u.degToRad((1.8 * p.x) + 45)) / 25 + (p.x / 14)) and (p.y <= @oilDepth + @height * Math.sin(@u.degToRad(0.9 * p.x)) / 15)
+      else if shaleUpperDepth >= p.y > shaleLowerDepth
         p.type = "shale"
         @setPatchColor(p) if @DEBUG
-      else if (p.y <= @baseDepth + @height * 0.9 * Math.sin(@u.degToRad((1.8 * p.x) + 45)) / 25 + (p.x / 14))
+      else if p.y <= shaleLowerDepth
         p.type = "rock"
         @setPatchColor(p) if @DEBUG
 
