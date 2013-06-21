@@ -24,10 +24,11 @@ class FrackingControls
 
   setupDrilling: ->
     timerId = null
-    $("#mouse-catcher").mousedown (evt)=>
+    target = $("#mouse-catcher")
+    target.bind 'mousedown', (evt)=>
       @stopModel()
       timerId = setInterval ->
-        ABM.model.drill ABM.model.patches.patchAtPixel(evt.offsetX, evt.offsetY)
+        ABM.model.drill ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
       , 100
     .bind 'mouseup mouseleave', ->
       clearInterval timerId if timerId?
@@ -57,6 +58,12 @@ class FrackingControls
     ABM.model.reset()
     $(".icon-pause").hide()
     $(".icon-play").show()
+
+  offsetX: (evt, target)->
+    return if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)
+
+  offsetY: (evt, target)->
+    return if evt.offsetY? then evt.offsetY else (evt.pageY - target.offset().top)
 
 window.FrackingControls = FrackingControls
 $(document).trigger('controls-ready')

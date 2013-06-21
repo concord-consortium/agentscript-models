@@ -96,11 +96,12 @@ window.WaterControls =
         done = true
 
   draw: ->
+    target = $("#mouse-catcher")
     mouseDown = false
     cStart = null
     drawEvt = (evt)=>
       return unless mouseDown
-      cEnd = ABM.model.patches.patchAtPixel evt.offsetX, evt.offsetY
+      cEnd = ABM.model.patches.patchAtPixel @offsetX(evt, target), @offsetY(evt, target)
       points = []
       if cStart? and (cStart.x != cEnd.x or cStart.y != cEnd.y)
         # Paint all the patches in a line between this and the last patch red
@@ -140,28 +141,29 @@ window.WaterControls =
       ABM.model.draw()
       ABM.model.refreshPatches = false
       cStart = cEnd
-    $("#mouse-catcher").show()
-    $("#mouse-catcher").bind 'mousedown', (evt)->
+    target.show()
+    target.bind 'mousedown', (evt)->
       mouseDown = true
       drawEvt(evt)
-    $("#mouse-catcher").bind 'mouseup', =>
+    target.bind 'mouseup', =>
       mouseDown = false
       cStart = null
       @startType = null
-    $("#mouse-catcher").bind 'mouseleave', (evt)=>
+    target.bind 'mouseleave', (evt)=>
       drawEvt(evt)
       mouseDown = false
       cStart = null
       @startType = null
-    $("#mouse-catcher").bind 'mousemove', drawEvt
+    target.bind 'mousemove', drawEvt
 
   erase: ->
-    $("#mouse-catcher").show()
-    $("#mouse-catcher").bind 'mousedown', (evt)=>
+    target = $("#mouse-catcher")
+    target.show()
+    target.bind 'mousedown', (evt)=>
       # get the patch under the cursor,
       # find all the contiguous patches of the same type,
       # set them to the type of the first non-similar patch above them
-      originalPatch = ABM.model.patches.patchAtPixel evt.offsetX, evt.offsetY
+      originalPatch = ABM.model.patches.patchAtPixel @offsetX(evt, target), @offsetY(evt, target)
       return unless originalPatch?
       originalPatchType = originalPatch.type
       return if originalPatchType is "sky"
@@ -214,5 +216,11 @@ window.WaterControls =
     ABM.model.reset()
     $(".icon-pause").hide()
     $(".icon-play").show()
+
+  offsetX: (evt, target)->
+    return if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)
+
+  offsetY: (evt, target)->
+    return if evt.offsetY? then evt.offsetY else (evt.pageY - target.offset().top)
 
 $(document).trigger('controls-ready')
