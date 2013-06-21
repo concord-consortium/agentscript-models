@@ -118,7 +118,7 @@ class FrackingModel extends ABM.Model
           @drillHorizontal(well)
           @drillHorizontal(well)
     else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
-      well = {x: p.x, depth: @airDepth+1, goneHorizontal: false, toTheRight: null, head: {x: p.x, y: @airDepth+1}} # TODO some richer well object... ?
+      well = new Well(p.x,@airDepth+1)
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
         @drillVertical(well)
@@ -133,14 +133,12 @@ class FrackingModel extends ABM.Model
     #draw the well
     for x in [(well.x - 1)..(well.x + 1)]
       pw = @patches.patchXY x, y
-      pw.well = well
-      pw.type = "well"
+      well.addPatch pw
 
     # and the well walls
     for x in [(well.x - 2), (well.x + 2)]
       pw = @patches.patchXY x, y
-      pw.well = well
-      pw.type = "wellWall"
+      well.addWall pw
 
     # Also expose the color of the 5 patches to either side
     for x in [(well.x - 7)..(well.x + 7)]
@@ -159,9 +157,9 @@ class FrackingModel extends ABM.Model
           if (well.toTheRight and x <= pivot.x) or (not well.toTheRight and x >= pivot.x)
             d = @distance(pivot, p)
             if d > 3.9 and d < 4.5
-              p.type = "wellWall"
+              well.addWall p
             else if d <= 3.9
-              p.type = "well"
+              well.addPatch p
           @setPatchColor p
       well.depth = well.depth - 2
       well.x = well.x + (if well.toTheRight then 2 else -2)
@@ -174,14 +172,12 @@ class FrackingModel extends ABM.Model
       #draw the well
       for y in [(well.depth - 1)..(well.depth + 1)]
         pw = @patches.patchXY x, y
-        pw.well = well
-        pw.type = "well"
+        well.addPatch pw
 
       # and the well walls
       for y in [(well.depth - 2), (well.depth + 2)]
         pw = @patches.patchXY x, y
-        pw.well = well
-        pw.type = "wellWall"
+        well.addWall pw
 
       # set up "exploding" patches every 20
       if Math.abs(x - well.head.x) % 20 == 0
@@ -245,3 +241,27 @@ class FrackingModel extends ABM.Model
           return pn.well
 
 window.FrackingModel = FrackingModel
+
+class Well
+  x: 0,
+  depth: 0,
+  goneHorizontal: false,
+  toTheRight: null,
+  head: {x: 0, y: 0}
+  patches: []
+  walls: []
+
+  constructor: (@x,@depth)->
+    @head.x = @x
+    @head.y = @depth
+
+  # add a center patch to the well
+  addPatch: (p)->
+    p.type = "well"
+    p.well = @
+    @patches.push p
+
+  addWall: (p)->
+    p.type = "wellWall"
+    p.well = @
+    @walls.push p
