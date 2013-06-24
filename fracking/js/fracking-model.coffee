@@ -46,6 +46,8 @@ class FrackingModel extends ABM.Model
       when "open"      then [0, 0, 0]
       when "cleanWaterWell" then [45, 141, 190]
       when "cleanWaterOpen" then [45, 141, 190]
+      when "dirtyWaterWell" then [38,  90,  90]
+      when "dirtyWaterOpen" then [38,  90,  90]
 
   setupGlobals: ->
     @airDepth   = Math.round(@patches.minY + @patches.maxY * 0.8)
@@ -228,6 +230,7 @@ class Well
   depth: 0,
   goneHorizontal: false,
   toTheRight: null,
+  filled: false
   head: null
   patches: null
   walls: null
@@ -235,6 +238,7 @@ class Well
   capped: false
   filling: null
   exploding: null
+  fracking: null
 
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays
@@ -244,6 +248,7 @@ class Well
     @open = []
     @filling = []
     @exploding = []
+    @fracking = []
 
     @head.x = @x
     @head.y = @depth
@@ -306,7 +311,12 @@ class Well
     @fill()
 
   fill: ->
-    return unless @filling.length > 0
+    if @filling.length <= 0
+      @filled = true
+      setTimeout =>
+        @cycleWaterColors()
+      , 500
+      return
     currentFilling = ABM.util.clone @filling
     @filling = []
     setTimeout =>
@@ -325,3 +335,64 @@ class Well
 
     @model.draw()
     @fill()
+
+  frack: ->
+    return unless @filled
+    @
+    currentFracking = ABM.util.clone @open
+
+  processFracking: (ps)->
+    for p in ps
+      for pn in p.n4
+        if pn?
+          switch pn.type
+            when "shale"
+              if ABM.util.randomInt(100) < (@model.shaleFractibility * 1.05)
+                @fracking.push pn
+                pn.type = "dirtyWaterOpen"
+                @addOpen pn
+                @model.setPatchColor pn
+    @model.draw()
+    @frack()
+
+  frack: ->
+    return unless @filled and @fracking.length > 0
+    currentFracking = ABM.util.clone @fracking
+    @fracking = []
+    setTimeout =>
+      @processFracking currentFracking
+    , 50
+
+  cycleWaterColors: ->
+    colors = [
+      [ 67, 160, 160],
+      [ 64, 152, 152],
+      [ 61, 144, 144],
+      [ 57, 137, 137],
+      [ 64, 129, 129],
+      [ 51, 121, 121],
+      [ 48, 113, 113],
+      [ 45, 105, 105],
+      [ 41,  98,  98],
+      [ 38,  90,  90]
+    ]
+    @nextColor(colors)
+
+  nextColor: (colors)->
+    if colors.length <= 0
+      setTimeout =>
+        @fracking = ABM.util.clone @open
+        @frack()
+      , 250
+      return
+    c = colors.shift()
+    setTimeout =>
+      for p in @patches
+        p.color = c
+
+      for p in @open
+        p.color = c
+
+      @model.draw()
+      @nextColor(colors)
+    , 200
