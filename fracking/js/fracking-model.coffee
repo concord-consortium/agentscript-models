@@ -277,9 +277,10 @@ class Well
   processSet: (set, done, n4processor = null, pProcessor = null)->
     for p in set
       pProcessor(p) if pProcessor?
-      for pn in p.n4
-        if pn?
-          n4processor(pn) if n4processor?
+      if n4processor?
+        for pn in p.n4
+          if pn?
+            n4processor(pn)
     @model.draw()
     done()
 
