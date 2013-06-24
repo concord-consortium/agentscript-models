@@ -273,42 +273,35 @@ class Well
     @model.setPatchColor p
     @exploding.push p
 
-  processExploding: (ps)->
-    for p in ps
+  processSet: (set, done, n4processor = null, pProcessor = null)->
+    for p in set
+      pProcessor(p) if pProcessor?
       for pn in p.n4
         if pn?
-          switch pn.type
-            when "shale"
-              if ABM.util.randomInt(100) < @model.shaleFractibility
-                @addExploding pn
-            when "rock"
-              if ABM.util.randomInt(100) < @model.rockFractibility
-                @addExploding pn
-      p.type = "open"
-      @addOpen p
-      @model.setPatchColor p
+          n4processor(pn) if n4processor?
     @model.draw()
-    @explode()
+    done()
 
   explode: ->
     return unless @exploding.length > 0
     currentExploding = ABM.util.clone @exploding
     @exploding = []
     setTimeout =>
-      @processExploding currentExploding
+      @processSet currentExploding, =>
+        @explode()
+      , (p)=>
+        switch p.type
+          when "shale"
+            if ABM.util.randomInt(100) < @model.shaleFractibility
+              @addExploding p
+          when "rock"
+            if ABM.util.randomInt(100) < @model.rockFractibility
+              @addExploding p
+      , (p)=>
+        p.type = "open"
+        @addOpen p
+        @model.setPatchColor p 
     , 50
-
-  processFilling: (ps)->
-    for p in ps
-      for pn in p.n4
-        if pn?
-          switch pn.type
-            when "open"
-              pn.type = "cleanWaterOpen"
-              @model.setPatchColor pn
-              @filling.push pn
-    @model.draw()
-    @fill()
 
   fill: ->
     if @filling.length <= 0
@@ -320,7 +313,14 @@ class Well
     currentFilling = ABM.util.clone @filling
     @filling = []
     setTimeout =>
-      @processFilling currentFilling
+      @processSet currentFilling, =>
+        @fill()
+      , (p)=>
+        switch p.type
+          when "open"
+            p.type = "cleanWaterOpen"
+            @model.setPatchColor p
+            @filling.push p
     , 50
 
   flood: ->
@@ -337,30 +337,20 @@ class Well
     @fill()
 
   frack: ->
-    return unless @filled
-    @
-    currentFracking = ABM.util.clone @open
-
-  processFracking: (ps)->
-    for p in ps
-      for pn in p.n4
-        if pn?
-          switch pn.type
-            when "shale"
-              if ABM.util.randomInt(100) < (@model.shaleFractibility * 1.05)
-                @fracking.push pn
-                pn.type = "dirtyWaterOpen"
-                @addOpen pn
-                @model.setPatchColor pn
-    @model.draw()
-    @frack()
-
-  frack: ->
     return unless @filled and @fracking.length > 0
     currentFracking = ABM.util.clone @fracking
     @fracking = []
     setTimeout =>
-      @processFracking currentFracking
+      @processSet currentFracking, =>
+        @frack()
+      , (p)=>
+          switch p.type
+            when "shale"
+              if ABM.util.randomInt(100) < (@model.shaleFractibility * 1.05)
+                @fracking.push p
+                p.type = "dirtyWaterOpen"
+                @addOpen p
+                @model.setPatchColor p
     , 50
 
   cycleWaterColors: ->
