@@ -8,7 +8,6 @@ class FrackingModel extends ABM.Model
   baseDepth: 0
   width: 0
   height: 0
-  exploding: []
   shaleFractibility: 42
   rockFractibility: 10
   wells: []
@@ -187,14 +186,10 @@ class FrackingModel extends ABM.Model
       if Math.abs(x - well.head.x) % 20 == 0
         for y in [(well.depth-7)..(well.depth-3)]
           pw = @patches.patchXY x, y
-          pw.type = "exploding"
-          pw.well = well
-          @exploding.push pw
+          well.addExploding pw
         for y in [(well.depth+7)..(well.depth+3)]
           pw = @patches.patchXY x, y
-          pw.type = "exploding"
-          pw.well = well
-          @exploding.push pw
+          well.addExploding pw
 
       # Also expose the color of the 5 patches to top/bottom
       for y in [(well.depth - 7)..(well.depth + 7)]
@@ -202,35 +197,9 @@ class FrackingModel extends ABM.Model
 
       well.x = x
 
-  processExploding: (ps)->
-    for p in ps
-      for pn in p.n4
-        if pn?
-          switch pn.type
-            when "shale"
-              if @u.randomInt(100) < @shaleFractibility
-                pn.type = "exploding"
-                pn.well = p.well
-                @setPatchColor pn
-                @exploding.push pn
-            when "rock"
-              if @u.randomInt(100) < @rockFractibility
-                pn.type = "exploding"
-                pn.well = p.well
-                @setPatchColor pn
-                @exploding.push pn
-      p.well.addOpen p
-      @setPatchColor p
-    @draw()
-    @explode() if @exploding.length > 0
-
   explode: ->
-    return unless @exploding.length > 0
-    currentExploding = @u.clone @exploding
-    @exploding = []
-    setTimeout =>
-      @processExploding currentExploding
-    , 50
+    for well in @wells
+      well.explode()
 
   flood: ->
     for well in @wells
@@ -265,6 +234,7 @@ class Well
   open: []
   capped: false
   filling: []
+  exploding: []
 
   constructor: (@model, @x, @depth)->
     @head.x = @x
@@ -282,8 +252,38 @@ class Well
     @walls.push p
 
   addOpen: (p)->
-    p.type = "open"
     @open.push p
+
+  addExploding: (p)->
+    p.type = "exploding"
+    p.well = @
+    @model.setPatchColor p
+    @exploding.push p
+
+  processExploding: (ps)->
+    for p in ps
+      for pn in p.n4
+        if pn?
+          switch pn.type
+            when "shale"
+              if ABM.util.randomInt(100) < @model.shaleFractibility
+                @addExploding pn
+            when "rock"
+              if ABM.util.randomInt(100) < @model.rockFractibility
+                @addExploding pn
+      p.type = "open"
+      @addOpen p
+      @model.setPatchColor p
+    @model.draw()
+    @explode() if @exploding.length > 0
+
+  explode: ->
+    return unless @exploding.length > 0
+    currentExploding = ABM.util.clone @exploding
+    @exploding = []
+    setTimeout =>
+      @processExploding currentExploding
+    , 50
 
   processFilling: (ps)->
     for p in ps
