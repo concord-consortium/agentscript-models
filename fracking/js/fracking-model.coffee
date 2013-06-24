@@ -267,6 +267,7 @@ class Well
 
   addOpen: (p)->
     @open.push p
+    p.well = @
 
   addExploding: (p)->
     p.type = "exploding"
@@ -382,7 +383,7 @@ class Well
       @processSet currentPumping, =>
         @empty()
       , null, (p)=>
-        p.type = "open"
+        p.type = if p.type is "dirtyWaterWell" then "well" else "open"
         @model.setPatchColor p
     , 50
 
@@ -404,6 +405,9 @@ class Well
   nextColor: (colors)->
     if colors.length <= 0
       setTimeout =>
+        for p in @patches
+          p.type = "dirtyWaterWell"
+
         @fracking = ABM.util.clone @open
         @frack()
       , 250
