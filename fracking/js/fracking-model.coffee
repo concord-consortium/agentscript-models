@@ -24,13 +24,74 @@ class FrackingModel extends ABM.Model
       @draw()
     , 100
 
+    setInterval =>
+      console.log("Killed " + @killed)
+      @killed = 0
+    , 10000
+
   reset: ->
     super
     @setup()
     @anim.draw()
 
+  toKill: []
+  killed: 0
   step: ->
-    # other stuff
+    # move gas turtles to the surface, if possible
+    for a in @gas
+      continue unless a.p?
+      switch a.p.type
+        when "well", "wellWall", "open"
+          a.well = a.p.well
+          a.hidden = not a.well.capped
+      @moveAgentTowardPipeCenter(a)
+
+    if @toKill.length > 0
+      for a in @toKill
+        a.die()
+        @killed++
+      @toKill = []
+    return true
+
+  moveAgentTowardPipeCenter: (a)->
+    return if a.hidden
+
+    # randomly spawn new gas
+    if @u.randomFloat(1000) < 1.8
+      a.hatch 1, @gas, (g)=>
+        a.trapped = false
+        placed = false
+        while not placed or a.p.type isnt "open"
+          x = 2 + @u.randomInt(@width - 4)
+          y = 2 + @u.randomInt(@height - 4)
+          a.moveTo @patches.patchXY(x, y)
+          placed = true
+
+    return if a.trapped
+    switch a.p.type
+      when "air"
+        @toKill.push a
+        return
+      when "well"
+        if -0.5 < (a.x - a.well.head.x) < 0.5
+          # move vertically toward the well head
+          a.heading = @u.degToRad(90)
+        else
+          # move horizontally
+          a.heading = if a.x > a.well.head.x then @u.degToRad(180) else 0
+        a.forward 1
+      when "shale", "rock", "wellWall", "open"
+        # move to center of the pipe
+        if Math.abs(a.x - a.well.head.x) == 2
+          # move horizontally
+          a.heading = if a.x > a.well.head.x then @u.degToRad(180) else 0
+        else
+          # move vertically toward the horizontal pipe center
+          a.heading = if a.y < a.well.depth then @u.degToRad(90) else @u.degToRad(270)
+        a.forward 1
+      else
+        console.log("Hit layer: " + a.p.type)
+
 
   setPatchColor: (p)->
     return unless p?
@@ -376,6 +437,7 @@ class Well
   empty: ->
     if @pumping.length <= 0
       @filled = false
+      @capped = true
       return
     currentPumping = @pumping.slice(0,100)
     @pumping = @pumping.slice(100)
