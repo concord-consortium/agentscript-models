@@ -283,7 +283,7 @@ class Well
       @addOpen p
       @model.setPatchColor p
     @model.draw()
-    @explode() if @exploding.length > 0
+    @explode()
 
   explode: ->
     return unless @exploding.length > 0
@@ -303,7 +303,7 @@ class Well
               @model.setPatchColor pn
               @filling.push pn
     @model.draw()
-    @fill() if @filling.length > 0
+    @fill()
 
   fill: ->
     return unless @filling.length > 0
