@@ -188,10 +188,12 @@ class FrackingModel extends ABM.Model
         for y in [(well.depth-7)..(well.depth-3)]
           pw = @patches.patchXY x, y
           pw.type = "exploding"
+          pw.well = well
           @exploding.push pw
         for y in [(well.depth+7)..(well.depth+3)]
           pw = @patches.patchXY x, y
           pw.type = "exploding"
+          pw.well = well
           @exploding.push pw
 
       # Also expose the color of the 5 patches to top/bottom
@@ -208,14 +210,16 @@ class FrackingModel extends ABM.Model
             when "shale"
               if @u.randomInt(100) < @shaleFractibility
                 pn.type = "exploding"
+                pn.well = p.well
                 @setPatchColor pn
                 @exploding.push pn
             when "rock"
               if @u.randomInt(100) < @rockFractibility
                 pn.type = "exploding"
+                pn.well = p.well
                 @setPatchColor pn
                 @exploding.push pn
-      p.type = "open"
+      p.well.addOpen p
       @setPatchColor p
     @draw()
     @explode() if @exploding.length > 0
@@ -289,6 +293,7 @@ class Well
   head: {x: 0, y: 0}
   patches: []
   walls: []
+  open: []
   capped: false
 
   constructor: (@x,@depth)->
@@ -305,3 +310,7 @@ class Well
     p.type = "wellWall"
     p.well = @
     @walls.push p
+
+  addOpen: (p)->
+    p.type = "open"
+    @open.push p
