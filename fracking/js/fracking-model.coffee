@@ -207,6 +207,9 @@ class FrackingModel extends ABM.Model
     for well in @wells
       well.flood()
 
+  pumpOut: ->
+    for well in @wells
+      well.pumpOut()
 
   findNearbyWell: (p)->
     if p.type is "well" or p.type is "wellWall"
@@ -226,6 +229,7 @@ class Well
   goneHorizontal: false,
   toTheRight: null,
   filled: false
+  fracked: false
   head: null
   patches: null
   walls: null
@@ -234,6 +238,7 @@ class Well
   filling: null
   exploding: null
   fracking: null
+  pumping: null
 
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays
@@ -244,6 +249,7 @@ class Well
     @filling = []
     @exploding = []
     @fracking = []
+    @pumping = []
 
     @head.x = @x
     @head.y = @depth
@@ -333,6 +339,7 @@ class Well
 
   frack: ->
     return unless @filled and @fracking.length > 0
+    @fracked = true
     currentFracking = ABM.util.clone @fracking
     @fracking = []
     setTimeout =>
@@ -346,6 +353,36 @@ class Well
                 p.type = "dirtyWaterOpen"
                 @addOpen p
                 @model.setPatchColor p
+    , 50
+
+  pumpOut: ->
+    return unless @filled and @fracked
+    # start with all of the "open" patches
+    opens = ABM.util.clone @open
+    opens.sort (a,b)=>
+      Math.abs(b.y - @depth) - Math.abs(a.y - @depth)
+
+    # then add all of the well interior patches, sorted by their distance
+    # to the well head.
+    interiors = ABM.util.clone @patches
+    interiors.sort (a,b)=>
+      ABM.util.distance(b.x,b.y,@head.x,@head.y) - ABM.util.distance(a.x,a.y,@head.x,@head.y)
+
+    @pumping = opens.concat interiors
+    @empty()
+
+  empty: ->
+    if @pumping.length <= 0
+      @filled = false
+      return
+    currentPumping = @pumping.slice(0,100)
+    @pumping = @pumping.slice(100)
+    setTimeout =>
+      @processSet currentPumping, =>
+        @empty()
+      , null, (p)=>
+        p.type = "open"
+        @model.setPatchColor p
     , 50
 
   cycleWaterColors: ->

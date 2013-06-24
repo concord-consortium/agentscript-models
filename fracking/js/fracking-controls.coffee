@@ -72,6 +72,8 @@ class FrackingControls
       ABM.model.explode()
     $("#fill-water").button().click =>
       ABM.model.flood()
+    $("#remove-fluid").button().click =>
+      ABM.model.pumpOut()
 
   startStopModel: ->
     @stopModel() unless @startModel()
