@@ -228,15 +228,23 @@ class Well
   depth: 0,
   goneHorizontal: false,
   toTheRight: null,
-  head: {x: 0, y: 0}
-  patches: []
-  walls: []
-  open: []
+  head: null
+  patches: null
+  walls: null
+  open: null
   capped: false
-  filling: []
-  exploding: []
+  filling: null
+  exploding: null
 
   constructor: (@model, @x, @depth)->
+    # set these here so all Well instances don't share the same arrays
+    @head = {x: 0, y: 0}
+    @patches = []
+    @walls = []
+    @open = []
+    @filling = []
+    @exploding = []
+
     @head.x = @x
     @head.y = @depth
 
