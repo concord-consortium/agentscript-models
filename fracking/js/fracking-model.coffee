@@ -121,7 +121,7 @@ class FrackingModel extends ABM.Model
           @drillHorizontal(well)
           @drillHorizontal(well)
     else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
-      well = new Well(p.x,@airDepth+1)
+      well = new Well @, p.x, @airDepth+1
       @wells.push well
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
@@ -232,40 +232,9 @@ class FrackingModel extends ABM.Model
       @processExploding currentExploding
     , 50
 
-  filling: []
-  processFilling: (ps)->
-    for p in ps
-      for pn in p.n4
-        if pn?
-          switch pn.type
-            when "open"
-              pn.type = "cleanWaterOpen"
-              @setPatchColor pn
-              @filling.push pn
-    @draw()
-    @fill() if @filling.length > 0
-
-  fill: ->
-    return unless @filling.length > 0
-    currentFilling = @u.clone @filling
-    @filling = []
-    setTimeout =>
-      @processFilling currentFilling
-    , 50
-
   flood: ->
     for well in @wells
-      continue if well.capped
-      for p in well.patches
-        p.type = "cleanWaterWell"
-        @setPatchColor p
-
-      for p in well.walls
-        # fill all the open patches nearby
-        @filling.push p
-
-    @draw()
-    @fill()
+      well.flood()
 
   distance: (p1, p2)->
     dx = p2.x - p1.x
@@ -295,8 +264,9 @@ class Well
   walls: []
   open: []
   capped: false
+  filling: []
 
-  constructor: (@x,@depth)->
+  constructor: (@model, @x, @depth)->
     @head.x = @x
     @head.y = @depth
 
@@ -314,3 +284,36 @@ class Well
   addOpen: (p)->
     p.type = "open"
     @open.push p
+
+  processFilling: (ps)->
+    for p in ps
+      for pn in p.n4
+        if pn?
+          switch pn.type
+            when "open"
+              pn.type = "cleanWaterOpen"
+              @model.setPatchColor pn
+              @filling.push pn
+    @model.draw()
+    @fill() if @filling.length > 0
+
+  fill: ->
+    return unless @filling.length > 0
+    currentFilling = ABM.util.clone @filling
+    @filling = []
+    setTimeout =>
+      @processFilling currentFilling
+    , 50
+
+  flood: ->
+    return if @capped
+    for p in @patches
+      p.type = "cleanWaterWell"
+      @model.setPatchColor p
+
+    for p in @walls
+      # fill all the open patches nearby
+      @filling.push p
+
+    @model.draw()
+    @fill()
