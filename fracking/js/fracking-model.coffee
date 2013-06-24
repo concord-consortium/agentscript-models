@@ -160,7 +160,7 @@ class FrackingModel extends ABM.Model
         for y in [(well.depth - 1)..(well.depth - 8)]
           p = @patches.patchXY x, y
           if (well.toTheRight and x <= pivot.x) or (not well.toTheRight and x >= pivot.x)
-            d = @distance(pivot, p)
+            d = @u.distance(pivot.x, pivot.y, p.x, p.y)
             if d > 3.9 and d < 4.5
               well.addWall p
             else if d <= 3.9
@@ -207,11 +207,6 @@ class FrackingModel extends ABM.Model
     for well in @wells
       well.flood()
 
-  distance: (p1, p2)->
-    dx = p2.x - p1.x
-    dy = p2.y - p1.y
-    d = Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2))
-    return d
 
   findNearbyWell: (p)->
     if p.type is "well" or p.type is "wellWall"
