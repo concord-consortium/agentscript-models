@@ -51,7 +51,6 @@ class FrackingControls
     target = $("#mouse-catcher")
     target.bind 'mousedown', (evt)=>
       return if @timerId?
-      @stopModel()
       @timerId = setInterval =>
         ABM.model.drill ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
       , 100
@@ -98,6 +97,7 @@ class FrackingControls
       return false
 
   resetModel: ->
+    @stopModel()
     ABM.model.reset()
     $(".icon-pause").hide()
     $(".icon-play").show()
