@@ -11,6 +11,7 @@ class FrackingModel extends ABM.Model
   shaleFractibility: 42
   rockFractibility: 10
   wells: []
+  reportingTimer: null
   setup: ->
     @anim.setRate 30, false
     @setFastPatches()
@@ -24,10 +25,11 @@ class FrackingModel extends ABM.Model
       @draw()
     , 100
 
-    setInterval =>
-      console.log("Killed " + @killed)
-      @killed = 0
-    , 10000
+    unless @reportingTimer?
+      @reportingTimer = setInterval =>
+        console.log("Killed " + @killed)
+        @killed = 0
+      , 10000
 
   reset: ->
     super
