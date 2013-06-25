@@ -12,9 +12,11 @@ class FrackingModel extends ABM.Model
   rockFractibility: 10
   wells: []
   reportingTimer: null
+  toRedraw: null
   setup: ->
     @anim.setRate 30, false
     @setFastPatches()
+    @patches.usePixels true
     @agentBreeds "gas"
 
     @setupGlobals()
@@ -23,6 +25,7 @@ class FrackingModel extends ABM.Model
 
     setTimeout =>
       @draw()
+      @refreshPatches = false
     , 100
 
     unless @reportingTimer?
@@ -58,6 +61,13 @@ class FrackingModel extends ABM.Model
         @killed++
       @toKill = []
     return true
+
+  redraw: ->
+    redrawSet = @u.clone @toRedraw
+    @toRedraw = []
+    setTimeout =>
+      @patches.drawScaledPixels @contexts.patches, redrawSet
+    , 1
 
   moveAgentTowardPipeCenter: (a)->
     return if a.hidden
@@ -128,6 +138,7 @@ class FrackingModel extends ABM.Model
       when "cleanWaterOpen" then [45, 141, 190]
       when "dirtyWaterWell" then [38,  90,  90]
       when "dirtyWaterOpen" then [38,  90,  90]
+    @toRedraw.push p
 
   setupGlobals: ->
     @airDepth   = Math.round(@patches.minY + @patches.maxY * 0.8)
@@ -137,6 +148,8 @@ class FrackingModel extends ABM.Model
     @baseDepth  = Math.round(@patches.minY + @patches.maxY * 0.2)
     @width  = @patches.maxX - @patches.minX
     @height = @patches.maxY - @patches.minY
+
+    @toRedraw = []
 
   setupPatches: ->
     for p in @patches
@@ -208,7 +221,7 @@ class FrackingModel extends ABM.Model
       for y in [@airDepth..(p.y)]
         @drillVertical(well)
         @drillVertical(well)
-    @draw()
+    @redraw()
 
   drillVertical: (well)->
     y = well.depth - 1
@@ -362,7 +375,7 @@ class Well
         for pn in p.n4
           if pn?
             n4processor(pn)
-    @model.draw()
+    @model.redraw()
     done()
 
   explode: ->
@@ -417,7 +430,7 @@ class Well
       # fill all the open patches nearby
       @filling.push p
 
-    @model.draw()
+    @model.redraw()
     @fill()
 
   frack: ->
@@ -498,10 +511,12 @@ class Well
     setTimeout =>
       for p in @patches
         p.color = c
+        @model.toRedraw.push p
 
       for p in @open
         p.color = c
+        @model.toRedraw.push p
 
-      @model.draw()
+      @model.redraw()
       @nextColor(colors)
     , 200
