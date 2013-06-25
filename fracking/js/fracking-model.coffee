@@ -399,9 +399,10 @@ class Well
       , (p)=>
         switch p.type
           when "open"
-            p.type = "cleanWaterOpen"
-            @model.setPatchColor p
-            @filling.push p
+            unless p.well? and p.well is @
+              p.type = "cleanWaterOpen"
+              @model.setPatchColor p
+              @filling.push p
     , 50
 
   flood: ->
