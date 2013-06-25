@@ -75,7 +75,7 @@ class FrackingModel extends ABM.Model
     return unless a.moveable
 
     # randomly spawn new gas
-    if @u.randomFloat(1000) < 1.8
+    if @u.randomFloat(1000) < (990/(a.well.length() + 50))
       a.hatch 1, @gas, (g)=>
         a.trapped = false
         placed = false
@@ -351,6 +351,9 @@ class Well
 
     @head.x = @x
     @head.y = @depth
+
+  length: ->
+    Math.abs(@x - @head.x) + Math.abs(@depth - @head.y)
 
   # add a center patch to the well
   addPatch: (p)->
