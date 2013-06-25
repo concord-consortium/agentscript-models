@@ -38,14 +38,16 @@ r<html>
         <button id="remove-fluid">Pump out fracking fluid</button>
       </div>
     </div>
-    <div id="model">
-      <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
-      <div id="layers"></div>
-      <div id="mouse-catcher"></div>
+    <div id="model-viewport">
+      <div id="model">
+        <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+        <div id="layers"></div>
+        <div id="mouse-catcher"></div>
+      </div>
     </div>
     <script>
       $(document).one('controls-ready', function() {
-        APP=new FrackingModel("layers", 1, 0, 799, 0, 444, false);
+        APP=new FrackingModel("layers", 1, 0, 799, 0, 1444, false);
         APP.setRootVars();
         var controls = new FrackingControls();
         controls.setup();

@@ -143,25 +143,27 @@ class FrackingModel extends ABM.Model
     @toRedraw.push p
 
   setupGlobals: ->
-    @airDepth   = Math.round(@patches.minY + @patches.maxY * 0.8)
-    @landDepth  = Math.round(@patches.minY + @patches.maxY * 0.75)
-    @waterDepth = Math.round(@patches.minY + @patches.maxY * 0.6)
-    @oilDepth   = Math.round(@patches.minY + @patches.maxY * 0.4)
-    @baseDepth  = Math.round(@patches.minY + @patches.maxY * 0.2)
     @width  = @patches.maxX - @patches.minX
     @height = @patches.maxY - @patches.minY
+    @airDepth   = @height - 90 # Math.round(@patches.minY + @patches.maxY * 0.8)
+    @landDepth  = @airDepth - 20 # Math.round(@patches.minY + @patches.maxY * 0.75)
+    @waterDepth = @landDepth - 50 # Math.round(@patches.minY + @patches.maxY * 0.6)
+    @oilDepth   = Math.round(@patches.minY + @waterDepth * 0.2)
+    @baseDepth  = Math.round(@patches.minY + @waterDepth * 0.1)
 
     @wells = []
     @toRedraw = []
 
   setupPatches: ->
+    shaleUpperModifier = @u.randomFloat(1.5)
+    shaleLowerModifier = @u.randomFloat(1.5)
     for p in @patches
       p.type = "n/a"
       p.color = [255,255,255]
       # continue if p.isOnEdge()
-      waterLowerDepth = (@waterDepth + @height * Math.sin(@u.degToRad(1.5*p.x - (@width / 4))) / 20)
-      shaleUpperDepth = (@oilDepth + @height * Math.sin(@u.degToRad(0.9 * p.x)) / 15)
-      shaleLowerDepth = (@baseDepth + @height * 0.9 * Math.sin(@u.degToRad((1.8 * p.x) + 45)) / 25 + (p.x / 14))
+      waterLowerDepth = (@waterDepth + @height * Math.sin(@u.degToRad(0.6*p.x - (@width / 4))) / 160)
+      shaleUpperDepth = (@oilDepth + @height * Math.sin(@u.degToRad(shaleUpperModifier * p.x)) / 30)
+      shaleLowerDepth = (@baseDepth + @height * 0.9 * Math.sin(@u.degToRad(shaleLowerModifier * p.x + 45)) / 50 + (p.x / 10))
       if p.y > @airDepth
         p.type = "air"
         @setPatchColor(p)

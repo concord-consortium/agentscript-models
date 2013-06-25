@@ -1,9 +1,18 @@
-#model {
+#model-viewport {
   position: absolute;
   top: 5px;
   left: 5px;
-  width: 800px;
+  width: 820px;
   height: 445px;
+  overflow: auto;
+}
+
+#model {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 800px;
+  height: 1445px;
 }
 
 #mouse-catcher {
