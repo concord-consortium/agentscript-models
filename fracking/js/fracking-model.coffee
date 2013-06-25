@@ -50,9 +50,11 @@ class FrackingModel extends ABM.Model
           a.trapped = false
           a.well = a.p.well
           a.hidden = not a.well.capped
+          a.moveable = a.well.capped
         when "open"
           a.well = a.p.well
           a.hidden = not a.well.capped
+          a.moveable = a.well.capped
       @moveAgentTowardPipeCenter(a)
 
     if @toKill.length > 0
@@ -70,7 +72,7 @@ class FrackingModel extends ABM.Model
     , 1
 
   moveAgentTowardPipeCenter: (a)->
-    return if a.hidden
+    return unless a.moveable
 
     # randomly spawn new gas
     if @u.randomFloat(1000) < 1.8
