@@ -520,4 +520,4 @@ class Well
 
       @model.redraw()
       @nextColor(colors)
-    , 200
+    , 100
