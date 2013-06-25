@@ -41,7 +41,11 @@ class FrackingModel extends ABM.Model
     for a in @gas
       continue unless a.p?
       switch a.p.type
-        when "well", "wellWall", "open"
+        when "well", "wellWall"
+          a.trapped = false
+          a.well = a.p.well
+          a.hidden = not a.well.capped
+        when "open"
           a.well = a.p.well
           a.hidden = not a.well.capped
       @moveAgentTowardPipeCenter(a)
@@ -66,6 +70,7 @@ class FrackingModel extends ABM.Model
           y = 2 + @u.randomInt(@height - 4)
           a.moveTo @patches.patchXY(x, y)
           placed = true
+        a.well = a.p.well
 
     return if a.trapped
     switch a.p.type
@@ -86,8 +91,20 @@ class FrackingModel extends ABM.Model
           # move horizontally
           a.heading = if a.x > a.well.head.x then @u.degToRad(180) else 0
         else
-          # move vertically toward the horizontal pipe center
-          a.heading = if a.y < a.well.depth then @u.degToRad(90) else @u.degToRad(270)
+          # if the well bends right, and we're left of the vertical shaft,
+          # aim for the center of the bend. Vice versa, as well.
+          if a.well.x < a.well.head.x and a.x > a.well.head.x
+            a.face @patches.patchXY a.well.head.x, a.well.depth
+          else if a.well.x > a.well.head.x and a.x < a.well.head.x
+            a.face @patches.patchXY a.well.head.x, a.well.depth
+          # if we're past the end of the horizontal pipe, aim for the end of the pipe
+          else if a.well.x > a.well.head.x and a.x > a.well.x
+            a.face @patches.patchXY a.well.x-2, a.well.depth
+          else if a.well.x < a.well.head.x and a.x < a.well.x
+            a.face @patches.patchXY a.well.x-2, a.well.depth
+          else
+            # move vertically toward the horizontal pipe center
+            a.heading = if a.y < a.well.depth then @u.degToRad(90) else @u.degToRad(270)
         a.forward 1
       else
         console.log("Hit layer: " + a.p.type)
