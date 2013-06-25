@@ -10,7 +10,7 @@ class FrackingModel extends ABM.Model
   height: 0
   shaleFractibility: 42
   rockFractibility: 10
-  wells: []
+  wells: null
   reportingTimer: null
   toRedraw: null
   setup: ->
@@ -149,6 +149,7 @@ class FrackingModel extends ABM.Model
     @width  = @patches.maxX - @patches.minX
     @height = @patches.maxY - @patches.minY
 
+    @wells = []
     @toRedraw = []
 
   setupPatches: ->
