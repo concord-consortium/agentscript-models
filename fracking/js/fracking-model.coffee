@@ -17,6 +17,7 @@ class FrackingModel extends ABM.Model
     @anim.setRate 30, false
     @setFastPatches()
     @patches.usePixels true
+    @refreshPatches = false
     @agentBreeds "gas"
 
     @setupGlobals()
@@ -25,7 +26,6 @@ class FrackingModel extends ABM.Model
 
     setTimeout =>
       @draw()
-      @refreshPatches = false
     , 100
 
     unless @reportingTimer?
@@ -124,7 +124,7 @@ class FrackingModel extends ABM.Model
         console.log("Hit layer: " + a.p.type)
 
 
-  setPatchColor: (p)->
+  setPatchColor: (p, redraw=true)->
     return unless p?
     p.color = switch p.type
       when "air"   then [ 93, 126, 186]
@@ -140,7 +140,7 @@ class FrackingModel extends ABM.Model
       when "cleanWaterOpen" then [45, 141, 190]
       when "dirtyWaterWell" then [38,  90,  90]
       when "dirtyWaterOpen" then [38,  90,  90]
-    @toRedraw.push p
+    @toRedraw.push p if redraw
 
   setupGlobals: ->
     @width  = @patches.maxX - @patches.minX
@@ -160,28 +160,30 @@ class FrackingModel extends ABM.Model
     for p in @patches
       p.type = "n/a"
       p.color = [255,255,255]
+      @toRedraw.push p
+      @redraw() if @toRedraw.length > 1000
       # continue if p.isOnEdge()
       waterLowerDepth = (@waterDepth + @height * Math.sin(@u.degToRad(0.6*p.x - (@width / 4))) / 160)
       shaleUpperDepth = (@oilDepth + @height * Math.sin(@u.degToRad(shaleUpperModifier * p.x)) / 30)
       shaleLowerDepth = (@baseDepth + @height * 0.9 * Math.sin(@u.degToRad(shaleLowerModifier * p.x + 45)) / 50 + (p.x / 10))
       if p.y > @airDepth
         p.type = "air"
-        @setPatchColor(p)
+        @setPatchColor(p, false)
       else if p.y > @landDepth and p.y <= @airDepth
         p.type = "land"
-        @setPatchColor(p)
+        @setPatchColor(p, false)
       else if @landDepth >= p.y > waterLowerDepth
         p.type = "water"
-        @setPatchColor(p) if @DEBUG
+        @setPatchColor(p, false) if @DEBUG
       else if waterLowerDepth >= p.y > shaleUpperDepth
         p.type = "rock"
-        @setPatchColor(p) if @DEBUG
+        @setPatchColor(p, false) if @DEBUG
       else if shaleUpperDepth >= p.y > shaleLowerDepth
         p.type = "shale"
-        @setPatchColor(p) if @DEBUG
+        @setPatchColor(p, false) if @DEBUG
       else if p.y <= shaleLowerDepth
         p.type = "rock"
-        @setPatchColor(p) if @DEBUG
+        @setPatchColor(p, false) if @DEBUG
 
   setupGas: ->
     @gas.create 4000, (a)=>
