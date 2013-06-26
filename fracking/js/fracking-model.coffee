@@ -11,7 +11,6 @@ class FrackingModel extends ABM.Model
   shaleFractibility: 42
   rockFractibility: 10
   wells: null
-  reportingTimer: null
   toRedraw: null
 
   setup: ->
@@ -24,12 +23,6 @@ class FrackingModel extends ABM.Model
     @setupGlobals()
     @setupPatches()
     @setupGas()
-
-    unless @reportingTimer?
-      @reportingTimer = setInterval =>
-        console.log("Killed " + @killed)
-        @killed = 0
-      , 10000
 
   reset: ->
     super
@@ -59,6 +52,11 @@ class FrackingModel extends ABM.Model
         a.die()
         @killed++
       @toKill = []
+
+    if @anim.ticks % 100 is 0
+      console.log("Killed " + @killed)
+      @killed = 0
+
     return true
 
   redraw: ->
