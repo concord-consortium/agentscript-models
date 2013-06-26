@@ -5,6 +5,7 @@ class FrackingControls
       @setupPlayback()
       @setupDrilling()
       @setupOperations()
+      @setupTriggers()
     else
       console.log("delaying...")
       setTimeout =>
@@ -22,6 +23,35 @@ class FrackingControls
       .click =>
         @resetModel()
       $("#playback").buttonset()
+
+  setupTriggers: ->
+    $(document).on Well.CAN_EXPLODE, =>
+      @updateControls()
+    $(document).on Well.EXPLODED, =>
+      @updateControls()
+    $(document).on Well.FILLED, =>
+      @updateControls()
+    $(document).on Well.FRACKED, =>
+      @updateControls()
+    $(document).on Well.CAPPED, =>
+      @updateControls()
+      @startModel()
+    @updateControls()
+
+  updateControls: ->
+    console.log "updating controls"
+    for c in ["#explosion","#fill-water","#fill-propane","#remove-fluid"]
+      $(c).button("disable")
+
+    for w in ABM.model.wells
+      continue if w.capped
+      if w.fracked
+        $("#remove-fluid").button("enable")
+      else if w.exploded and w.exploding.length <= 0
+        $("#fill-water").button("enable")
+        $("#fill-propane").button("enable")
+      else if w.goneHorizontal
+        $("#explosion").button("enable")
 
   timerId: null
   setupDrilling: ->
@@ -77,9 +107,10 @@ class FrackingControls
       ABM.model.explode()
     $("#fill-water").button().click =>
       ABM.model.flood()
+    $("#fill-propane").button().click =>
+      ABM.model.flood()
     $("#remove-fluid").button().click =>
       ABM.model.pumpOut()
-      @startModel()
 
   startStopModel: ->
     @stopModel() unless @startModel()

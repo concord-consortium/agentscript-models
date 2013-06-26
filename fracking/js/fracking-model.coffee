@@ -13,6 +13,7 @@ class FrackingModel extends ABM.Model
   wells: null
   reportingTimer: null
   toRedraw: null
+
   setup: ->
     @anim.setRate 30, false
     @setFastPatches()
@@ -294,6 +295,7 @@ class FrackingModel extends ABM.Model
           pw = @patches.patchXY x, y
           well.addExploding pw
         well.exploded = false
+        $(document).trigger Well.CAN_EXPLODE
 
       # Also expose the color of the 5 patches to top/bottom
       for y in [(well.depth - 7)..(well.depth + 7)]
@@ -349,6 +351,13 @@ class Well
   cappingInProgress: false
   capped: false
 
+  # some event types
+  @CAN_EXPLODE: "canExplode"
+  @EXPLODED: 'exploded'
+  @FILLED: 'filled'
+  @FRACKED: 'fracked'
+  @CAPPED: 'capped'
+
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays
     @head = {x: 0, y: 0}
@@ -402,6 +411,7 @@ class Well
     if @exploding.length <= 0
       @exploded = true if @explodingInProgress
       @explodingInProgress = false
+      $(document).trigger Well.EXPLODED
       return
     @explodingInProgress = true
     currentExploding = ABM.util.clone @exploding
@@ -427,6 +437,7 @@ class Well
     if @filling.length <= 0
       @filled = true if @fillingInProgress
       @fillingInProgress = false
+      $(document).trigger Well.FILLED
       setTimeout =>
         @cycleWaterColors()
       , 500
@@ -464,6 +475,7 @@ class Well
     if @fracking.length <= 0
       @fracked = true if @frackingInProgress
       @frackingInProgress = false
+      $(document).trigger Well.FRACKED
       return
     @frackingInProgress = true
     currentFracking = ABM.util.clone @fracking
@@ -503,6 +515,7 @@ class Well
       @filled = false
       @capped = true if @cappingInProgress
       @cappingInProgress = false
+      $(document).trigger Well.CAPPED
       return
     currentPumping = @pumping.slice(0,100)
     @pumping = @pumping.slice(100)
@@ -552,3 +565,5 @@ class Well
       @model.redraw()
       @nextColor(colors)
     , 100
+
+window.Well = Well
