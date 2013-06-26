@@ -31,18 +31,17 @@
   left: 5px;
 }
 
-#playback {
+.button-set {
   display: inline-block;
+  margin-rigth: 20px;
 }
 
-#interaction {
-  display: inline-block;
-  margin-left: 20px;
+#filling {
+  position: relative;
+  top: 2.6em;
+  text-align: center;
 }
 
-#drilling {
-  display: inline-block;
-}
 
 #drilling-header {
   text-align: center;

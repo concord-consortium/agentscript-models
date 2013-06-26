@@ -14,7 +14,7 @@ r<html>
   </head>
   <body>
     <div id="controls">
-      <div id="playback">
+      <div id="playback" class="button-set">
         <button id="reset-button">
           <i class="icon-step-backward"></i>
         </button>
@@ -23,7 +23,7 @@ r<html>
           <i class="icon-pause"></i>
         </button>
       </div>
-      <div id="interaction">
+      <div class="button-set">
         <div id="drilling">
           <div id="drilling-header">Drill</div>
           <div id="drilling-buttons">
@@ -32,9 +32,19 @@ r<html>
             <input type="checkbox" id="drill-right" /><label for="drill-right"><i class="icon-long-arrow-right"></i></label>
           </div>
         </div>
+      </div>
+      <div class="button-set">
         <button id="explosion">Set off explosions</button>
-        <button id="fill-water">Fill with water</button>
-        <button id="fill-propane">Fill with propane</button>
+      </div>
+      <div id="filling" class="button-set">
+        <div>
+          <button id="fill-water">Fill with water</button>
+        </div>
+        <div>
+          <button id="fill-propane">Fill with propane</button>
+        </div>
+      </div>
+      <div class="button-set">
         <button id="remove-fluid">Pump out fracking fluid</button>
       </div>
     </div>
