@@ -54,9 +54,11 @@ class FrackingControls
       @timerId = setInterval =>
         p = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
         ABM.model.drill p
-        depthBelowViewport = $("#model").height() - ($("#model-viewport").scrollTop() + $("#model-viewport").height()) - p.well.depth
-        if depthBelowViewport > -5
-          $("#model-viewport").animate {scrollTop: "+=" + (depthBelowViewport + 100)}, 50
+        well = ABM.model.findNearbyWell(p)
+        if well?
+          depthBelowViewport = $("#model").height() - ($("#model-viewport").scrollTop() + $("#model-viewport").height()) - well.depth
+          if depthBelowViewport > -5
+            $("#model-viewport").animate {scrollTop: "+=" + (depthBelowViewport + 100)}, 50
       , 100
     .bind 'mouseup mouseleave', =>
       clearInterval @timerId if @timerId?
