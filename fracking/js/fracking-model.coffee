@@ -293,6 +293,7 @@ class FrackingModel extends ABM.Model
         for y in [(well.depth+7)..(well.depth+3)]
           pw = @patches.patchXY x, y
           well.addExploding pw
+        well.exploded = false
 
       # Also expose the color of the 5 patches to top/bottom
       for y in [(well.depth - 7)..(well.depth + 7)]
@@ -445,7 +446,7 @@ class Well
     , 50
 
   flood: ->
-    return if @capped or not @exploded
+    return if @capped or @filled or @fracked or not @exploded
     for p in @patches
       p.type = "cleanWaterWell"
       @model.setPatchColor p
