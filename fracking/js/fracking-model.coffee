@@ -203,6 +203,11 @@ class FrackingModel extends ABM.Model
     # drill at the specified patch
     well = @findNearbyWell(p)
     if well?
+      return if well.explodingInProgress or
+        well.fillingInProgress or well.filled or
+        well.frackingInProgress or well.fracked or
+        well.cappingInProgress or well.capped
+
       # if we're up in the land area, go verticall
       # if p.y > @landDepth and p.y <= @airDepth
       if @drillDirection is "down" and not well.goneHorizontal
