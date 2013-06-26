@@ -106,9 +106,9 @@ class FrackingControls
     $("#explosion").button().click =>
       ABM.model.explode()
     $("#fill-water").button().click =>
-      ABM.model.flood()
+      ABM.model.floodWater()
     $("#fill-propane").button().click =>
-      ABM.model.flood()
+      ABM.model.floodPropane()
     $("#remove-fluid").button().click =>
       ABM.model.pumpOut()
 

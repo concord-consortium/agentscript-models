@@ -131,10 +131,9 @@ class FrackingModel extends ABM.Model
       when "wellWall" then [87, 87, 87]
       when "exploding" then [215, 50, 41]
       when "open"      then [0, 0, 0]
-      when "cleanWaterWell" then [45, 141, 190]
-      when "cleanWaterOpen" then [45, 141, 190]
-      when "dirtyWaterWell" then [38,  90,  90]
-      when "dirtyWaterOpen" then [38,  90,  90]
+      when "cleanWaterWell", "cleanWaterOpen" then [45, 141, 190]
+      when "dirtyWaterWell", "dirtyWaterOpen" then [38,  90,  90]
+      when "cleanPropaneWell", "cleanPropaneOpen", "dirtyPropaneWell", "dirtyPropaneOpen" then [122, 192, 99]
     @toRedraw.push p if redraw
 
   setupGlobals: ->
@@ -305,9 +304,13 @@ class FrackingModel extends ABM.Model
     for well in @wells
       well.explode()
 
-  flood: ->
+  floodWater: ->
     for well in @wells
-      well.flood()
+      well.floodWater()
+
+  floodPropane: ->
+    for well in @wells
+      well.floodPropane()
 
   pumpOut: ->
     for well in @wells
@@ -348,6 +351,10 @@ class Well
   fracked: false
   cappingInProgress: false
   capped: false
+
+  # fill types
+  @PROPANE: 'Propane'
+  @WATER:   'Water'
 
   # some event types
   @CAN_EXPLODE: "canExplode"
@@ -428,7 +435,7 @@ class Well
       , (p)=>
         p.type = "open"
         @addOpen p
-        @model.setPatchColor p 
+        @model.setPatchColor p
     , 50
 
   fill: ->
@@ -449,23 +456,30 @@ class Well
         switch p.type
           when "open"
             if p.well? and p.well is @
-              p.type = "cleanWaterOpen"
+              p.type = "clean" + @fillType + "Open"
               @model.setPatchColor p
               @filling.push p
     , 50
 
+  floodWater: ->
+    @fillType = Well.WATER
+    @flood()
+
+  floodPropane: ->
+    @fillType = Well.PROPANE
+    @flood()
+
   flood: ->
     return if @capped or @filled or @fracked or not @exploded
     for p in @patches
-      p.type = "cleanWaterWell"
+      p.type = "clean" + @fillType + "Well"
       @model.setPatchColor p
-
-    for p in @walls
-      # fill all the open patches nearby
-      @filling.push p
 
     @fillingInProgress = true
     @model.redraw()
+
+    @filling = ABM.util.clone @walls
+    console.log "Filling with " + @filling.length + " starters"
     @fill()
 
   frack: ->
@@ -478,15 +492,19 @@ class Well
     @frackingInProgress = true
     currentFracking = ABM.util.clone @fracking
     @fracking = []
+    fractibilityModifier = switch @fillType
+      when Well.WATER then 1.05
+      when Well.PROPANE then 1.1
+      else 1
     setTimeout =>
       @processSet currentFracking, =>
         @frack()
       , (p)=>
           switch p.type
             when "shale"
-              if ABM.util.randomInt(100) < (@model.shaleFractibility * 1.05)
+              if ABM.util.randomInt(100) < (@model.shaleFractibility * fractibilityModifier)
                 @fracking.push p
-                p.type = "dirtyWaterOpen"
+                p.type = "dirty" + @fillType + "Open"
                 @addOpen p
                 @model.setPatchColor p
     , 50
@@ -521,30 +539,33 @@ class Well
       @processSet currentPumping, =>
         @empty()
       , null, (p)=>
-        p.type = if p.type is "dirtyWaterWell" then "well" else "open"
+        p.type = if p.type is "dirty" + @fillType + "Well" then "well" else "open"
         @model.setPatchColor p
     , 50
 
   cycleWaterColors: ->
-    colors = [
-      [ 67, 160, 160],
-      [ 64, 152, 152],
-      [ 61, 144, 144],
-      [ 57, 137, 137],
-      [ 64, 129, 129],
-      [ 51, 121, 121],
-      [ 48, 113, 113],
-      [ 45, 105, 105],
-      [ 41,  98,  98],
-      [ 38,  90,  90]
-    ]
+    if @fillType is Well.WATER
+      colors = [
+        [ 67, 160, 160],
+        [ 64, 152, 152],
+        [ 61, 144, 144],
+        [ 57, 137, 137],
+        [ 64, 129, 129],
+        [ 51, 121, 121],
+        [ 48, 113, 113],
+        [ 45, 105, 105],
+        [ 41,  98,  98],
+        [ 38,  90,  90]
+      ]
+    else
+      colors = [[122, 192, 99]]
     @nextColor(colors)
 
   nextColor: (colors)->
     if colors.length <= 0
       setTimeout =>
         for p in @patches
-          p.type = "dirtyWaterWell"
+          p.type = "dirty" + @fillType + "Well"
 
         @fracking = ABM.util.clone @open
         @frack()
