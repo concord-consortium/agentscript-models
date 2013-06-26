@@ -24,10 +24,6 @@ class FrackingModel extends ABM.Model
     @setupPatches()
     @setupGas()
 
-    setTimeout =>
-      @draw()
-    , 100
-
     unless @reportingTimer?
       @reportingTimer = setInterval =>
         console.log("Killed " + @killed)
