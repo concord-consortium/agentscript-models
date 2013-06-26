@@ -322,19 +322,26 @@ window.FrackingModel = FrackingModel
 class Well
   x: 0,
   depth: 0,
-  goneHorizontal: false,
-  toTheRight: null,
-  filled: false
-  fracked: false
   head: null
   patches: null
   walls: null
   open: null
-  capped: false
   filling: null
   exploding: null
   fracking: null
   pumping: null
+
+  # state management
+  goneHorizontal: false
+  toTheRight: null
+  explodingInProgress: false
+  exploded: false
+  fillingInProgress: false
+  filled: false
+  frackingInProgress: false
+  fracked: false
+  cappingInProgress: false
+  capped: false
 
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays
@@ -385,7 +392,12 @@ class Well
     done()
 
   explode: ->
-    return unless @exploding.length > 0
+    return unless @goneHorizontal
+    if @exploding.length <= 0
+      @exploded = true if @explodingInProgress
+      @explodingInProgress = false
+      return
+    @explodingInProgress = true
     currentExploding = ABM.util.clone @exploding
     @exploding = []
     setTimeout =>
@@ -407,7 +419,8 @@ class Well
 
   fill: ->
     if @filling.length <= 0
-      @filled = true
+      @filled = true if @fillingInProgress
+      @fillingInProgress = false
       setTimeout =>
         @cycleWaterColors()
       , 500
@@ -427,7 +440,7 @@ class Well
     , 50
 
   flood: ->
-    return if @capped
+    return if @capped or not @exploded
     for p in @patches
       p.type = "cleanWaterWell"
       @model.setPatchColor p
@@ -436,12 +449,17 @@ class Well
       # fill all the open patches nearby
       @filling.push p
 
+    @fillingInProgress = true
     @model.redraw()
     @fill()
 
   frack: ->
-    return unless @filled and @fracking.length > 0
-    @fracked = true
+    return unless @filled
+    if @fracking.length <= 0
+      @fracked = true if @frackingInProgress
+      @frackingInProgress = false
+      return
+    @frackingInProgress = true
     currentFracking = ABM.util.clone @fracking
     @fracking = []
     setTimeout =>
@@ -471,12 +489,14 @@ class Well
       ABM.util.distance(b.x,b.y,@head.x,@head.y) - ABM.util.distance(a.x,a.y,@head.x,@head.y)
 
     @pumping = opens.concat interiors
+    @cappingInProgress = true
     @empty()
 
   empty: ->
     if @pumping.length <= 0
       @filled = false
-      @capped = true
+      @capped = true if @cappingInProgress
+      @cappingInProgress = false
       return
     currentPumping = @pumping.slice(0,100)
     @pumping = @pumping.slice(100)
