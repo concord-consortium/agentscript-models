@@ -234,6 +234,9 @@ class FrackingModel extends ABM.Model
     return if y < (@patches.minY - 5)
     return if well.goneHorizontal
 
+    lookahead = @patches.patchXY(well.x, y-5)
+    return if lookahead? and @u.contains(["wellWall","open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type)
+
     #draw the well
     for x in [(well.x - 1)..(well.x + 1)]
       pw = @patches.patchXY x, y
@@ -272,6 +275,10 @@ class FrackingModel extends ABM.Model
     else
       x = well.x + (if well.toTheRight then 1 else -1)
       return if x > (@patches.maxX - 1) or x < (@patches.minX + 1)
+
+      lx = well.x + (if well.toTheRight then 5 else -5)
+      lookahead = @patches.patchXY(lx, well.depth)
+      return if lookahead? and @u.contains(["wellWall","open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type)
 
       #draw the well
       for y in [(well.depth - 1)..(well.depth + 1)]
