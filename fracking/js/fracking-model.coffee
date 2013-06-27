@@ -489,7 +489,6 @@ class Well
     @model.redraw()
 
     @filling = ABM.util.clone @walls
-    console.log "Filling with " + @filling.length + " starters"
     @fill()
 
   frack: ->

@@ -59,21 +59,21 @@ class FrackingControls
       @stopDrilling("left")
       if $("#drill-left")[0]?.checked
         ABM.model.drillDirection = "left"
-      else 
+      else
         ABM.model.drillDirection = null
 
     $("#drill-down").button().click =>
       @stopDrilling("down")
       if $("#drill-down")[0]?.checked
         ABM.model.drillDirection = "down"
-      else 
+      else
         ABM.model.drillDirection = null
 
     $("#drill-right").button().click =>
       @stopDrilling("right")
       if $("#drill-right")[0]?.checked
         ABM.model.drillDirection = "right"
-      else 
+      else
         ABM.model.drillDirection = null
 
     $("#drilling-buttons").buttonset()
