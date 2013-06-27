@@ -95,22 +95,25 @@ class FrackingModel extends ABM.Model
           a.heading = if a.x > a.well.head.x then @u.degToRad(180) else 0
         a.forward 1
       when "shale", "rock", "wellWall", "open"
-        # move to center of the pipe
-        if Math.abs(a.x - a.well.head.x) == 2
-          # move horizontally
+        if a.y > a.well.depth and -0.5 < (a.x - a.well.head.x) < 0.5
+          # somehow we're right under the well head, but not on a well patch...
+          # move vertically toward the well head anyway
+          a.heading = @u.degToRad(90)
+        else if a.y > a.well.depth and Math.abs(a.x - a.well.head.x) <= 2
+          # move horizontally to the center of the vertical shaft
           a.heading = if a.x > a.well.head.x then @u.degToRad(180) else 0
         else
           # if the well bends right, and we're left of the vertical shaft,
           # aim for the center of the bend. Vice versa, as well.
-          if a.well.x < a.well.head.x and a.x > a.well.head.x
-            a.face @patches.patchXY a.well.head.x, a.well.depth
-          else if a.well.x > a.well.head.x and a.x < a.well.head.x
-            a.face @patches.patchXY a.well.head.x, a.well.depth
+          if not a.well.toTheRight and a.x > a.well.head.x
+            a.face @patches.patchXY a.well.head.x, a.well.depth+1
+          else if a.well.toTheRight and a.x < a.well.head.x
+            a.face @patches.patchXY a.well.head.x, a.well.depth+1
           # if we're past the end of the horizontal pipe, aim for the end of the pipe
-          else if a.well.x > a.well.head.x and a.x > a.well.x
+          else if a.well.toTheRight and a.x > a.well.x
             a.face @patches.patchXY a.well.x-2, a.well.depth
-          else if a.well.x < a.well.head.x and a.x < a.well.x
-            a.face @patches.patchXY a.well.x-2, a.well.depth
+          else if not a.well.toTheRight and a.x < a.well.x
+            a.face @patches.patchXY a.well.x+2, a.well.depth
           else
             # move vertically toward the horizontal pipe center
             a.heading = if a.y < a.well.depth then @u.degToRad(90) else @u.degToRad(270)
