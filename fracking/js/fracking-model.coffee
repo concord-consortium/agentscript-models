@@ -549,7 +549,7 @@ class Well
       @processSet currentPumping, =>
         @empty()
       , null, (p)=>
-        p.type = if p.type is "dirty" + @fillType + "Well" then "well" else "open"
+        p.type = if p.type.match(/.*Well$/) then "well" else "open"
         @model.setPatchColor p
     , 50
 
