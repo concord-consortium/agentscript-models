@@ -10,6 +10,7 @@ class FrackingModel extends ABM.Model
   height: 0
   shaleFractibility: 42
   rockFractibility: 10
+  drillSpeed: 3
   wells: null
   toRedraw: null
 
@@ -213,22 +214,21 @@ class FrackingModel extends ABM.Model
       # if p.y > @landDepth and p.y <= @airDepth
       if @drillDirection is "down" and not well.goneHorizontal
         # drill one deeper
-        @drillVertical(well)
-        @drillVertical(well)
+        for i in [0...@drillSpeed]
+          @drillVertical(well)
       else if @drillDirection isnt "down"
         if not well.toTheRight?
           well.toTheRight = (@drillDirection is "right")
 
         if (@drillDirection is "right" and well.toTheRight) or (@drillDirection is "left" and not well.toTheRight)
           # drill horizontally
-          @drillHorizontal(well)
-          @drillHorizontal(well)
+          for i in [0...@drillSpeed]
+            @drillHorizontal(well)
     else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
       well = new Well @, p.x, @airDepth+1
       @wells.push well
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
-        @drillVertical(well)
         @drillVertical(well)
     @redraw()
 
