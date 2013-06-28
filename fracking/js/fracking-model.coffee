@@ -54,9 +54,8 @@ class FrackingModel extends ABM.Model
         @killed++
       @toKill = []
 
-    if @anim.ticks % 100 is 0
-      console.log("Killed " + @killed)
-      @killed = 0
+    if @anim.ticks % 150 is 0
+      $(document).trigger Well.YEAR_ELAPSED
 
     return true
 
@@ -372,6 +371,7 @@ class Well
   @FILLED: 'filled'
   @FRACKED: 'fracked'
   @CAPPED: 'capped'
+  @YEAR_ELAPSED: "yearElapsed"
 
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays

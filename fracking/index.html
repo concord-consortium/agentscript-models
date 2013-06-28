@@ -5,10 +5,13 @@ r<html>
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="http://lab.concord.org/vendor/d3/d3.js"></script>
+    <script src="../lib/lab.grapher.js"></script>
     <script src="../lib/agentscript/agentscript.js"></script>
     <script src="../lib/agentscript/coffee-script.js"></script>
 
     <link href="css/fracking.css" rel="stylesheet" type="text/css" />
+    <link href="css/graph.css" rel="stylesheet" type="text/css" />
     <script src="js/fracking-model.coffee" type="text/coffeescript"></script>
     <script src="js/fracking-controls.coffee" type="text/coffeescript"></script>
   </head>
@@ -55,6 +58,7 @@ r<html>
         <div id="mouse-catcher"></div>
       </div>
     </div>
+    <div id='output-graph' class="graph"></div>
     <script>
       $(document).one('controls-ready', function() {
         APP=new FrackingModel("layers", 1, 0, 799, 0, 1444, false);

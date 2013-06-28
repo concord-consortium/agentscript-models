@@ -6,6 +6,7 @@ class FrackingControls
       @setupDrilling()
       @setupOperations()
       @setupTriggers()
+      @setupGraph()
     else
       console.log("delaying...")
       setTimeout =>
@@ -39,7 +40,6 @@ class FrackingControls
     @updateControls()
 
   updateControls: ->
-    console.log "updating controls"
     for c in ["#explosion","#fill-water","#fill-propane","#remove-fluid"]
       $(c).button("disable")
 
@@ -111,6 +111,31 @@ class FrackingControls
       ABM.model.floodPropane()
     $("#remove-fluid").button().click =>
       ABM.model.pumpOut()
+
+  outputGraph: null
+  setupGraph: ->
+    @outputGraph = Lab.grapher.Graph '#output-graph',
+      title:  "Output vs Time (model ticks)"
+      xlabel: "Time (years)"
+      ylabel: "Methane"
+      xmax:   20
+      xmin:   0
+      ymax:   1000
+      ymin:   0
+      xTickCount: 4
+      yTickCount: 5
+      xFormatter: "3.3r"
+      sample: 1
+      realTime: true
+      fontScaleRelativeToParent: true
+
+    # start the graph at 0,0
+    @outputGraph.addSamples [0]
+
+    $(document).on Well.YEAR_ELAPSED, =>
+      killed = ABM.model.killed
+      ABM.model.killed = 0
+      @outputGraph.addSamples [killed] if killed > 0
 
   startStopModel: ->
     @stopModel() unless @startModel()
