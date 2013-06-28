@@ -90,10 +90,12 @@ class FrackingModel extends ABM.Model
         if -0.5 < (a.x - a.well.head.x) < 0.5
           # move vertically toward the well head
           a.heading = @u.degToRad(90)
+          a.forward 3
         else
           # move horizontally
-          a.heading = if a.x > a.well.head.x then @u.degToRad(180) else 0
-        a.forward 1
+          dx = a.x - a.well.head.x
+          a.heading = if dx > 0 then @u.degToRad(180) else 0
+          if Math.abs(dx) > 3 then a.forward(3) else a.forward(Math.abs(dx))
       when "shale", "rock", "wellWall", "open"
         if a.y > a.well.depth and -0.5 < (a.x - a.well.head.x) < 0.5
           # somehow we're right under the well head, but not on a well patch...
