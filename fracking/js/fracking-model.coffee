@@ -20,6 +20,8 @@ class FrackingModel extends ABM.Model
     @setFastPatches()
     @patches.usePixels true
     @refreshPatches = false
+    @setTextParams {name: "drawing"}, "10px sans-serif"
+    @setLabelParams {name: "drawing"}, [255,255,255], [0,-10]
     @agentBreeds "gas"
 
     @setupGlobals()
@@ -332,6 +334,8 @@ class FrackingModel extends ABM.Model
 window.FrackingModel = FrackingModel
 
 class Well
+  @IDX: 0
+  id: 0
   x: 0
   depth: 0
   tickOpened: 0
@@ -370,6 +374,7 @@ class Well
 
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays
+    @id = ++Well.IDX
     @head = {x: 0, y: 0}
     @patches = []
     @walls = []
@@ -381,6 +386,11 @@ class Well
 
     @head.x = @x
     @head.y = @depth
+
+    p = @model.patches.patchXY(@head.x, @head.y + 1)
+    p.label = "" + @id
+    p.drawLabel(@model.contexts.drawing)
+    @model.draw()
 
   length: ->
     Math.abs(@x - @head.x) + Math.abs(@depth - @head.y)
