@@ -115,10 +115,10 @@ class FrackingControls
   outputGraph: null
   setupGraph: ->
     @outputGraph = Lab.grapher.Graph '#output-graph',
-      title:  "Output vs Time (model ticks)"
+      title:  "Combined Output vs Time (years)"
       xlabel: "Time (years)"
       ylabel: "Methane"
-      xmax:   20
+      xmax:   40
       xmin:   0
       ymax:   1000
       ymin:   0
