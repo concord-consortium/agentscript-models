@@ -11,6 +11,7 @@ class FrackingModel extends ABM.Model
   shaleFractibility: 42
   rockFractibility: 10
   drillSpeed: 3
+  ticksPerYear: 100
   wells: null
   toRedraw: null
 
@@ -48,13 +49,16 @@ class FrackingModel extends ABM.Model
           a.moveable = a.well.capped
       @moveAgentTowardPipeCenter(a)
 
+    for well in @wells
+      well.spawnNewGas()
+
     if @toKill.length > 0
       for a in @toKill
         a.die()
         @killed++
       @toKill = []
 
-    if @anim.ticks % 150 is 0
+    if @anim.ticks % @ticksPerYear is 0
       $(document).trigger Well.YEAR_ELAPSED
 
     return true
@@ -68,18 +72,6 @@ class FrackingModel extends ABM.Model
 
   moveAgentTowardPipeCenter: (a)->
     return unless a.moveable
-
-    # randomly spawn new gas
-    if @u.randomFloat(1000) < (990/(a.well.length() + 50))
-      a.hatch 1, @gas, (g)=>
-        a.trapped = false
-        placed = false
-        while not placed or a.p.type isnt "open"
-          x = 2 + @u.randomInt(@width - 4)
-          y = 2 + @u.randomInt(@height - 4)
-          a.moveTo @patches.patchXY(x, y)
-          placed = true
-        a.well = a.p.well
 
     return if a.trapped
     switch a.p.type
@@ -340,8 +332,9 @@ class FrackingModel extends ABM.Model
 window.FrackingModel = FrackingModel
 
 class Well
-  x: 0,
-  depth: 0,
+  x: 0
+  depth: 0
+  tickOpened: 0
   head: null
   patches: null
   walls: null
@@ -391,6 +384,10 @@ class Well
 
   length: ->
     Math.abs(@x - @head.x) + Math.abs(@depth - @head.y)
+
+  age: ->
+    age = Math.ceil((@model.anim.ticks - @tickOpened) / @model.ticksPerYear)
+    return if age is 0 then 1 else age
 
   # add a center patch to the well
   addPatch: (p)->
@@ -543,6 +540,7 @@ class Well
       @capped = true if @cappingInProgress
       @cappingInProgress = false
       $(document).trigger Well.CAPPED
+      @tickOpened = @model.anim.ticks
       return
     currentPumping = @pumping.slice(0,100)
     @pumping = @pumping.slice(100)
@@ -595,5 +593,28 @@ class Well
       @model.redraw()
       @nextColor(colors)
     , 100
+
+  spawnNewGas: ->
+    # spawn new gas at a rate dependent on the age of the well
+    # this ensures we get a nice reduction curve over time
+    numToSpawn = 0
+    age = @age()
+    if age <=2
+      numToSpawn = @open.length/2000
+    else
+      numToSpawn = @open.length/(2000 + (300*(age-2)))
+    # else
+    #   numToSpawn = @open.length/(5000 + (300*age))
+    if numToSpawn > 0
+      @model.gas.create Math.ceil(numToSpawn), (g)=>
+        g.moveTo ABM.util.oneOf @open
+        g.well = @
+        g.trapped = false
+        g.color = [255, 0, 0]
+        g.heading = ABM.util.degToRad(180)
+        g.size = 4
+        g.moveable = false
+        g.shape = "triangle"
+        g.hidden = false
 
 window.Well = Well
