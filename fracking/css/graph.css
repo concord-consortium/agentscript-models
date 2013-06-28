@@ -1,4 +1,4 @@
-#output-graph {
+#output-graphs {
   position: absolute;
   top: 15px;
   left: 830px;
@@ -9,6 +9,7 @@ div.graph {
    border-radius: 0.25em;
    width: 360px;
    height: 140px;
+   margin-bottom: 10px;
 }
 
 .graph {

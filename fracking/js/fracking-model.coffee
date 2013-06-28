@@ -15,6 +15,8 @@ class FrackingModel extends ABM.Model
   wells: null
   toRedraw: null
 
+  @YEAR_ELAPSED: "modelYearElapsed"
+
   setup: ->
     @anim.setRate 30, false
     @setFastPatches()
@@ -51,17 +53,20 @@ class FrackingModel extends ABM.Model
           a.moveable = a.well.capped
       @moveAgentTowardPipeCenter(a)
 
-    for well in @wells
-      well.spawnNewGas()
-
     if @toKill.length > 0
       for a in @toKill
         a.die()
         @killed++
+        a.well.killed++
       @toKill = []
 
+    for well in @wells
+      well.spawnNewGas()
+      if well.tickAge() % @ticksPerYear is 0
+        $(document).trigger Well.YEAR_ELAPSED, well
+
     if @anim.ticks % @ticksPerYear is 0
-      $(document).trigger Well.YEAR_ELAPSED
+      $(document).trigger FrackingModel.YEAR_ELAPSED
 
     return true
 
@@ -339,6 +344,7 @@ class Well
   x: 0
   depth: 0
   tickOpened: 0
+  killed: 0
   head: null
   patches: null
   walls: null
@@ -365,12 +371,13 @@ class Well
   @WATER:   'Water'
 
   # some event types
+  @CREATED: "wellCreated"
   @CAN_EXPLODE: "canExplode"
   @EXPLODED: 'exploded'
   @FILLED: 'filled'
   @FRACKED: 'fracked'
   @CAPPED: 'capped'
-  @YEAR_ELAPSED: "yearElapsed"
+  @YEAR_ELAPSED: "wellYearElapsed"
 
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays
@@ -392,12 +399,17 @@ class Well
     p.drawLabel(@model.contexts.drawing)
     @model.draw()
 
+    $(document).trigger Well.CREATED, @
+
   length: ->
     Math.abs(@x - @head.x) + Math.abs(@depth - @head.y)
 
   age: ->
-    age = Math.ceil((@model.anim.ticks - @tickOpened) / @model.ticksPerYear)
+    age = Math.ceil(@tickAge() / @model.ticksPerYear)
     return if age is 0 then 1 else age
+
+  tickAge: ->
+    @model.anim.ticks - @tickOpened
 
   # add a center patch to the well
   addPatch: (p)->

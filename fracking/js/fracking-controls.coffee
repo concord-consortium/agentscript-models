@@ -113,8 +113,10 @@ class FrackingControls
       ABM.model.pumpOut()
 
   outputGraph: null
+  outputGraphs: null
   setupGraph: ->
-    @outputGraph = Lab.grapher.Graph '#output-graph',
+    @outputGraphs = []
+    defaultOptions =
       title:  "Combined Output vs Time (years)"
       xlabel: "Time (years)"
       ylabel: "Methane"
@@ -129,13 +131,27 @@ class FrackingControls
       realTime: true
       fontScaleRelativeToParent: true
 
+    @outputGraph = Lab.grapher.Graph '#output-graph', defaultOptions
+
     # start the graph at 0,0
     @outputGraph.addSamples [0]
 
-    $(document).on Well.YEAR_ELAPSED, =>
+    $(document).on FrackingModel.YEAR_ELAPSED, =>
       killed = ABM.model.killed
       ABM.model.killed = 0
       @outputGraph.addSamples [killed] if killed > 0
+
+    $(document).on Well.YEAR_ELAPSED, (evt,well)=>
+      killed = well.killed
+      well.killed = 0
+      @outputGraphs[well.id].addSamples [killed] if killed > 0
+
+    $(document).on Well.CREATED, (evt,well)=>
+      # Add the graph to the DOM
+      $("#output-graphs").append "<div id='output-graph-" + well.id + "' class='graph'></div>"
+      # init the graph
+      defaultOptions.title = "Well " + well.id + " Output vs Time (years)"
+      @outputGraphs[well.id] = Lab.grapher.Graph '#output-graph-'+well.id, defaultOptions
 
   startStopModel: ->
     @stopModel() unless @startModel()
