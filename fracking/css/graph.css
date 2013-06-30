@@ -2,6 +2,9 @@
   position: absolute;
   top: 15px;
   left: 830px;
+  width: 380px;
+  height: 435px;
+  overflow: auto;
 }
 
 div.graph {
