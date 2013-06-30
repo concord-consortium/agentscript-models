@@ -349,6 +349,7 @@ class Well
   patches: null
   walls: null
   open: null
+  openShale: null
   filling: null
   exploding: null
   fracking: null
@@ -386,6 +387,7 @@ class Well
     @patches = []
     @walls = []
     @open = []
+    @openShale = []
     @filling = []
     @exploding = []
     @fracking = []
@@ -427,6 +429,7 @@ class Well
     p.well = @
 
   addExploding: (p)->
+    @openShale.push p if p.type is "shale"
     p.type = "exploding"
     p.well = @
     @model.setPatchColor p
@@ -617,19 +620,20 @@ class Well
     , 100
 
   spawnNewGas: ->
+    return unless @capped
     # spawn new gas at a rate dependent on the age of the well
     # this ensures we get a nice reduction curve over time
     numToSpawn = 0
     age = @age()
     if age <=2
-      numToSpawn = @open.length/2000
+      numToSpawn = @openShale.length/2000
     else
-      numToSpawn = @open.length/(2000 + (300*(age-2)))
+      numToSpawn = @openShale.length/(2000 + (300*(age-2)))
     # else
-    #   numToSpawn = @open.length/(5000 + (300*age))
+    #   numToSpawn = @openShale.length/(5000 + (300*age))
     if numToSpawn > 0
       @model.gas.create Math.ceil(numToSpawn), (g)=>
-        g.moveTo ABM.util.oneOf @open
+        g.moveTo ABM.util.oneOf @openShale
         g.well = @
         g.trapped = false
         g.color = [255, 0, 0]
