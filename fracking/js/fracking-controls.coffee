@@ -44,9 +44,11 @@ class FrackingControls
       $(c).button("disable")
 
     for w in ABM.model.wells
-      continue if w.capped
+      continue if w.capped or w.explodingInProgress or w.fillingInProgress or w.frackingInProgress or w.cappingInProgress
       if w.fracked
         $("#remove-fluid").button("enable")
+      else if w.filled
+        # do nothing - we're automatically forwarded to the fracking stage
       else if w.exploded and w.exploding.length <= 0
         $("#fill-water").button("enable")
         $("#fill-propane").button("enable")
@@ -104,12 +106,18 @@ class FrackingControls
 
   setupOperations: ->
     $("#explosion").button().click =>
+      $("#explosion").button("disable")
       ABM.model.explode()
     $("#fill-water").button().click =>
+      $("#fill-water").button("disable")
+      $("#fill-propane").button("disable")
       ABM.model.floodWater()
     $("#fill-propane").button().click =>
+      $("#fill-water").button("disable")
+      $("#fill-propane").button("disable")
       ABM.model.floodPropane()
     $("#remove-fluid").button().click =>
+      $("#remove-fluid").button("disable")
       ABM.model.pumpOut()
 
   outputGraph: null
