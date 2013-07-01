@@ -195,4 +195,4 @@ class FrackingControls
     return if evt.offsetY? then evt.offsetY else (evt.pageY - target.offset().top)
 
 window.FrackingControls = FrackingControls
-$(document).trigger('controls-ready')
+$(document).trigger 'fracking-controls-loaded'

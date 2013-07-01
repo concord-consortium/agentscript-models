@@ -63,11 +63,22 @@
       <div id='output-graph' class="graph"></div>
     </div>
     <script>
-      $(document).one('controls-ready', function() {
+      var modelReady = false, controls = null;
+      $(document).one('fracking-model-loaded', function() {
         APP=new FrackingModel("layers", 1, 0, 799, 0, 1444, false);
         APP.setRootVars();
-        var controls = new FrackingControls();
-        controls.setup();
+      });
+      $(document).one('model-ready', function() {
+        if (controls !== null) {
+          controls.setup();
+        }
+        modelReady = true;
+      });
+      $(document).one('fracking-controls-loaded', function() {
+        controls = new FrackingControls();
+        if (modelReady) {
+          controls.setup();
+        }
       });
     </script>
   </body>

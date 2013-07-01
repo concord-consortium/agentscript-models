@@ -38,6 +38,8 @@ class FrackingModel extends ABM.Model
     @setupPatches()
     @setupGas()
 
+    $(document).trigger 'model-ready'
+
   reset: ->
     super
     @setup()
@@ -690,3 +692,4 @@ class Well
         g.hidden = false
 
 window.Well = Well
+$(document).trigger 'fracking-model-loaded'
