@@ -14,6 +14,14 @@ class FrackingModel extends ABM.Model
   ticksPerYear: 100
   wells: null
   toRedraw: null
+  toMoveToWaterGas: null
+
+  leaks: false
+  leakProbability: 10 # 1/N wells will leak
+  leakRate: 100 # 1/N methane turtles will leak into the water layer
+
+  toKill: null
+  killed: 0
 
   @YEAR_ELAPSED: "modelYearElapsed"
 
@@ -24,8 +32,8 @@ class FrackingModel extends ABM.Model
     @refreshPatches = false
     @setTextParams {name: "drawing"}, "10px sans-serif"
     @setLabelParams {name: "drawing"}, [255,255,255], [0,-10]
-    @agentBreeds "gas"
 
+    @setupAgents()
     @setupGlobals()
     @setupPatches()
     @setupGas()
@@ -35,8 +43,14 @@ class FrackingModel extends ABM.Model
     @setup()
     @anim.draw()
 
-  toKill: []
-  killed: 0
+  setupAgents: ->
+    @agentBreeds "gas waterGas"
+
+    for agents in [@gas, @waterGas]
+      agents.setDefaultShape "circle"
+      agents.setDefaultSize 2
+      agents.setDefaultColor [255, 0, 0]
+
   step: ->
     # move gas turtles to the surface, if possible
     for a in @gas
@@ -52,6 +66,16 @@ class FrackingModel extends ABM.Model
           a.hidden = not a.well.capped
           a.moveable = a.well.capped
       @moveAgentTowardPipeCenter(a)
+
+    for a in @waterGas
+      @moveWaterGas(a)
+
+    if @toMoveToWaterGas.length > 0
+      for a in @toMoveToWaterGas
+        well = a.well
+        res = a.changeBreed @waterGas
+        res[0].well = well
+      @toMoveToWaterGas = []
 
     if @toKill.length > 0
       for a in @toKill
@@ -87,9 +111,14 @@ class FrackingModel extends ABM.Model
         return
       when "well"
         if -0.5 < (a.x - a.well.head.x) < 0.5
-          # move vertically toward the well head
-          a.heading = @u.degToRad(90)
-          a.forward 6
+          if a.well.leaks and @u.randomInt(@leakRate) == 0 and (pWater = @patches.patchXY(a.x + (if @u.randomInt(2) is 0 then 3 else -3), a.y))?.type is "water"
+            # Leak into the water
+            a.moveTo pWater
+            @toMoveToWaterGas.push a
+          else
+            # move vertically toward the well head
+            a.heading = @u.degToRad(90)
+            a.forward @u.randomInt(10)+3
         else
           # move horizontally
           dx = a.x - a.well.head.x
@@ -122,6 +151,23 @@ class FrackingModel extends ABM.Model
       else
         console.log("Hit layer: " + a.p.type)
 
+  moveWaterGas: (a)->
+    return if a.hidden
+    if @u.colorsEqual a.p.color, [255,255,255]
+      a.hidden = true
+      return
+    # Slowly diffuse through the water layer away from the well
+    n = @u.randomInt 8
+    if a.x > a.well.head.x
+      while n is 0 or n is 3 or n is 5
+        n = @u.randomInt 8
+    else
+      while n is 2 or n is 4 or n is 7
+        n = @u.randomInt 8
+    pWater = a.p.n[n]
+    if pWater? and pWater.type is "water"
+      a.face pWater
+      a.forward 0.05
 
   setPatchColor: (p, redraw=true)->
     return unless p?
@@ -151,6 +197,8 @@ class FrackingModel extends ABM.Model
 
     @wells = []
     @toRedraw = []
+    @toKill = []
+    @toMoveToWaterGas = []
 
   setupPatches: ->
     shaleUpperModifier = @u.randomFloat(1.5)
@@ -191,12 +239,9 @@ class FrackingModel extends ABM.Model
         y = 2 + @u.randomInt(@height - 4)
         a.moveTo @patches.patchXY(x, y)
         placed = true
-      a.color = [255, 0, 0]
       a.heading = @u.degToRad(180)
-      a.size = 4
       a.moveable = false
       a.trapped = (@u.randomInt(100) <= 14)
-      a.shape = "triangle"
       a.hidden = not @DEBUG
 
   drillDirection: null
@@ -226,6 +271,8 @@ class FrackingModel extends ABM.Model
             @drillHorizontal(well)
     else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
       well = new Well @, p.x, @airDepth+1
+      if @leaks and @u.randomInt(@leakProbability) == 0
+        well.leaks = true
       @wells.push well
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
@@ -354,6 +401,8 @@ class Well
   exploding: null
   fracking: null
   pumping: null
+
+  leaks: false
 
   # state management
   goneHorizontal: false
@@ -636,11 +685,8 @@ class Well
         g.moveTo ABM.util.oneOf @openShale
         g.well = @
         g.trapped = false
-        g.color = [255, 0, 0]
         g.heading = ABM.util.degToRad(180)
-        g.size = 4
         g.moveable = false
-        g.shape = "triangle"
         g.hidden = false
 
 window.Well = Well
