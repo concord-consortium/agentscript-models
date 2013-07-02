@@ -454,6 +454,7 @@ class Well
 
     p = @model.patches.patchXY(@head.x, @head.y + 1)
     p.label = "" + @id
+    p.label += "*" if @leaks and FrackingModel.DEBUG
     p.drawLabel(@model.contexts.drawing)
     @model.draw()
 
