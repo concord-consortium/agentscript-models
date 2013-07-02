@@ -1,5 +1,5 @@
 class FrackingModel extends ABM.Model
-  DEBUG: false
+  @DEBUG: false
   u: ABM.util
   airDepth: 0
   landDepth: 0
@@ -227,16 +227,16 @@ class FrackingModel extends ABM.Model
         @setPatchColor(p, false)
       else if @landDepth >= p.y > waterLowerDepth
         p.type = "water"
-        @setPatchColor(p, false) if @DEBUG
+        @setPatchColor(p, false) if FrackingModel.DEBUG
       else if waterLowerDepth >= p.y > shaleUpperDepth
         p.type = "rock"
-        @setPatchColor(p, false) if @DEBUG
+        @setPatchColor(p, false) if FrackingModel.DEBUG
       else if shaleUpperDepth >= p.y > shaleLowerDepth
         p.type = "shale"
-        @setPatchColor(p, false) if @DEBUG
+        @setPatchColor(p, false) if FrackingModel.DEBUG
       else if p.y <= shaleLowerDepth
         p.type = "rock"
-        @setPatchColor(p, false) if @DEBUG
+        @setPatchColor(p, false) if FrackingModel.DEBUG
 
   setupGas: ->
     @gas.create 4000, (a)=>
@@ -249,7 +249,7 @@ class FrackingModel extends ABM.Model
       a.heading = @u.degToRad(180)
       a.moveable = false
       a.trapped = (@u.randomInt(100) <= 14)
-      a.hidden = not @DEBUG
+      a.hidden = not FrackingModel.DEBUG
 
   drillDirection: null
   drill: (p)->
