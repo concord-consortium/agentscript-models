@@ -207,6 +207,9 @@ class FrackingModel extends ABM.Model
     @toKill = []
     @toMoveToWaterGas = []
 
+    @drillSpeed = 10 if FrackingModel.DEBUG
+    @leakProbability = 1 if FrackingModel.DEBUG
+
   setupPatches: ->
     shaleUpperModifier = @u.randomFloat(1.5)
     shaleLowerModifier = @u.randomFloat(1.5)
