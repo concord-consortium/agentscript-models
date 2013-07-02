@@ -1,9 +1,11 @@
 class LeakingFrackingControls extends FrackingControls
   pollutionGraph: null
   pollutionBaseline: 20
+  leakingSetupCompleted: false
   setup: ->
     super
-    @setupPollutionGraph()
+    @setupPollutionGraph() unless @leakingSetupCompleted
+    @leakingSetupCompleted = true
 
   setupPollutionGraph: ->
     @pollutionGraph = Lab.grapher.Graph '#pollution-graph',
