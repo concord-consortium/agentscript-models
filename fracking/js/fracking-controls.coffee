@@ -160,6 +160,7 @@ class FrackingControls
       # init the graph
       defaultOptions.title = "Well " + well.id + " Output vs Time (years)"
       @outputGraphs[well.id] = Lab.grapher.Graph '#output-graph-'+well.id, defaultOptions
+      @outputGraphs[well.id].addSamples [0]
 
   startStopModel: ->
     @stopModel() unless @startModel()
