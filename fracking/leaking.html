@@ -72,7 +72,7 @@
         APP.leaks = true;
         APP.leakProbability = 10;
       });
-      $(document).one('model-ready', function() {
+      $(document).on('model-ready', function() {
         if (controls !== null) {
           controls.setup();
         }

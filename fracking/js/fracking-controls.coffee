@@ -1,12 +1,17 @@
 class FrackingControls
+  setupCompleted: false
   setup: ->
     # do stuff
     if ABM.model?
-      @setupPlayback()
-      @setupDrilling()
-      @setupOperations()
-      @setupTriggers()
-      @setupGraph()
+      if @setupCompleted
+        $("#controls").show()
+      else
+        @setupPlayback()
+        @setupDrilling()
+        @setupOperations()
+        @setupTriggers()
+        @setupGraph()
+        @setupCompleted = true
     else
       console.log("delaying...")
       setTimeout =>
@@ -185,9 +190,12 @@ class FrackingControls
 
   resetModel: ->
     @stopModel()
-    ABM.model.reset()
+    $("#controls").hide()
     $(".icon-pause").hide()
     $(".icon-play").show()
+    setTimeout ->
+      ABM.model.reset()
+    , 10
 
   offsetX: (evt, target)->
     return if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)
