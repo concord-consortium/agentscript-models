@@ -17,8 +17,12 @@ class FrackingModel extends ABM.Model
   toMoveToWaterGas: null
 
   leaks: false
-  leakProbability: 10 # 1/N wells will leak
-  leakRate: 100 # 1/N methane turtles will leak into the water layer
+  # 1/N wells will leak
+  leakProbability: 10
+  # a methane turtle has a 1/N chance it will leak into the water layer
+  # every tick that it is within the water layer. Currently gas agents are
+  # within that layer for about 6 ticks.
+  leakRate: 600
 
   toKill: null
   killed: 0
