@@ -84,6 +84,7 @@ class FrackingModel extends ABM.Model
         a.die()
         @killed++
         a.well.killed++
+        a.well.totalKilled++
       @toKill = []
 
     for well in @wells
@@ -394,6 +395,7 @@ class Well
   depth: 0
   tickOpened: 0
   killed: 0
+  totalKilled: 0
   head: null
   patches: null
   walls: null
