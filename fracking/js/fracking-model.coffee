@@ -11,6 +11,7 @@ class FrackingModel extends ABM.Model
   shaleFractibility: 42
   rockFractibility: 10
   drillSpeed: 3
+  gasSpeed: 20
   ticksPerYear: 100
   wells: null
   toRedraw: null
@@ -117,6 +118,7 @@ class FrackingModel extends ABM.Model
         @toKill.push a
         return
       when "well"
+        dist = @u.randomInt(@gasSpeed)+3
         if -0.5 < (a.x - a.well.head.x) < 0.5
           if a.well.leaks and @u.randomInt(@leakRate) == 0 and (pWater = @patches.patchXY(a.x + (if @u.randomInt(2) is 0 then 3 else -3), a.y))?.type is "water"
             # Leak into the water
@@ -125,12 +127,12 @@ class FrackingModel extends ABM.Model
           else
             # move vertically toward the well head
             a.heading = @u.degToRad(90)
-            a.forward @u.randomInt(10)+3
+            a.forward dist
         else
           # move horizontally
           dx = a.x - a.well.head.x
           a.heading = if dx > 0 then @u.degToRad(180) else 0
-          if Math.abs(dx) > 6 then a.forward(6) else a.forward(Math.abs(dx))
+          if Math.abs(dx) > dist then a.forward(dist) else a.forward(Math.abs(dx))
       when "shale", "rock", "wellWall", "open"
         if a.y > a.well.depth and -0.5 < (a.x - a.well.head.x) < 0.5
           # somehow we're right under the well head, but not on a well patch...
