@@ -277,9 +277,8 @@ class FrackingModel extends ABM.Model
           for i in [0...@drillSpeed]
             @drillHorizontal(well)
     else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
-      well = new Well @, p.x, @airDepth+1
-      if @leaks and @u.randomInt(@leakProbability) == 0
-        well.leaks = true
+      leaks = (@leaks and @u.randomInt(@leakProbability) == 0)
+      well = new Well @, p.x, @airDepth+1, leaks
       @wells.push well
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
@@ -437,7 +436,7 @@ class Well
   @CAPPED: 'capped'
   @YEAR_ELAPSED: "wellYearElapsed"
 
-  constructor: (@model, @x, @depth)->
+  constructor: (@model, @x, @depth, @leaks=false)->
     # set these here so all Well instances don't share the same arrays
     @id = ++Well.IDX
     @head = {x: 0, y: 0}
