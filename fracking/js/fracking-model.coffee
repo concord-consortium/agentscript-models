@@ -41,7 +41,6 @@ class FrackingModel extends ABM.Model
     @setupAgents()
     @setupGlobals()
     @setupPatches()
-    @setupGas()
 
     $(document).trigger 'model-ready'
 
@@ -242,19 +241,6 @@ class FrackingModel extends ABM.Model
       else if p.y <= shaleLowerDepth
         p.type = "rock"
         @setPatchColor(p, false) if FrackingModel.DEBUG
-
-  setupGas: ->
-    @gas.create 4000, (a)=>
-      placed = false
-      while not placed or a.p.type isnt "shale"
-        x = 2 + @u.randomInt(@width - 4)
-        y = 2 + @u.randomInt(@height - 4)
-        a.moveTo @patches.patchXY(x, y)
-        placed = true
-      a.heading = @u.degToRad(180)
-      a.moveable = false
-      a.trapped = (@u.randomInt(100) <= 14)
-      a.hidden = not FrackingModel.DEBUG
 
   drillDirection: null
   drill: (p)->
@@ -472,6 +458,9 @@ class Well
     age = Math.ceil(@tickAge() / @model.ticksPerYear)
     return if age is 0 then 1 else age
 
+  ageFloat: ->
+    @tickAge() / @model.ticksPerYear
+
   tickAge: ->
     @model.anim.ticks - @tickOpened
 
@@ -686,15 +675,14 @@ class Well
     # spawn new gas at a rate dependent on the age of the well
     # this ensures we get a nice reduction curve over time
     numToSpawn = 0
-    age = @age()
-    if age <=2
-      numToSpawn = @openShale.length/2000
-    else
-      numToSpawn = @openShale.length/(2000 + (300*(age-2)))
-    # else
-    #   numToSpawn = @openShale.length/(5000 + (300*age))
+    age = @ageFloat()
+    return if age is 0
+    wellSize = @openShale.length
+    numToSpawn = wellSize/((age+1)*200)
+    if (deci = numToSpawn % 1) > 0
+      numToSpawn = (if ABM.util.randomFloat(1) < deci then Math.ceil(numToSpawn) else Math.floor(numToSpawn))
     if numToSpawn > 0
-      @model.gas.create Math.ceil(numToSpawn), (g)=>
+      @model.gas.create numToSpawn, (g)=>
         g.moveTo ABM.util.oneOf @openShale
         g.well = @
         g.trapped = false
