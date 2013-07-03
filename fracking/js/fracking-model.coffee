@@ -678,7 +678,7 @@ class Well
     age = @ageFloat()
     return if age is 0
     wellSize = @openShale.length
-    numToSpawn = wellSize/((age+1)*200)
+    numToSpawn = wellSize/((age+1)*200) + 1
     if (deci = numToSpawn % 1) > 0
       numToSpawn = (if ABM.util.randomFloat(1) < deci then Math.ceil(numToSpawn) else Math.floor(numToSpawn))
     if numToSpawn > 0
