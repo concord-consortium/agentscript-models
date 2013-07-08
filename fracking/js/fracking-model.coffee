@@ -190,7 +190,7 @@ class FrackingModel extends ABM.Model
       when "exploding" then [215, 50, 41]
       when "open"      then [0, 0, 0]
       when "cleanWaterWell", "cleanWaterOpen" then [45, 141, 190]
-      when "dirtyWaterWell", "dirtyWaterOpen" then [38,  90,  90]
+      when "dirtyWaterWell", "dirtyWaterOpen", "dirtyWaterPond" then [38,  90,  90]
       when "cleanPropaneWell", "cleanPropaneOpen", "dirtyPropaneWell", "dirtyPropaneOpen" then [122, 192, 99]
     @toRedraw.push p if redraw
 
@@ -628,6 +628,13 @@ class Well
 
     @pumping = opens.concat interiors
     @cappingInProgress = true
+
+    if (rounds = Math.ceil(@pumping.length / 100)) < 13
+      eIdx = (14-rounds)*21
+      for p in @pond.slice(0,eIdx)
+        p.type = "dirtyWaterPond"
+        @model.setPatchColor p
+
     @empty()
 
   empty: ->
@@ -640,12 +647,23 @@ class Well
       return
     currentPumping = @pumping.slice(0,100)
     @pumping = @pumping.slice(100)
+
+    pondFilling = []
+    if (roundsLeft = Math.ceil(@pumping.length / 100)) <= 13
+      sIdx = (13-roundsLeft)*21
+      pondFilling = @pond.slice(sIdx, sIdx+21)
+
     setTimeout =>
       @processSet currentPumping, =>
         @empty()
       , null, (p)=>
         p.type = if p.type.match(/.*Well$/) then "well" else "open"
         @model.setPatchColor p
+
+      if pondFilling.length > 0
+        for p in pondFilling
+          p.type = "dirtyWaterPond"
+          @model.setPatchColor p
     , 50
 
   cycleWaterColors: ->
