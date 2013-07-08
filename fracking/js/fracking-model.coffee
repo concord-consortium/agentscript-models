@@ -267,7 +267,9 @@ class FrackingModel extends ABM.Model
           # drill horizontally
           for i in [0...@drillSpeed]
             @drillHorizontal(well)
-    else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 3)
+    else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 38)
+      for w in @wells
+        return if (0 < Math.abs(p.x - w.head.x) < 50)
       leaks = (@leaks and @u.randomInt(@leakProbability) == 0)
       well = new Well @, p.x, @airDepth+1, leaks
       @wells.push well
@@ -399,6 +401,7 @@ class Well
   exploding: null
   fracking: null
   pumping: null
+  pond: null
 
   leaks: false
 
@@ -429,6 +432,7 @@ class Well
 
   # some graphical images
   @WELL_IMG: ABM.util.importImage 'img/well-head.png'
+  @POND_IMG: ABM.util.importImage 'img/well-pond.png'
 
   constructor: (@model, @x, @depth, @leaks=false)->
     # set these here so all Well instances don't share the same arrays
@@ -442,6 +446,7 @@ class Well
     @exploding = []
     @fracking = []
     @pumping = []
+    @pond = []
 
     @head.x = @x
     @head.y = @depth
@@ -452,6 +457,16 @@ class Well
     p.drawLabel(@model.contexts.drawing)
 
     @drawUI Well.WELL_IMG, @head.x + 7, @head.y + 15
+    @drawUI Well.POND_IMG, @head.x + 35, @head.y
+
+    for y in [(@head.y-13)...(@head.y)]
+      for x in [(@head.x+12)...(@head.x+33)]
+        p = @model.patches.patchXY x, y
+        if p?
+          @pond.push p
+          p.type = "air"
+          @model.setPatchColor p
+
     @model.draw()
 
     $(document).trigger Well.CREATED, @
