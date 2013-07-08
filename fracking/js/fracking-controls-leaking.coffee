@@ -14,8 +14,8 @@ class LeakingFrackingControls extends FrackingControls
       ylabel: "Methane"
       xmax:   40
       xmin:   0
-      ymax:   500
-      ymin:   0
+      ymax:   60
+      ymin:   10
       xTickCount: 4
       yTickCount: 5
       xFormatter: "3.3r"
