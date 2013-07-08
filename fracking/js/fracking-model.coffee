@@ -180,7 +180,7 @@ class FrackingModel extends ABM.Model
   setPatchColor: (p, redraw=true)->
     return unless p?
     p.color = switch p.type
-      when "air"   then [ 93, 126, 186]
+      when "air"   then [128, 173, 255]
       when "land"  then [ 29, 159, 120]
       when "water" then [ 52,  93, 169]
       when "shale" then [237, 237,  49]
