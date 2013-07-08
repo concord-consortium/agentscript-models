@@ -677,6 +677,7 @@ class Well
 
   spawnNewGas: ->
     return unless @capped
+    return unless @openShale.length > 0
     # spawn new gas at a rate dependent on the age of the well
     # this ensures we get a nice reduction curve over time
     numToSpawn = 0
