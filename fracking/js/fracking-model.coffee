@@ -36,7 +36,7 @@ class FrackingModel extends ABM.Model
     @patches.usePixels true
     @refreshPatches = false
     @setTextParams {name: "drawing"}, "10px sans-serif"
-    @setLabelParams {name: "drawing"}, [255,255,255], [0,-10]
+    @setLabelParams {name: "drawing"}, [255,255,255], [0,-20]
 
     @setupAgents()
     @setupGlobals()
@@ -427,6 +427,9 @@ class Well
   @CAPPED: 'capped'
   @YEAR_ELAPSED: "wellYearElapsed"
 
+  # some graphical images
+  @WELL_IMG: ABM.util.importImage 'img/well-head.png'
+
   constructor: (@model, @x, @depth, @leaks=false)->
     # set these here so all Well instances don't share the same arrays
     @id = ++Well.IDX
@@ -447,6 +450,8 @@ class Well
     p.label = "" + @id
     p.label += "*" if @leaks and FrackingModel.DEBUG
     p.drawLabel(@model.contexts.drawing)
+
+    @drawUI Well.WELL_IMG, @head.x + 7, @head.y + 15
     @model.draw()
 
     $(document).trigger Well.CREATED, @
@@ -689,6 +694,14 @@ class Well
         g.heading = ABM.util.degToRad(180)
         g.moveable = false
         g.hidden = false
+
+  drawUI: (img, x, y)->
+    ctx = @model.contexts.drawing
+    ctx.save()
+    ctx.translate x, y
+    ctx.rotate ABM.util.degToRad(180)
+    ctx.drawImage img, 0, 0
+    ctx.restore()
 
 window.Well = Well
 $(document).trigger 'fracking-model-loaded'
