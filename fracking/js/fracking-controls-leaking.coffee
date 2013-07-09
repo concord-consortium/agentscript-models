@@ -11,13 +11,13 @@ class LeakingFrackingControls extends FrackingControls
     @pollutionGraph = Lab.grapher.Graph '#pollution-graph',
       title:  "Pollution: Methane (red), Wastewater (green) vs Time"
       xlabel: "Time (years)"
-      ylabel: " "
+      ylabel: ""
       xmax:   40
       xmin:   0
       ymax:   60
       ymin:   0
       xTickCount: 4
-      yTickCount: 6
+      yTickCount: 0
       xFormatter: "3.3r"
       sample: 1
       realTime: true
