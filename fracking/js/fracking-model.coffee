@@ -457,15 +457,6 @@ class Well
     p.drawLabel(@model.contexts.drawing)
 
     @drawUI Well.WELL_IMG, @head.x + 7, @head.y + 15
-    @drawUI Well.POND_IMG, @head.x + 35, @head.y
-
-    for y in [(@head.y-13)...(@head.y)]
-      for x in [(@head.x+12)...(@head.x+33)]
-        p = @model.patches.patchXY x, y
-        if p?
-          @pond.push p
-          p.type = "air"
-          @model.setPatchColor p
 
     @model.draw()
 
@@ -580,6 +571,8 @@ class Well
       p.type = "clean" + @fillType + "Well"
       @model.setPatchColor p
 
+    @createWastePond() if @fillType is Well.WATER
+
     @fillingInProgress = true
     @model.redraw()
 
@@ -629,7 +622,7 @@ class Well
     @pumping = opens.concat interiors
     @cappingInProgress = true
 
-    if (rounds = Math.ceil(@pumping.length / 100)) < 13
+    if @pond.length > 0 and (rounds = Math.ceil(@pumping.length / 100)) < 13
       eIdx = (14-rounds)*21
       for p in @pond.slice(0,eIdx)
         p.type = "dirtyWaterPond"
@@ -649,7 +642,7 @@ class Well
     @pumping = @pumping.slice(100)
 
     pondFilling = []
-    if (roundsLeft = Math.ceil(@pumping.length / 100)) <= 13
+    if @pond.length > 0 and (roundsLeft = Math.ceil(@pumping.length / 100)) <= 13
       sIdx = (13-roundsLeft)*21
       pondFilling = @pond.slice(sIdx, sIdx+21)
 
@@ -728,6 +721,17 @@ class Well
         g.heading = ABM.util.degToRad(180)
         g.moveable = false
         g.hidden = false
+
+  createWastePond: ->
+    @drawUI Well.POND_IMG, @head.x + 35, @head.y
+
+    for y in [(@head.y-13)...(@head.y)]
+      for x in [(@head.x+12)...(@head.x+33)]
+        p = @model.patches.patchXY x, y
+        if p?
+          @pond.push p
+          p.type = "air"
+          @model.setPatchColor p
 
   drawUI: (img, x, y)->
     ctx = @model.contexts.drawing
