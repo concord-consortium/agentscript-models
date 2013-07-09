@@ -217,8 +217,6 @@ class FrackingModel extends ABM.Model
     for p in @patches
       p.type = "n/a"
       p.color = [255,255,255]
-      @toRedraw.push p
-      @redraw() if @toRedraw.length > 1000
       # continue if p.isOnEdge()
       waterLowerDepth = (@waterDepth + @height * Math.sin(@u.degToRad(0.6*p.x - (@width / 4))) / 160)
       shaleUpperDepth = (@oilDepth + @height * Math.sin(@u.degToRad(shaleUpperModifier * p.x)) / 30)
@@ -241,6 +239,8 @@ class FrackingModel extends ABM.Model
       else if p.y <= shaleLowerDepth
         p.type = "rock"
         @setPatchColor(p, false) if FrackingModel.DEBUG
+      @toRedraw.push p
+      @redraw() if @toRedraw.length > 1000
 
   drillDirection: null
   drill: (p)->
