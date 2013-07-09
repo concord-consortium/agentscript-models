@@ -9,9 +9,9 @@ class LeakingFrackingControls extends FrackingControls
 
   setupPollutionGraph: ->
     @pollutionGraph = Lab.grapher.Graph '#pollution-graph',
-      title:  "Groundwater Pollution vs Time (years)"
+      title:  "Pollution: Methane (red), Wastewater (green) vs Time"
       xlabel: "Time (years)"
-      ylabel: "Methane/Fracking Water"
+      ylabel: " "
       xmax:   40
       xmin:   0
       ymax:   60

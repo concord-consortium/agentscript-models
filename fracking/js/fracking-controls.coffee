@@ -130,7 +130,7 @@ class FrackingControls
   setupGraph: ->
     @outputGraphs = []
     defaultOptions =
-      title:  "Combined Output vs Time (years)"
+      title:  "Combined Output vs Time"
       xlabel: "Time (years)"
       ylabel: "Methane"
       xmax:   40
@@ -163,7 +163,7 @@ class FrackingControls
       # Add the graph to the DOM
       $("#output-graphs").append "<div id='output-graph-" + well.id + "' class='graph'></div>"
       # init the graph
-      defaultOptions.title = "Well " + well.id + " Output vs Time (years)"
+      defaultOptions.title = "Well " + well.id + " Output vs Time"
       @outputGraphs[well.id] = Lab.grapher.Graph '#output-graph-'+well.id, defaultOptions
       @outputGraphs[well.id].addSamples [0]
 
