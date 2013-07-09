@@ -50,12 +50,16 @@ class FrackingModel extends ABM.Model
     @anim.draw()
 
   setupAgents: ->
-    @agentBreeds "gas waterGas"
+    @agentBreeds "gas waterGas pondWater"
 
     for agents in [@gas, @waterGas]
       agents.setDefaultShape "circle"
       agents.setDefaultSize 2
       agents.setDefaultColor [255, 0, 0]
+
+    @pondWater.setDefaultShape "circle"
+    @pondWater.setDefaultSize 3
+    @pondWater.setDefaultColor [38,  90,  90]
 
   step: ->
     # move gas turtles to the surface, if possible
@@ -74,7 +78,10 @@ class FrackingModel extends ABM.Model
       @moveAgentTowardPipeCenter(a)
 
     for a in @waterGas
-      @moveWaterGas(a)
+      @moveWaterPollution(a)
+
+    for a in @pondWater
+      @movePondWater(a)
 
     if @toMoveToWaterGas.length > 0
       for a in @toMoveToWaterGas
@@ -93,6 +100,7 @@ class FrackingModel extends ABM.Model
 
     for well in @wells
       well.spawnNewGas()
+      well.leakWastePondWater()
       if well.tickAge() % @ticksPerYear is 0
         $(document).trigger Well.YEAR_ELAPSED, well
 
@@ -159,14 +167,14 @@ class FrackingModel extends ABM.Model
       else
         console.log("Hit layer: " + a.p.type)
 
-  moveWaterGas: (a)->
+  moveWaterPollution: (a, offset=0)->
     return if a.hidden
     if @u.colorsEqual a.p.color, [255,255,255]
       a.hidden = true
       return
     # Slowly diffuse through the water layer away from the well
     n = @u.randomInt 8
-    if a.x > a.well.head.x
+    if a.x > a.well.head.x + offset
       while n is 0 or n is 3 or n is 5
         n = @u.randomInt 8
     else
@@ -176,6 +184,22 @@ class FrackingModel extends ABM.Model
     if pWater? and pWater.type is "water"
       a.face pWater
       a.forward 0.05
+
+  movePondWater: (a)->
+    return if a.hidden
+    if @u.colorsEqual a.p.color, [255,255,255]
+      a.hidden = true
+      return
+    switch a.p.type
+      when "land"
+        n = @u.randomInt 3
+        if a.p.n[n]?
+          a.face a.p.n[n]
+          a.forward 0.05
+      when "water"
+        @moveWaterPollution a, 22
+      else
+        console.log "bad patch type: " + a.p.type
 
   setPatchColor: (p, redraw=true)->
     return unless p?
@@ -732,6 +756,12 @@ class Well
           @pond.push p
           p.type = "air"
           @model.setPatchColor p
+
+  leakWastePondWater: ->
+    if @leaks and @capped and @pond.length > 0 and ABM.util.randomInt(50) is 0
+      @model.pondWater.create 1, (a)=>
+        a.well = @
+        a.moveTo @model.patches.patchXY(@head.x + ABM.util.randomInt(25) + 11, @head.y - 15)
 
   drawUI: (img, x, y)->
     ctx = @model.contexts.drawing
