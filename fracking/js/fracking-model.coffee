@@ -20,6 +20,7 @@ class FrackingModel extends ABM.Model
   leaks: false
   # 1/N wells will leak
   leakProbability: 10
+  pondLeakProbability: 10
   # a methane turtle has a 1/N chance it will leak into the water layer
   # every tick that it is within the water layer. Currently gas agents are
   # within that layer for about 6 ticks.
@@ -234,6 +235,7 @@ class FrackingModel extends ABM.Model
 
     @drillSpeed = 10 if FrackingModel.DEBUG
     @leakProbability = 1 if FrackingModel.DEBUG
+    @pondLeakProbability = 1 if FrackingModel.DEBUG
 
   setupPatches: ->
     shaleUpperModifier = @u.randomFloat(1.5)
@@ -295,7 +297,8 @@ class FrackingModel extends ABM.Model
       for w in @wells
         return if (0 < Math.abs(p.x - w.head.x) < 50)
       leaks = (@leaks and @u.randomInt(@leakProbability) == 0)
-      well = new Well @, p.x, @airDepth+1, leaks
+      pondLeaks = (@leaks and @u.randomInt(@pondLeakProbability) == 0)
+      well = new Well @, p.x, @airDepth+1, leaks, pondLeaks
       @wells.push well
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
@@ -428,6 +431,7 @@ class Well
   pond: null
 
   leaks: false
+  pondLeaks: false
 
   # state management
   goneHorizontal: false
@@ -458,7 +462,7 @@ class Well
   @WELL_IMG: ABM.util.importImage 'img/well-head.png'
   @POND_IMG: ABM.util.importImage 'img/well-pond.png'
 
-  constructor: (@model, @x, @depth, @leaks=false)->
+  constructor: (@model, @x, @depth, @leaks=false, @pondLeaks=false)->
     # set these here so all Well instances don't share the same arrays
     @id = ++Well.IDX
     @head = {x: 0, y: 0}
@@ -478,6 +482,7 @@ class Well
     p = @model.patches.patchXY(@head.x, @head.y + 1)
     p.label = "" + @id
     p.label += "*" if @leaks and FrackingModel.DEBUG
+    p.label += "+" if @pondLeaks and FrackingModel.DEBUG
     p.drawLabel(@model.contexts.drawing)
 
     @drawUI Well.WELL_IMG, @head.x + 7, @head.y + 15
@@ -758,7 +763,7 @@ class Well
           @model.setPatchColor p
 
   leakWastePondWater: ->
-    if @leaks and @capped and @pond.length > 0 and ABM.util.randomInt(50) is 0
+    if @pondLeaks and @capped and @pond.length > 0 and ABM.util.randomInt(50) is 0
       @model.pondWater.create 1, (a)=>
         a.well = @
         a.moveTo @model.patches.patchXY(@head.x + ABM.util.randomInt(25) + 11, @head.y - 15)
