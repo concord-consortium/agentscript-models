@@ -1,6 +1,7 @@
 class LeakingFrackingControls extends FrackingControls
   pollutionGraph: null
   pollutionBaseline: 20
+  pondPollutionBaseline: 10
   leakingSetupCompleted: false
   setup: ->
     super
@@ -24,12 +25,12 @@ class LeakingFrackingControls extends FrackingControls
       fontScaleRelativeToParent: true
 
     # start the graph at 0,20
-    @pollutionGraph.addSamples [[@pollutionBaseline],[0]]
+    @pollutionGraph.addSamples [[@pollutionBaseline],[@pondPollutionBaseline]]
 
     $(document).on FrackingModel.YEAR_ELAPSED, =>
       leaked = ABM.model.waterGas.length
       pondLeaked = ABM.model.pondWater.length
-      @pollutionGraph.addSamples [[leaked + @pollutionBaseline], [pondLeaked]]
+      @pollutionGraph.addSamples [[leaked + @pollutionBaseline], [pondLeaked + @pondPollutionBaseline]]
 
 window.LeakingFrackingControls = LeakingFrackingControls
 $(document).trigger 'leaking-fracking-controls-loaded'
