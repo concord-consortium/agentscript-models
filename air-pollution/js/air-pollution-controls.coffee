@@ -5,8 +5,22 @@ class AirPollutionControls
       $("#controls").show()
     else
       # do other stuff
+      @setupPlayback()
+
       $("#controls").show()
       @setupCompleted = true
+
+  setupPlayback: ->
+      $(".icon-pause").hide()
+      $(".icon-play").show()
+      $("#controls").show()
+      $("#play-pause-button").button()
+      .click =>
+        @startStopModel()
+      $("#reset-button").button()
+      .click =>
+        @resetModel()
+      $("#playback").buttonset()
 
   startStopModel: ->
     @stopModel() unless @startModel()

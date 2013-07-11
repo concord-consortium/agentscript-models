@@ -29,27 +29,13 @@
       </div>
       <div class="button-set">
         <div id="drilling">
-          <div id="drilling-header">Drill</div>
-          <div id="drilling-buttons">
-            <input type="checkbox" id="drill-left" /><label for="drill-left"><i class="icon-long-arrow-left"></i></label>
-            <input type="checkbox" id="drill-down" /><label for="drill-down"><i class="icon-long-arrow-down"></i></label>
-            <input type="checkbox" id="drill-right" /><label for="drill-right"><i class="icon-long-arrow-right"></i></label>
-          </div>
         </div>
       </div>
       <div class="button-set">
-        <button id="explosion">Set off explosions</button>
       </div>
       <div id="filling" class="button-set">
-        <div>
-          <button id="fill-water">Fill with water</button>
-        </div>
-        <div>
-          <button id="fill-propane">Fill with propane</button>
-        </div>
       </div>
       <div class="button-set">
-        <button id="remove-fluid">Pump out fracking fluid</button>
       </div>
     </div>
     <div id="model-viewport">
@@ -59,9 +45,9 @@
         <div id="mouse-catcher"></div>
       </div>
     </div>
-    <div id='output-graphs'>
+<!--     <div id='output-graphs'>
       <div id='output-graph' class="graph"></div>
-    </div>
+    </div> -->
     <script>
       var modelReady = false, controls = null;
       $(document).one('air-pollution-model-loaded', function() {
