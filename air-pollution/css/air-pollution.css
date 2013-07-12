@@ -33,7 +33,23 @@
 
 .button-set {
   display: inline-block;
-  margin-rigth: 20px;
+  margin-right: 20px;
+}
+
+.button-label-left {
+  display: inline-block;
+  margin-right: 10px;
+  position: relative;
+  top: -3px;
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.button-label-top {
+  margin-bottom: -5px;
+  position: relative;
+  font-size: 1.5em;
+  font-weight: bold;
 }
 
 #controls i {
@@ -49,4 +65,31 @@
 #play-pause-button {
   min-width: 3.2em;
   border-bottom-right-radius: 0.7em;
+}
+
+.horizontal-slider {
+  width: 250px;
+  display: inline-block;
+}
+
+#wind-top-labels {
+  width: 330px;
+  height: 1em;
+}
+
+#wind-none {
+  position: absolute;
+  font-size: 0.5em;
+  left: 190px;
+  top: 5px;
+}
+
+#wind-left {
+  position: absolute;
+  left: 80px;
+}
+
+#wind-right {
+  position: absolute;
+  right: 0px;
 }
