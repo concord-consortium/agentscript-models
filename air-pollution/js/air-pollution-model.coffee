@@ -3,6 +3,8 @@ class AirPollutionModel extends ABM.Model
   RIGHT: 0
 
   mountainsX: 410
+  oceanX: 120
+
   windSpeed: 0
   carDensity: 5
   factoryDensity: 5
@@ -50,6 +52,7 @@ class AirPollutionModel extends ABM.Model
 
   step: ->
     @moveWind()
+    @moveCars()
     return
 
   setupWind: ->
@@ -66,7 +69,6 @@ class AirPollutionModel extends ABM.Model
       w.moveTo @patches.patchXY(x,y)
 
   setupCars: ->
-    console.log "car setup"
     @cars.setDefaultSize 1
     @cars.setDefaultHeading @LEFT
     @cars.setDefaultShape "left-car"
@@ -106,6 +108,18 @@ class AirPollutionModel extends ABM.Model
       else if x < 0
         x = x+@mountainsX
       w.moveTo @patches.patchXY x, y
+
+  moveCars: ->
+    for c in @cars
+      if (c.x-1) < @oceanX
+        c.heading = @RIGHT
+        c.shape = "right-car"
+        c.x += 37
+      else if (c.x+1) >= (@world.maxX-5)
+        c.heading = @LEFT
+        c.shape = "left-car"
+        c.x -= 37
+      c.forward 1
 
   _intSpeed: (divisor)->
     speed = @windSpeed/divisor
