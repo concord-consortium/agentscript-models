@@ -1,3 +1,9 @@
+#sprites {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
 #model-viewport {
   position: absolute;
   top: 5px;

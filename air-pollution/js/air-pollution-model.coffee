@@ -1,6 +1,8 @@
 class AirPollutionModel extends ABM.Model
   mountainsX: 410
   windSpeed: 0
+  carDensity: 5
+  factoryDensity: 5
 
   setup: ->
     @anim.setRate 30, false
@@ -12,9 +14,26 @@ class AirPollutionModel extends ABM.Model
     @patches.importColors "img/air-pollution-bg-mask.png"
     @patches.importDrawing "img/air-pollution-bg.png"
 
-    @agentBreeds "wind"
+    carImg = document.getElementById('car-sprite')
+    factoryImg = document.getElementById('factory-sprite')
 
+    ABM.shapes.add "left-car", false, (ctx)->
+      ctx.scale(-1, 1) # if heading leftward...
+      ctx.rotate ABM.util.degToRad(180)
+      ctx.drawImage(carImg, 0, 0)
+    ABM.shapes.add "right-car", false, (ctx)->
+      ctx.rotate ABM.util.degToRad(180)
+      ctx.drawImage(carImg, 0, 0)
+    ABM.shapes.add "factory", false, (ctx)->
+      ctx.scale(-1, 1)
+      ctx.rotate ABM.util.degToRad(180)
+      ctx.drawImage(factoryImg, 0, 0)
+
+    @agentBreeds "wind cars factories primary secondary"
+
+    @setupFactories()
     @setupWind()
+    @setupCars()
 
     @draw()
     @refreshPatches = false
@@ -42,6 +61,28 @@ class AirPollutionModel extends ABM.Model
       x = ((@wind.length-1) % 5) * 90 + (row * 30)
       y = row * 30 + 100
       w.moveTo @patches.patchXY(x,y)
+
+  setupCars: ->
+    console.log "car setup"
+    @cars.setDefaultSize 1
+    @cars.setDefaultHeading ABM.util.degToRad 180
+    @cars.setDefaultShape "left-car"
+    @cars.setDefaultColor [0,0,0]
+    @cars.setDefaultHidden false
+
+    @cars.create 1, (c)=>
+      c.moveTo @patches.patchXY 520, 40
+
+  setupFactories: ->
+    console.log "factory setup"
+    @factories.setDefaultSize 1
+    @factories.setDefaultHeading ABM.util.degToRad 180
+    @factories.setDefaultShape "factory"
+    @factories.setDefaultColor [0,0,0]
+    @factories.setDefaultHidden false
+
+    @factories.create 1, (c)=>
+      c.moveTo @patches.patchXY 160, 160
 
   setWindSpeed: (speed)->
     @windSpeed = speed
