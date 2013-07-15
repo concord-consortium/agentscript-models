@@ -1,4 +1,7 @@
 class AirPollutionModel extends ABM.Model
+  LEFT: ABM.util.degToRad 180
+  RIGHT: 0
+
   mountainsX: 410
   windSpeed: 0
   carDensity: 5
@@ -17,16 +20,16 @@ class AirPollutionModel extends ABM.Model
     carImg = document.getElementById('car-sprite')
     factoryImg = document.getElementById('factory-sprite')
 
-    ABM.shapes.add "left-car", false, (ctx)->
+    ABM.shapes.add "left-car", false, (ctx)=>
       ctx.scale(-1, 1) # if heading leftward...
-      ctx.rotate ABM.util.degToRad(180)
+      ctx.rotate @LEFT
       ctx.drawImage(carImg, 0, 0)
-    ABM.shapes.add "right-car", false, (ctx)->
-      ctx.rotate ABM.util.degToRad(180)
+    ABM.shapes.add "right-car", false, (ctx)=>
+      ctx.rotate @LEFT
       ctx.drawImage(carImg, 0, 0)
-    ABM.shapes.add "factory", false, (ctx)->
+    ABM.shapes.add "factory", false, (ctx)=>
       ctx.scale(-1, 1)
-      ctx.rotate ABM.util.degToRad(180)
+      ctx.rotate @LEFT
       ctx.drawImage(factoryImg, 0, 0)
 
     @agentBreeds "wind cars factories primary secondary"
@@ -65,7 +68,7 @@ class AirPollutionModel extends ABM.Model
   setupCars: ->
     console.log "car setup"
     @cars.setDefaultSize 1
-    @cars.setDefaultHeading ABM.util.degToRad 180
+    @cars.setDefaultHeading @LEFT
     @cars.setDefaultShape "left-car"
     @cars.setDefaultColor [0,0,0]
     @cars.setDefaultHidden false
@@ -76,7 +79,7 @@ class AirPollutionModel extends ABM.Model
   setupFactories: ->
     console.log "factory setup"
     @factories.setDefaultSize 1
-    @factories.setDefaultHeading ABM.util.degToRad 180
+    @factories.setDefaultHeading @LEFT
     @factories.setDefaultShape "factory"
     @factories.setDefaultColor [0,0,0]
     @factories.setDefaultHidden false
@@ -89,7 +92,7 @@ class AirPollutionModel extends ABM.Model
     for w in @wind
       w.hidden = (speed is 0)
       w.size = Math.abs(@_intSpeed(10)) + 5
-      w.heading = if speed >= 0 then 0 else ABM.util.degToRad(180)
+      w.heading = if speed >= 0 then 0 else @LEFT
 
     @draw() if @anim.animStop
 
