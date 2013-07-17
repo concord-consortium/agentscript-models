@@ -1,6 +1,14 @@
 class AirPollutionModel extends ABM.Model
   LEFT: ABM.util.degToRad 180
   RIGHT: 0
+  UP: ABM.util.degToRad 90
+  PI2: Math.PI * 2
+  FACTORY_SPAWN_OFFSETS: [
+    {x: 133, y:   3},
+    {x: 122, y:  -5},
+    {x: 106, y: -15},
+    {x:  93, y: -19}
+  ]
 
   mountainsX: 410
   oceanX: 120
@@ -8,6 +16,8 @@ class AirPollutionModel extends ABM.Model
   windSpeed: 0
   carDensity: 5
   factoryDensity: 5
+  carPollutionRate: 5
+  factoryPollutionRate: 5
 
   setup: ->
     @anim.setRate 30, false
@@ -33,12 +43,20 @@ class AirPollutionModel extends ABM.Model
       ctx.scale(-1, 1)
       ctx.rotate @LEFT
       ctx.drawImage(factoryImg, 0, 0)
+    ABM.shapes.add "pollutant", false, (ctx)=>
+      ctx.arc -0.5, -0.5, 0.5, 0, @PI2, false
+      ctx.fill()
+      ctx.arc 0.5, -0.5, 0.5, 0, @PI2, false
+      ctx.fill()
+      ctx.arc 0, 0.5, 0.5, 0, @PI2, false
+      ctx.fill()
 
     @agentBreeds "wind cars factories primary secondary"
 
     @setupFactories()
     @setupWind()
     @setupCars()
+    @setupPrimaryPollution()
 
     @draw()
     @refreshPatches = false
@@ -53,6 +71,8 @@ class AirPollutionModel extends ABM.Model
   step: ->
     @moveWind()
     @moveCars()
+    @movePollution()
+    @pollute()
     return
 
   setupWind: ->
@@ -77,9 +97,9 @@ class AirPollutionModel extends ABM.Model
 
     @cars.create 1, (c)=>
       c.moveTo @patches.patchXY 520, 40
+      c.createTick = @anim.ticks || 0
 
   setupFactories: ->
-    console.log "factory setup"
     @factories.setDefaultSize 1
     @factories.setDefaultHeading @LEFT
     @factories.setDefaultShape "factory"
@@ -88,6 +108,13 @@ class AirPollutionModel extends ABM.Model
 
     @factories.create 1, (c)=>
       c.moveTo @patches.patchXY 160, 160
+
+  setupPrimaryPollution: ->
+    @primary.setDefaultSize 3
+    @primary.setDefaultHeading @UP
+    @primary.setDefaultShape "pollutant"
+    @primary.setDefaultColor [120,30,30]
+    @primary.setDefaultHidden false
 
   setWindSpeed: (speed)->
     @windSpeed = speed
@@ -120,6 +147,23 @@ class AirPollutionModel extends ABM.Model
         c.shape = "left-car"
         c.x -= 37
       c.forward 1
+
+  movePollution: ->
+    for p in @primary
+      p.forward ABM.util.randomFloat 1
+
+  pollute: ->
+    for c in @cars
+      if (@anim.ticks - c.createTick) % @carPollutionRate is 0
+        @primary.create 1, (p)=>
+          x = if c.heading is 0 then c.x-37 else c.x+37
+          p.moveTo @patches.patchXY x, c.y-10
+
+    for f in @factories
+      if (@anim.ticks - c.createTick) % @factoryPollutionRate is 0
+        @primary.create 1, (p)=>
+          offset = @FACTORY_SPAWN_OFFSETS[ABM.util.randomInt(@FACTORY_SPAWN_OFFSETS.length)]
+          p.moveTo @patches.patchXY f.x + offset.x, f.y + offset.y
 
   _intSpeed: (divisor)->
     speed = @windSpeed/divisor
