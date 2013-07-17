@@ -16,7 +16,7 @@ class AirPollutionModel extends ABM.Model
   windSpeed: 0
   carDensity: 5
   factoryDensity: 5
-  carPollutionRate: 5
+  carPollutionRate: 10
   factoryPollutionRate: 5
 
   setup: ->
@@ -149,8 +149,24 @@ class AirPollutionModel extends ABM.Model
       c.forward 1
 
   movePollution: ->
-    for p in @primary
-      p.forward ABM.util.randomFloat 1
+    u = ABM.util
+    pollutionToRemove = []
+    for a in @primary
+      a.heading = a.heading + u.randomCentered(Math.PI/9)
+      a.forward if a.y > 20 and a.y < 340 and a.x < @mountainsX and Math.abs(@windSpeed) > 10 then Math.abs(@windSpeed / 100) else 0.1
+      if a.x < @world.minX + 1 or a.x > @world.maxX - 1 or a.y < @world.minY + 1 or a.y > @world.maxX - 1
+        pollutionToRemove.push a
+      else if a.y <= 20
+        a.heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
+      else if a.y >= 340
+        a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
+      else if @windSpeed < 0
+        a.heading = u.randomFloat2(Math.PI/2+0.1, Math.PI*3/2 - 0.1)
+      else if @windSpeed > 0 and a.x < @mountainsX
+        a.heading = u.randomFloat2(Math.PI/2-0.1, -Math.PI/2 + 0.1)
+
+    for a in pollutionToRemove
+      a.die()
 
   pollute: ->
     for c in @cars
