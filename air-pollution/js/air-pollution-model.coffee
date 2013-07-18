@@ -218,7 +218,7 @@ class AirPollutionModel extends ABM.Model
         if (@anim.ticks - c.createTick) % @factoryPollutionRate is 0
           @primary.create 1, (p)=>
             offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(@FACTORY_POLLUTION_SPAWN_OFFSETS.length)]
-            p.moveTo @patches.patchXY f.x + offset.x, f.y + offset.y
+            p.moveTo @patches.patchXY f.x + Math.round(offset.x * f.size), f.y + Math.round(offset.y * f.size)
 
   _intSpeed: (divisor)->
     speed = @windSpeed/divisor
