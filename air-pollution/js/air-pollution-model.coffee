@@ -203,16 +203,18 @@ class AirPollutionModel extends ABM.Model
 
   pollute: ->
     for c in @cars
-      if (@anim.ticks - c.createTick) % @carPollutionRate is 0
-        @primary.create 1, (p)=>
-          x = if c.heading is 0 then c.x-37 else c.x+37
-          p.moveTo @patches.patchXY x, c.y-10
+      if c?
+        if (@anim.ticks - c.createTick) % @carPollutionRate is 0
+          @primary.create 1, (p)=>
+            x = if c.heading is 0 then c.x-37 else c.x+37
+            p.moveTo @patches.patchXY x, c.y-10
 
     for f in @factories
-      if (@anim.ticks - c.createTick) % @factoryPollutionRate is 0
-        @primary.create 1, (p)=>
-          offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(@FACTORY_POLLUTION_SPAWN_OFFSETS.length)]
-          p.moveTo @patches.patchXY f.x + offset.x, f.y + offset.y
+      if f?
+        if (@anim.ticks - c.createTick) % @factoryPollutionRate is 0
+          @primary.create 1, (p)=>
+            offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(@FACTORY_POLLUTION_SPAWN_OFFSETS.length)]
+            p.moveTo @patches.patchXY f.x + offset.x, f.y + offset.y
 
   _intSpeed: (divisor)->
     speed = @windSpeed/divisor
