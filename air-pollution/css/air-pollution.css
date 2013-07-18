@@ -47,7 +47,7 @@
   margin-right: 10px;
   position: relative;
   top: -3px;
-  font-size: 1.5em;
+  font-size: 1em;
   font-weight: bold;
   min-width: 120px;
 }
@@ -58,18 +58,11 @@
   font-weight: bold;
   width: 385px;
   height: 1em;
+  font-size: 0.7em;
 }
 
 #wind-top-labels {
   font-size: 1.5em;
-}
-
-#cars-top-labels {
-  font-size: 0.7em;
-}
-
-#factories-top-labels {
-  font-size: 0.7em;
 }
 
 #controls i {
@@ -90,6 +83,7 @@
 .horizontal-slider {
   width: 250px;
   display: inline-block;
+  margin-top: 10px;
 }
 
 .button-label-top .center {

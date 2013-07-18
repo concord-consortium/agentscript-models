@@ -221,14 +221,14 @@ class AirPollutionModel extends ABM.Model
   pollute: ->
     for c in @cars
       if c? and !c.hidden
-        if (@anim.ticks - c.createTick) % @carPollutionRate is 0
+        if @carPollutionRate isnt 100 and (@anim.ticks - c.createTick) % @carPollutionRate is 0
           @primary.create 1, (p)=>
             x = if c.heading is 0 then c.x-37 else c.x+37
             p.moveTo @patches.patchXY x, c.y-10
 
     for f in @factories
       if f? and !f.hidden
-        if (@anim.ticks - f.createTick) % @factoryPollutionRate is 0
+        if @factoryPollutionRate isnt 100 and (@anim.ticks - f.createTick) % @factoryPollutionRate is 0
           @primary.create 1, (p)=>
             offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(@FACTORY_POLLUTION_SPAWN_OFFSETS.length)]
             p.moveTo @patches.patchXY f.x + Math.round(offset.x * f.size), f.y + Math.round(offset.y * f.size)
