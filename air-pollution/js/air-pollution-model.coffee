@@ -186,7 +186,11 @@ class AirPollutionModel extends ABM.Model
     pollutionToRemove = []
     for a in @primary
       a.heading = a.heading + u.randomCentered(Math.PI/9)
-      a.forward if a.y > 20 and a.y < 340 and a.x < @mountainsX and Math.abs(@windSpeed) > 10 then Math.abs(@windSpeed / 100) else 0.1
+      speed = 0.1
+      if a.y > 20 and a.y < 340
+        if @windSpeed < -10 or (a.x < @mountainsX and @windSpeed > 10)
+          speed = Math.abs(@windSpeed / 100)
+      a.forward speed
       if a.x < @world.minX + 1 or a.x > @world.maxX - 1 or a.y < @world.minY + 1 or a.y > @world.maxX - 1
         pollutionToRemove.push a
       else if a.y <= 20
