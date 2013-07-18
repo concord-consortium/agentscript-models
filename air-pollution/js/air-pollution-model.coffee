@@ -16,13 +16,14 @@ class AirPollutionModel extends ABM.Model
     {x: 320, y: 120, size: 0.5},
     {x:  90, y: 110, size: 0.3}
   ]
+  CAR_SPAWN: null
 
   mountainsX: 410
   oceanX: 120
 
   windSpeed: 0
-  numCars: 1
-  numFactories: 1
+  numCars: 10
+  numFactories: 5
   factoryDensity: 5
   carPollutionRate: 10
   factoryPollutionRate: 5
@@ -58,6 +59,19 @@ class AirPollutionModel extends ABM.Model
       ctx.fill()
       ctx.arc 0, 0.5, 0.5, 0, @PI2, false
       ctx.fill()
+
+    @CAR_SPAWN = [
+      {x: @world.maxX -  45, heading: @LEFT},
+      {x: @world.maxX - 404, heading: @RIGHT},
+      {x: @world.maxX - 223, heading: @LEFT},
+      {x: @world.maxX - 226, heading: @RIGHT},
+      {x: @world.maxX - 134, heading: @LEFT},
+      {x: @world.maxX - 315, heading: @RIGHT},
+      {x: @world.maxX - 312, heading: @LEFT},
+      {x: @world.maxX - 137, heading: @RIGHT},
+      {x: @world.maxX - 401, heading: @LEFT},
+      {x: @world.maxX -  48, heading: @RIGHT}
+    ]
 
     @agentBreeds "wind cars factories primary secondary"
 
@@ -101,27 +115,31 @@ class AirPollutionModel extends ABM.Model
     @cars.setDefaultHeading @LEFT
     @cars.setDefaultShape "left-car"
     @cars.setDefaultColor [0,0,0]
-    @cars.setDefaultHidden false
+    @cars.setDefaultHidden true
 
     @cars.create @numCars, (c)=>
-      c.moveTo @patches.patchXY 520, 40
+      pos = @CAR_SPAWN[@cars.length - 1]
+      c.moveTo @patches.patchXY pos.x, 40
+      c.heading = pos.heading
+      c.shape = if pos.heading is 0 then 'right-car' else 'left-car'
       c.createTick = @anim.ticks || 0
+
+    @setCars 1
 
   setupFactories: ->
     @factories.setDefaultSize 1
     @factories.setDefaultHeading @LEFT
     @factories.setDefaultShape "factory"
     @factories.setDefaultColor [0,0,0]
-    @factories.setDefaultHidden false
+    @factories.setDefaultHidden true
 
-    @_createFactories(@numFactories)
-
-  _createFactories: (n)->
-    @factories.create n, (f)=>
+    @factories.create @numFactories, (f)=>
       pos = @FACTORY_SPAWN_POS[@factories.length-1]
       f.moveTo @patches.patchXY pos.x, pos.y
       f.size = pos.size
       f.createTick = @anim.ticks || 0
+
+    @setFactories 1
 
   setupPrimaryPollution: ->
     @primary.setDefaultSize 3
@@ -139,23 +157,17 @@ class AirPollutionModel extends ABM.Model
 
     @draw() if @anim.animStop
 
-  setCars: (cars)->
-    if cars > @cars.length
-      @cars.create (cars-@cars.length), (c)=>
-        c.moveTo @patches.patchXY 520, 40
-        c.createTick = @anim.ticks || 0
-    else if cars < @cars.length
-      for i in [0...(@cars.length - cars)]
-        @cars[@cars.length-1].die()
+  setCars: (n)->
+    for i in [0...(@cars.length)]
+      c = @cars[i]
+      c.hidden = (i >= n)
 
     @draw() if @anim.animStop
 
-  setFactories: (f)->
-    if f > @factories.length
-      @_createFactories(f - @factories.length)
-    else if f < @factories.length
-      for i in [0...(@factories.length - f)]
-        @factories[@factories.length-1].die()
+  setFactories: (n)->
+    for i in [0...(@factories.length)]
+      f = @factories[i]
+      f.hidden = (i >= n)
 
     @draw() if @anim.animStop
 
@@ -208,14 +220,14 @@ class AirPollutionModel extends ABM.Model
 
   pollute: ->
     for c in @cars
-      if c?
+      if c? and !c.hidden
         if (@anim.ticks - c.createTick) % @carPollutionRate is 0
           @primary.create 1, (p)=>
             x = if c.heading is 0 then c.x-37 else c.x+37
             p.moveTo @patches.patchXY x, c.y-10
 
     for f in @factories
-      if f?
+      if f? and !f.hidden
         if (@anim.ticks - f.createTick) % @factoryPollutionRate is 0
           @primary.create 1, (p)=>
             offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(@FACTORY_POLLUTION_SPAWN_OFFSETS.length)]
