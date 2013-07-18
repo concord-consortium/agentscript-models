@@ -30,17 +30,26 @@ class AirPollutionControls
       max: 100
       step: 10
       value: 0
-      tickInterval: 50
-      tickLabels:
-        "-100": "Strong"
-        "-50": "Moderate"
-        0: "None"
-        50: "Moderate"
-        100: "Strong"
       slide: (evt, ui)->
-        # using the 'slide' handler seems to have problems with incorrect values
-        # around -10 to 10, so we're using 'change' instead
         ABM.model.setWindSpeed ui.value
+
+    $("#cars-slider").slider
+      orientation: 'horizontal'
+      min: 0
+      max: 10
+      step: 1
+      value: 1
+      slide: (evt, ui)->
+        ABM.model.setCars ui.value
+
+    $("#factories-slider").slider
+      orientation: 'horizontal'
+      min: 0
+      max: 5
+      step: 1
+      value: 1
+      slide: (evt, ui)->
+        ABM.model.setFactories ui.value
 
   startStopModel: ->
     @stopModel() unless @startModel()

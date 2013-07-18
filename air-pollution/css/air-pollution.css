@@ -49,13 +49,27 @@
   top: -3px;
   font-size: 1.5em;
   font-weight: bold;
+  min-width: 120px;
 }
 
 .button-label-top {
   margin-bottom: -5px;
   position: relative;
-  font-size: 1.5em;
   font-weight: bold;
+  width: 385px;
+  height: 1em;
+}
+
+#wind-top-labels {
+  font-size: 1.5em;
+}
+
+#cars-top-labels {
+  font-size: 0.7em;
+}
+
+#factories-top-labels {
+  font-size: 0.7em;
 }
 
 #controls i {
@@ -78,24 +92,19 @@
   display: inline-block;
 }
 
-#wind-top-labels {
-  width: 330px;
-  height: 1em;
-}
-
-#wind-none {
+.button-label-top .center {
   position: absolute;
   font-size: 0.5em;
-  left: 190px;
+  left: 248px;
   top: 5px;
 }
 
-#wind-left {
+.button-label-top .left {
   position: absolute;
-  left: 80px;
+  left: 135px;
 }
 
-#wind-right {
+.button-label-top .right {
   position: absolute;
   right: 0px;
 }
