@@ -65,6 +65,11 @@
   font-size: 1.5em;
 }
 
+#wind-top-labels .center {
+  font-size: 0.5em;
+  top: 5px;
+}
+
 #controls i {
   color: #939598;
   font-size: 1.25em;
@@ -88,9 +93,7 @@
 
 .button-label-top .center {
   position: absolute;
-  font-size: 0.5em;
   left: 248px;
-  top: 5px;
 }
 
 .button-label-top .left {
