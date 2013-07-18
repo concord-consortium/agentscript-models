@@ -117,10 +117,11 @@ class AirPollutionModel extends ABM.Model
     @_createFactories(@numFactories)
 
   _createFactories: (n)->
-    @factories.create n, (c)=>
+    @factories.create n, (f)=>
       pos = @FACTORY_SPAWN_POS[@factories.length-1]
-      c.moveTo @patches.patchXY pos.x, pos.y
-      c.size = pos.size
+      f.moveTo @patches.patchXY pos.x, pos.y
+      f.size = pos.size
+      f.createTick = @anim.ticks || 0
 
   setupPrimaryPollution: ->
     @primary.setDefaultSize 3
@@ -215,7 +216,7 @@ class AirPollutionModel extends ABM.Model
 
     for f in @factories
       if f?
-        if (@anim.ticks - c.createTick) % @factoryPollutionRate is 0
+        if (@anim.ticks - f.createTick) % @factoryPollutionRate is 0
           @primary.create 1, (p)=>
             offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(@FACTORY_POLLUTION_SPAWN_OFFSETS.length)]
             p.moveTo @patches.patchXY f.x + Math.round(offset.x * f.size), f.y + Math.round(offset.y * f.size)
