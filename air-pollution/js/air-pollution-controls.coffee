@@ -32,6 +32,7 @@ class AirPollutionControls
       value: 0
       slide: (evt, ui)->
         ABM.model.setWindSpeed ui.value
+    ABM.model.setWindSpeed 0
 
     $("#cars-slider").slider
       orientation: 'horizontal'
@@ -41,6 +42,7 @@ class AirPollutionControls
       value: 1
       slide: (evt, ui)->
         ABM.model.setCars ui.value
+    ABM.model.setCars 1
 
     $("#cars-pollution-slider").slider
       orientation: 'horizontal'
@@ -50,6 +52,7 @@ class AirPollutionControls
       value: 50
       slide: (evt, ui)->
         ABM.model.carPollutionRate = ui.value
+    ABM.model.carPollutionRate = 50
 
     $("#factories-slider").slider
       orientation: 'horizontal'
@@ -59,6 +62,7 @@ class AirPollutionControls
       value: 1
       slide: (evt, ui)->
         ABM.model.setFactories ui.value
+    ABM.model.setFactories 1
 
     $("#factories-pollution-slider").slider
       orientation: 'horizontal'
@@ -68,6 +72,7 @@ class AirPollutionControls
       value: -25
       slide: (evt, ui)->
         ABM.model.factoryPollutionRate = Math.abs ui.value
+    ABM.model.factoryPollutionRate = 25
 
   startStopModel: ->
     @stopModel() unless @startModel()
