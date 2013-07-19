@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/themes/base/jquery-ui.css" type="text/css" media="all" />
     <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
+    <link href="css/global-climate.css" rel="stylesheet" type="text/css" />
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js"></script>
     <script src="http://lab.concord.org/vendor/d3/d3.js"></script>
@@ -21,133 +22,6 @@
         setupControls();
       });
     </script>
-
-    <style type="text/css">
-      body { font: 13px sans-serif; }
-      #content {
-        margin: 0em;
-        padding: 0em; }
-      p { font-size: 1.5em;
-        margin-left: 1.0em }
-      ul {
-        list-style-type: none;
-        margin: 0.3em 0em;
-        padding-left: 0em;
-        width: 100%; }
-        ul li {
-          display: table-cell;
-          vertical-align: middle;
-          margin: 0em;
-          padding: 0em 0.3em 0em 0.3em; }
-      #model {
-        display: table-cell;
-        margin: 0em 0.5em 0em 0.5em;
-        width: 600px; }
-      #layers {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        margin: 0em;
-        padding: 0em; }
-      #playback-controls {
-        position: absolute;
-        top: 385px;
-        left: 10px;
-        width: 588px;
-        font-size: 1.1em;
-        display: inline-block;
-        background-color: #f8f8f8; }
-      #playback-controls li, button, span {
-        font-size: 1.1em; }
-      #controls {
-        display: table-cell;
-        vertical-align: top;
-        margin: 0em 0.5em 0em 0.5em;
-        padding: 0em;
-        font-size: 1.0em; }
-      #controls label, span {
-        font-size: 1.0em;
-        vertical-align: top; }
-      #controls button {
-        font-size: 1.0em;
-        vertical-align: middle; }
-      #controls .output {
-        font-size: 1.0em;
-        vertical-align: middle; }
-      #controls span.digits3 {
-        font-size: 1.0em;
-        margin: 0em;
-        padding: 0em;
-        float: right;
-        text-align: left;
-        width: 2em; }
-      #controls span.slider-units {
-        font-size: 90%;
-        font-style: italic; }
-
-      div.graph {
-         background-color: #ddf2ff;
-         border-radius: 0.25em;
-         width: 360px;
-         height: 140px;
-      }
-
-      .graph {
-        position: relative;
-        background: rgba(255, 255, 255, 0); }
-        .graph:focus {
-          outline: #76d2b8 solid 0.2em; }
-        .graph div.background {
-          position: absolute;
-          background: #efefef; }
-        .graph div.button-layer {
-          position: absolute;
-          text-align: right; }
-          .graph div.button-layer a {
-            opacity: 0.3;
-            color: black;
-            font-size: 120%; }
-          .graph div.button-layer a:hover {
-            opacity: 1; }
-        .graph canvas.overlay {
-          position: absolute;
-          background: rgba(0, 255, 0, 0.05); }
-
-      svg.graph:focus {
-        outline: #76d2b8 solid 0.2em; }
-      svg.graph text.title {
-        font-size: 0.9em; }
-      svg.graph text.ylabel {
-        font-size: 0.8em; }
-      svg.graph text.xlabel {
-        font-size: 0.8em; }
-      svg.graph text.axis {
-        font-size: 0.8em; }
-        svg.graph text.axis:focus {
-          outline: #76d2b8 solid 0.2em; }
-      svg.graph rect.draggable-axis {
-        fill: rgba(255, 255, 255, 0); }
-        svg.graph rect.draggable-axis:hover {
-          fill: rgba(196, 196, 196, 0.2); }
-
-      circle, .line {
-        fill: none;
-        stroke: steelblue;
-        stroke-width: 2px; }
-      circle {
-        fill: white;
-        fill-opacity: 0.2;
-        cursor: move; }
-        circle.selected {
-          fill: #ff7f0e;
-          stroke: #ff7f0e; }
-        circle:hover {
-          fill: #ff7f0e;
-          stroke: #707f0e; }
-        circle.selected:hover {
-          fill: #ff7f0e;
-          stroke: #ff7f0e; }
-    </style>
   </head>
   <body>
     <div id="content">
