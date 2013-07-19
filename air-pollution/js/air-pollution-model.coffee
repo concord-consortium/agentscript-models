@@ -105,10 +105,10 @@ class AirPollutionModel extends ABM.Model
     @wind.setDefaultHidden true
     @wind.setDefaultHeading 0
 
-    @wind.create 15, (w)=>
+    @wind.create 30, (w)=>
       row = Math.floor((@wind.length-1) / 5)
       x = ((@wind.length-1) % 5) * 90 + (row * 30)
-      y = row * 30 + 100
+      y = row * 30 + 10
       w.moveTo @patches.patchXY(x,y)
 
   setupCars: ->
