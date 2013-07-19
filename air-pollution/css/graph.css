@@ -1,8 +1,8 @@
 #output-graphs {
   position: absolute;
   top: 15px;
-  left: 830px;
-  width: 380px;
+  left: 630px;
+  width: 580px;
   height: 435px;
   overflow: auto;
 }
@@ -10,8 +10,8 @@
 div.graph {
    background-color: #ddf2ff;
    border-radius: 0.25em;
-   width: 360px;
-   height: 140px;
+   width: 560px;
+   height: 240px;
    margin-bottom: 10px;
 }
 

@@ -1,4 +1,6 @@
 class AirPollutionModel extends ABM.Model
+  @GRAPH_INTERVAL_ELAPSED: 'graph-interval-lapsed'
+
   LEFT: ABM.util.degToRad 180
   RIGHT: 0
   UP: ABM.util.degToRad 90
@@ -20,6 +22,8 @@ class AirPollutionModel extends ABM.Model
 
   mountainsX: 410
   oceanX: 120
+
+  graphSampleInterval: 10
 
   windSpeed: 0
   numCars: 10
@@ -96,6 +100,9 @@ class AirPollutionModel extends ABM.Model
     @moveCars()
     @movePollution()
     @pollute()
+
+    @notifyGraphs() if @anim.ticks % @graphSampleInterval is 0
+
     return
 
   setupWind: ->
@@ -234,6 +241,9 @@ class AirPollutionModel extends ABM.Model
           @primary.create 1, (p)=>
             offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(@FACTORY_POLLUTION_SPAWN_OFFSETS.length)]
             p.moveTo @patches.patchXY f.x + Math.round(offset.x * f.size), f.y + Math.round(offset.y * f.size)
+
+  notifyGraphs: ->
+    $(document).trigger AirPollutionModel.GRAPH_INTERVAL_ELAPSED
 
   _intSpeed: (divisor)->
     speed = @windSpeed/divisor

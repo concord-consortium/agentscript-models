@@ -5,11 +5,40 @@ class AirPollutionControls
       $("#controls").show()
     else
       # do other stuff
+      @setupGraph()
       @setupPlayback()
       @setupSliders()
 
       $("#controls").show()
       @setupCompleted = true
+
+  pollutionGraph: null
+  setupGraph: ->
+    ABM.model.graphSampleInterval = 10
+    defaultOptions =
+      title:  "Primary (red), Secondary (green) Pollutants"
+      xlabel: "Time (ticks)"
+      ylabel: " "
+      xmax:   2100
+      xmin:   0
+      ymax:   1000
+      ymin:   0
+      xTickCount: 7
+      yTickCount: 0
+      xFormatter: "3.3r"
+      sample: 10
+      realTime: true
+      fontScaleRelativeToParent: true
+
+    @pollutionGraph = Lab.grapher.Graph '#pollution-graph', defaultOptions
+
+    # start the graph at 0,0
+    @pollutionGraph.addSamples [[0],[0]]
+
+    $(document).on AirPollutionModel.GRAPH_INTERVAL_ELAPSED, =>
+      p = ABM.model.primary.length
+      s = ABM.model.secondary.length
+      @pollutionGraph.addSamples [[p], [s]]
 
   setupPlayback: ->
       $(".icon-pause").hide()
