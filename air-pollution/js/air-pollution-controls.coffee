@@ -46,13 +46,23 @@ class AirPollutionControls
 
     $("#cars-pollution-slider").slider
       orientation: 'horizontal'
-      min: 5
-      max: 100
+      min: -100
+      max: 5
       step: 5
-      value: 50
+      value: -50
       slide: (evt, ui)->
-        ABM.model.carPollutionRate = ui.value
+        ABM.model.carPollutionRate = Math.abs ui.value
     ABM.model.carPollutionRate = 50
+
+    $("#cars-electric-slider").slider
+      orientation: 'horizontal'
+      min: 0
+      max: 100
+      step: 10
+      value: 25
+      slide: (evt, ui)->
+        ABM.model.carElectricRate = ui.value
+    ABM.model.carElectricRate = 25
 
     $("#factories-slider").slider
       orientation: 'horizontal'

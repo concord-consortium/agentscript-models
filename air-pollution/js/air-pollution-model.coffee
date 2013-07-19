@@ -26,6 +26,7 @@ class AirPollutionModel extends ABM.Model
   numFactories: 5
   factoryDensity: 5
   carPollutionRate: 10
+  carElectricRate: 25
   factoryPollutionRate: 5
 
   setup: ->
@@ -222,9 +223,10 @@ class AirPollutionModel extends ABM.Model
     for c in @cars
       if c? and !c.hidden
         if @carPollutionRate isnt 100 and (@anim.ticks - c.createTick) % @carPollutionRate is 0
-          @primary.create 1, (p)=>
-            x = if c.heading is 0 then c.x-37 else c.x+37
-            p.moveTo @patches.patchXY x, c.y-10
+          if ABM.util.randomInt(100) > @carElectricRate
+            @primary.create 1, (p)=>
+              x = if c.heading is 0 then c.x-37 else c.x+37
+              p.moveTo @patches.patchXY x, c.y-10
 
     for f in @factories
       if f? and !f.hidden
