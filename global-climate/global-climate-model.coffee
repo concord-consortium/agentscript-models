@@ -22,6 +22,7 @@ class ClimateModel extends ABM.Model
     @earthTop = 8 + @patches.minY
     @sunlightHeading = -1.1
     @numClouds = 0
+    @initialYear = new Date().getFullYear()
     @ticksPerYear = 300
     @hiding90 = false
     @showFPS = false
@@ -350,6 +351,9 @@ class ClimateModel extends ABM.Model
       u.randomFloat2 @patches.minX, @patches.maxX
       u.randomFloat2 minY, maxY
     ]
+
+  getYear: ->
+    return Math.floor @initialYear + @anim.ticks / @ticksPerYear
 
   #
   # Main Model Loop

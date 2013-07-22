@@ -99,6 +99,9 @@
           Model Ticks: <span id="tick-counter"></span>
         </ul>
       </div>
+      <div id="year-box">
+        Year: <span id="year"></span>
+      </div>
     </div>
     <script>
       var addCO2Button = document.getElementById("add-co2-button"),
@@ -118,6 +121,7 @@
           stopButton = document.getElementById("stop-button"),
           stepButton = document.getElementById("step-button"),
           tickCounter = document.getElementById("tick-counter"),
+          yearCounter = document.getElementById("year"),
           temperatureFormatter = d3.format("3.1f"),
           countFormatter = d3.format("3f"),
           ticks = 0,
@@ -209,6 +213,7 @@
 
       function updateTickCounter() {
         tickCounter.textContent = climateModel.anim.ticks;
+        yearCounter.textContent = climateModel.getYear();
       }
 
       temperatureGraph = Lab.grapher.Graph('#temperature-graph',

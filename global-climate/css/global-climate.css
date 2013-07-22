@@ -122,3 +122,9 @@ circle {
   circle.selected:hover {
     fill: #ff7f0e;
     stroke: #ff7f0e; }
+#year-box {
+  position: absolute;
+  top: 1em;
+  left: 40em;
+  color: white;
+}
