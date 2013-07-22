@@ -14,7 +14,7 @@ class OceanClimateModel extends ClimateModel
     @vapor.setDefaultColor [0, 0, 255]
 
     # globals
-    @oceanLeft = -5
+    @oceanLeft = -10
     @oceanBottom = -15
     @vaporPerDegree = 0.6
     @nCO2Emission = 0.25
