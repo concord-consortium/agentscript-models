@@ -4,6 +4,7 @@ class AirPollutionModel extends ABM.Model
   LEFT: ABM.util.degToRad 180
   RIGHT: 0
   UP: ABM.util.degToRad 90
+  DOWN: ABM.util.degToRad 270
   PI2: Math.PI * 2
   FACTORY_POLLUTION_SPAWN_OFFSETS: [
     {x: 133, y:   3},
@@ -32,6 +33,7 @@ class AirPollutionModel extends ABM.Model
   carPollutionRate: 10
   carElectricRate: 25
   factoryPollutionRate: 5
+  raining: false
 
   setup: ->
     @anim.setRate 30, false
@@ -43,8 +45,11 @@ class AirPollutionModel extends ABM.Model
     @patches.importColors "img/air-pollution-bg-mask.png"
     @patches.importDrawing "img/air-pollution-bg.png"
 
+    @setCacheAgentsHere()
+
     carImg = document.getElementById('car-sprite')
     factoryImg = document.getElementById('factory-sprite')
+    cloudImg = document.getElementById('cloud-sprite')
 
     ABM.shapes.add "left-car", false, (ctx)=>
       ctx.scale(-1, 1) # if heading leftward...
@@ -64,6 +69,9 @@ class AirPollutionModel extends ABM.Model
       ctx.fill()
       ctx.arc 0, 0.5, 0.5, 0, @PI2, false
       ctx.fill()
+    ABM.shapes.add "cloud", false, (ctx)=>
+      ctx.rotate @LEFT
+      ctx.drawImage(cloudImg, 0, 0)
 
     @CAR_SPAWN = [
       {x: @world.maxX -  45, heading: @LEFT},
@@ -78,12 +86,13 @@ class AirPollutionModel extends ABM.Model
       {x: @world.maxX -  48, heading: @RIGHT}
     ]
 
-    @agentBreeds "wind cars factories primary secondary"
+    @agentBreeds "wind cars factories primary secondary clouds rain"
 
     @setupFactories()
     @setupWind()
     @setupCars()
     @setupPrimaryPollution()
+    @setupRain()
 
     @draw()
     @refreshPatches = false
@@ -100,6 +109,10 @@ class AirPollutionModel extends ABM.Model
     @moveCars()
     @movePollution()
     @pollute()
+
+    @moveRainAndClouds()
+    @startRain() if @anim.ticks % 600 is 0
+    @stopRain() if @raining and @anim.ticks % 600 is 200
 
     @notifyGraphs() if @anim.ticks % @graphSampleInterval is 0
 
@@ -156,12 +169,41 @@ class AirPollutionModel extends ABM.Model
     @primary.setDefaultColor [120,30,30]
     @primary.setDefaultHidden false
 
+  setupRain: ->
+    # Create clouds which move left to right, or right to left, depending on wind speed
+    @clouds.create 8, (c)=>
+      c.heading = 0
+      c.size = 1
+      c.shape = "cloud"
+      c.hidden = false
+      x = (@clouds.length-1) * 71 + 1
+      y = @world.maxY-1
+      c.moveTo @patches.patchXY(x,y)
+
+    # Create rain which falls according to wind speed.
+    @rain.create 220, (c)=>
+      row = Math.floor((@rain.length-1) / 20)
+      x = Math.round ((@rain.length-1) % 20) * 28.6 + (row * 2.86)
+      y = row * 30 + 10
+      c.moveTo @patches.patchXY(x,y)
+      c.heading = @DOWN
+      c.size = 2
+      c.shape = "circle"
+      c.color = [0, 0, 128]
+      c.hidden = true
+
   setWindSpeed: (speed)->
     @windSpeed = speed
     for w in @wind
       w.hidden = (speed is 0)
       w.size = Math.abs(@_intSpeed(10)) + 5
       w.heading = if speed >= 0 then 0 else @LEFT
+
+    for r in @rain
+      r.heading = @DOWN + ABM.util.degToRad(@windSpeed/2)
+
+    for c in @clouds
+      c.heading = if @windSpeed >= 0 then 0 else @LEFT
 
     @draw() if @anim.animStop
 
@@ -225,6 +267,35 @@ class AirPollutionModel extends ABM.Model
 
     for a in pollutionToRemove
       a.die()
+
+  _killPollutionOnPatch: (p)->
+    for a in p.agentsHere()
+      if a? and (a.breed is @primary or a.breed is @secondary)
+        a.die()
+
+  moveRainAndClouds: ->
+    for c in @clouds
+      continue if c.hidden
+      c.forward 1
+
+    if @raining
+      for r in @rain
+        continue if r.hidden
+        for p in @patches.patchRect(r.p, 3, 3, true)
+          @_killPollutionOnPatch p
+        r.forward 2
+        if r.y > 310
+          r.setXY r.x, 310
+
+  startRain: ->
+    for r in @rain
+      r.hidden = false
+    @raining = true
+
+  stopRain: ->
+    for r in @rain
+      r.hidden = true
+    @raining = false
 
   pollute: ->
     for c in @cars
