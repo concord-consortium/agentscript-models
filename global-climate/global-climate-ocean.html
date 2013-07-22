@@ -34,6 +34,16 @@
         @oceanBottom = -15
         @vaporPerDegree = 0.6
         @nCO2Emission = 0.25
+
+        @oceanAbsorbtionChangable = false
+        @useFixedTemperature = false
+        @fixedTemperature = 5
+        @oceanTemperature = 5
+        @oceanTimeConstant = 1 / (10 * @ticksPerYear)
+        @oceanZeroAbsorbtionTemp = 20
+        @oceanCO2AbsorbtionMax = 1
+        @oceanCO2Absorbtion = @oceanCO2AbsorbtionMax
+
         @earthPatches =        (p for p in @patches when p.y <  @earthTop and p.x < @oceanLeft)
         @oceanPatches =        (p for p in @patches when p.y <  @earthTop and p.x >= @oceanLeft)
 
@@ -77,6 +87,9 @@
               a.die()
             if a.y <= @earthTop + 1 and a.x < @oceanLeft    # bounce off land
               a.heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
+            if a.y <= @earthTop + 1 and a.y > @earthTop + 0.9 and a.x >= @oceanLeft    # bounce off sea?
+              if @oceanCO2Absorbtion < u.randomFloat 1
+                a.heading = Math.PI/2
             if a.y >= @skyTop + 1                           # bounce off sky
               a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
 
@@ -195,6 +208,29 @@
         ((angle%twoPI) + twoPI) % twoPI
 
       #
+      # Functions for model where user can set temperature
+      #
+
+      setOceanAbsorbtionChangable: (b) ->
+        @oceanAbsorbtionChangable = b
+
+      setUseFixedTemperature: (b) ->
+        @useFixedTemperature = b
+
+      setFixedTemperature: (t) ->
+        @fixedTemperature = t
+
+      updateTemperature: ->
+        super
+        if @useFixedTemperature
+          @temperature = @fixedTemperature
+          @oceanTemperature = (1-@oceanTimeConstant) * @oceanTemperature + @oceanTimeConstant * @temperature
+
+      setOceanCO2Absorption: ->
+        if @oceanAbsorbtionChangable
+          @oceanCO2Absorbtion = (1 - @oceanTemperature / @oceanZeroAbsorbtionTemp) * @oceanCO2AbsorbtionMax
+
+      #
       # Main Model Loop
       #
       step: ->
@@ -206,6 +242,7 @@
           @emitCO2()
         if @anim.ticks % 30 is 0
           @updateVapor()
+          @setOceanCO2Absorption()
 
 
     window.OceanClimateModel = OceanClimateModel
