@@ -22,6 +22,7 @@ class ClimateModel extends ABM.Model
     @earthTop = 8 + @patches.minY
     @sunlightHeading = -1.1
     @numClouds = 0
+    @ticksPerYear = 300
     @hiding90 = false
     @showFPS = false
 
