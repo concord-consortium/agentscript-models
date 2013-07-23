@@ -106,3 +106,14 @@
   position: absolute;
   right: 0px;
 }
+
+.raw-label {
+  width: 80px;
+  display: inline-block;
+}
+
+.raw-number {
+  width: 50px;
+  text-align: right;
+  display: inline-block;
+}

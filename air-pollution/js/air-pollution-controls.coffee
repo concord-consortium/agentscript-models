@@ -39,6 +39,8 @@ class AirPollutionControls
       p = ABM.model.primary.length
       s = ABM.model.secondary.length
       @pollutionGraph.addSamples [[p], [s]]
+      $("#raw-primary").text(p)
+      $("#raw-secondary").text(s)
 
   setupPlayback: ->
       $(".icon-pause").hide()
