@@ -23,6 +23,7 @@ class AirPollutionModel extends ABM.Model
 
   mountainsX: 410
   oceanX: 120
+  rainMax: 310
 
   graphSampleInterval: 10
 
@@ -182,9 +183,8 @@ class AirPollutionModel extends ABM.Model
 
     # Create rain which falls according to wind speed.
     @rain.create 220, (c)=>
-      row = Math.floor((@rain.length-1) / 20)
-      x = Math.round ((@rain.length-1) % 20) * 28.6 + (row * 2.86)
-      y = row * 30 + 10
+      x = ABM.util.randomInt(@world.maxX - @world.minX) + @world.minX
+      y = ABM.util.randomInt(@rainMax - @world.minY) + @world.minY
       c.moveTo @patches.patchXY(x,y)
       c.heading = @DOWN
       c.size = 2
@@ -284,8 +284,8 @@ class AirPollutionModel extends ABM.Model
         for p in @patches.patchRect(r.p, 3, 3, true)
           @_killPollutionOnPatch p
         r.forward 2
-        if r.y > 310
-          r.setXY r.x, 310
+        if r.y > @rainMax
+          r.setXY r.x, @rainMax
 
   startRain: ->
     for r in @rain
