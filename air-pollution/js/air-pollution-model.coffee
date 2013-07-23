@@ -24,6 +24,8 @@ class AirPollutionModel extends ABM.Model
   mountainsX: 410
   oceanX: 120
   rainMax: 310
+  sunX: 91
+  sunY: 349
 
   graphSampleInterval: 10
 
@@ -87,13 +89,14 @@ class AirPollutionModel extends ABM.Model
       {x: @world.maxX -  48, heading: @RIGHT}
     ]
 
-    @agentBreeds "wind cars factories primary secondary clouds rain"
+    @agentBreeds "wind cars factories primary secondary clouds rain sunlight"
 
     @setupFactories()
     @setupWind()
     @setupCars()
-    @setupPrimaryPollution()
+    @setupPollution()
     @setupRain()
+    @setupSunlight()
 
     @draw()
     @refreshPatches = false
@@ -111,6 +114,7 @@ class AirPollutionModel extends ABM.Model
     @movePollution()
     @pollute()
 
+    @moveAndEmitSunlight()
     @moveRainAndClouds()
     @startRain() if @anim.ticks % 600 is 0
     @stopRain() if @raining and @anim.ticks % 600 is 200
@@ -163,12 +167,18 @@ class AirPollutionModel extends ABM.Model
 
     @setFactories 1
 
-  setupPrimaryPollution: ->
+  setupPollution: ->
     @primary.setDefaultSize 3
     @primary.setDefaultHeading @UP
     @primary.setDefaultShape "pollutant"
     @primary.setDefaultColor [120,30,30]
     @primary.setDefaultHidden false
+
+    @secondary.setDefaultSize 3
+    @secondary.setDefaultHeading @UP
+    @secondary.setDefaultShape "pollutant"
+    @secondary.setDefaultColor [30,120,30]
+    @secondary.setDefaultHidden false
 
   setupRain: ->
     # Create clouds which move left to right, or right to left, depending on wind speed
@@ -191,6 +201,13 @@ class AirPollutionModel extends ABM.Model
       c.shape = "circle"
       c.color = [0, 0, 128]
       c.hidden = true
+
+  setupSunlight: ->
+    @sunlight.setDefaultSize 1
+    @sunlight.setDefaultHeading @DOWN
+    @sunlight.setDefaultShape "circle"
+    @sunlight.setDefaultColor [255,255,0]
+    @sunlight.setDefaultHidden false
 
   setWindSpeed: (speed)->
     @windSpeed = speed
@@ -245,28 +262,39 @@ class AirPollutionModel extends ABM.Model
       c.forward 1
 
   movePollution: ->
-    u = ABM.util
     pollutionToRemove = []
+
     for a in @primary
-      a.heading = a.heading + u.randomCentered(Math.PI/9)
-      speed = 0.1
-      if a.y > 20 and a.y < 340
-        if @windSpeed < -10 or (a.x < @mountainsX and @windSpeed > 10)
-          speed = Math.abs(@windSpeed / 100)
-      a.forward speed
-      if a.x < @world.minX + 1 or a.x > @world.maxX - 1 or a.y < @world.minY + 1 or a.y > @world.maxX - 1
+      if @_movePollutionAgent(a)
         pollutionToRemove.push a
-      else if a.y <= 20
-        a.heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
-      else if a.y >= 340
-        a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
-      else if @windSpeed < 0
-        a.heading = u.randomFloat2(Math.PI/2+0.1, Math.PI*3/2 - 0.1)
-      else if @windSpeed > 0 and a.x < @mountainsX
-        a.heading = u.randomFloat2(Math.PI/2-0.1, -Math.PI/2 + 0.1)
+
+    for a in @secondary
+      if @_movePollutionAgent(a)
+        pollutionToRemove.push a
 
     for a in pollutionToRemove
       a.die()
+
+  _movePollutionAgent: (a)->
+    u = ABM.util
+    a.heading = a.heading + u.randomCentered(Math.PI/9)
+    speed = 0.1
+    if a.y > 20 and a.y < 340
+      if @windSpeed < -10 or (a.x < @mountainsX and @windSpeed > 10)
+        speed = Math.abs(@windSpeed / 100)
+    a.forward speed
+    if a.x < @world.minX + 1 or a.x > @world.maxX - 1 or a.y < @world.minY + 1 or a.y > @world.maxX - 1
+      return true
+    else if a.y <= 20
+      a.heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
+    else if a.y >= 340
+      a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
+    else if @windSpeed < 0
+      a.heading = u.randomFloat2(Math.PI/2+0.1, Math.PI*3/2 - 0.1)
+    else if @windSpeed > 0 and a.x < @mountainsX
+      a.heading = u.randomFloat2(Math.PI/2-0.1, -Math.PI/2 + 0.1)
+
+    return false
 
   _killPollutionOnPatch: (p)->
     for a in p.agentsHere()
@@ -286,6 +314,35 @@ class AirPollutionModel extends ABM.Model
         r.forward 2
         if r.y > @rainMax
           r.setXY r.x, @rainMax
+
+  _convertPollutionOnPatch: (p)->
+    converted = false
+    for a in p.agentsHere()
+      if a? and a.breed is @primary
+        a.changeBreed @secondary
+        converted = true
+    return converted
+
+  moveAndEmitSunlight: ->
+    interval = if @raining then 20 else 5
+    if @anim.ticks % interval is 0
+      @sunlight.create 1, (s)=>
+        s.setXY @sunX, @sunY
+        s.heading = ABM.util.randomFloat2 Math.PI, @PI2
+
+    toKill = []
+    for s in @sunlight
+      converted = false
+      for p in @patches.patchRect(s.p, 2, 2, true)
+        converted ||= @_convertPollutionOnPatch p
+
+      if converted or s.x + 2 > @world.maxX or s.x - 2 < @world.minX or s.y - 2 < @world.minY
+        toKill.push s
+      else
+        s.forward 2
+
+    for s in toKill
+      s.die()
 
   startRain: ->
     for r in @rain
