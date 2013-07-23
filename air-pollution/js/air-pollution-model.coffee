@@ -316,6 +316,16 @@ class AirPollutionModel extends ABM.Model
   notifyGraphs: ->
     $(document).trigger AirPollutionModel.GRAPH_INTERVAL_ELAPSED
 
+  primaryAQI: ->
+    p = @primary.length
+    # TODO Better coversion from raw pollutants to AQI
+    return p / 4
+
+  secondaryAQI: ->
+    p = @secondary.length
+    # TODO Better coversion from raw pollutants to AQI
+    return p / 4
+
   _intSpeed: (divisor)->
     speed = @windSpeed/divisor
     return if @windSpeed < 0 then Math.floor(speed) else Math.ceil(speed)

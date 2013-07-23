@@ -22,7 +22,11 @@ div.graph {
     outline: #76d2b8 solid 0.2em; }
   .graph div.background {
     position: absolute;
-    background: #efefef; }
+    background-image: url("../img/aqi-graph-bg.svg");
+    background-repeat: repeat-x;
+    background-position: left top;
+    background-size: contain;
+  }
   .graph div.button-layer {
     position: absolute;
     text-align: right; }

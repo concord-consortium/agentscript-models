@@ -18,13 +18,13 @@ class AirPollutionControls
     defaultOptions =
       title:  "Primary (red), Secondary (green) Pollutants"
       xlabel: "Time (ticks)"
-      ylabel: " "
+      ylabel: "AQI"
       xmax:   2100
       xmin:   0
-      ymax:   1000
+      ymax:   500
       ymin:   0
       xTickCount: 7
-      yTickCount: 0
+      yTickCount: 10
       xFormatter: "3.3r"
       sample: 10
       realTime: true
@@ -36,11 +36,13 @@ class AirPollutionControls
     @pollutionGraph.addSamples [[0],[0]]
 
     $(document).on AirPollutionModel.GRAPH_INTERVAL_ELAPSED, =>
-      p = ABM.model.primary.length
-      s = ABM.model.secondary.length
+      p = ABM.model.primaryAQI()
+      s = ABM.model.secondaryAQI()
       @pollutionGraph.addSamples [[p], [s]]
-      $("#raw-primary").text(p)
-      $("#raw-secondary").text(s)
+      $("#raw-primary").text(ABM.model.primary.length)
+      $("#raw-secondary").text(ABM.model.secondary.length)
+      $("#aqi-primary").text(p)
+      $("#aqi-secondary").text(s)
 
   setupPlayback: ->
       $(".icon-pause").hide()
