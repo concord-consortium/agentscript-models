@@ -25,6 +25,9 @@ class ClimateModel extends ABM.Model
     @initialYear = new Date().getFullYear()
     @ticksPerYear = 300
     @hiding90 = false
+    @hidingRays = false
+    @hidingGases = false
+    @hidingHeat = false
     @showFPS = false
 
     @agents.setDefaultSize @agentSize
@@ -103,6 +106,7 @@ class ClimateModel extends ABM.Model
   transformToIR: (_a) ->
     a = _a.changeBreed(@IR)[0]
     a.heading = -@sunlightHeading
+    a.hidden = unless @hidingRays or (@hiding90 and Math.random() > 0.1) then false else true
     # a.heading = u.randomFloat2(2.6, 0.5)
     # a.heading = u.randomCentered(Math.PI/4) + Math.PI/2
 
@@ -113,6 +117,7 @@ class ClimateModel extends ABM.Model
     a.shape = "circle"
     randomLightness = u.randomInt2(32, 128)
     a.color = [255, randomLightness, randomLightness]
+    a.hidden = unless @hidingHeat or (@hiding90 and Math.random() > 0.1) then false else true
 
   #
   # CO2
@@ -126,6 +131,7 @@ class ClimateModel extends ABM.Model
         a.heading = if heading? then heading else u.randomCentered(Math.PI)
         [x,y] = if location? then location else @getRandomLocation(@earthTop+1, @skyTop)
         a.setXY x, y
+        a.hidden = unless @hidingGases then false else true
 
   runCO2: ->
     for a in @CO2
@@ -196,6 +202,7 @@ class ClimateModel extends ABM.Model
         randomLightness = u.randomInt2(32, 128)
         a.color = [255, randomLightness, randomLightness]
         a.setXY x, y
+        a.hidden = unless @hidingHeat or (@hiding90 and Math.random() > 0.1) then false else true
 
 
   #
@@ -287,7 +294,7 @@ class ClimateModel extends ABM.Model
       @sunrays.create 1, (a) =>
         a.heading = @sunlightHeading
         a.setXY @patches.minX + u.randomFloat(modelWidth), @patches.maxY
-        a.hidden = unless @hiding90 and Math.random() > 0.1 then false else true
+        a.hidden = unless @hidingRays or (@hiding90 and Math.random() > 0.1) then false else true
 
   addSunraySpotlight: ->
     # try to add spotlight to a sunray at very top heading downwards
@@ -346,6 +353,30 @@ class ClimateModel extends ABM.Model
     @hiding90 = false
     for a in @agents
       a.hidden = false
+    for agentSet in [@sunrays, @IR]
+      for a in agentSet
+        a.hidden = @hidingRays
+    for a in @CO2
+      a.hidden = @hidingGases
+    for a in @heat
+      a.hidden = @hidingHeat
+
+  showRays: (show) ->
+    @hidingRays = !show
+    for agentSet in [@sunrays, @IR]
+      for a in agentSet
+        a.hidden = @hidingRays
+
+  showGases: (show) ->
+    @hidingGases = !show
+    for a in @CO2
+      a.hidden = @hidingGases
+
+  showHeat: (show) ->
+    @hidingHeat = !show
+    for a in @heat
+      a.hidden = @hidingHeat
+
 
   getRandomLocation: (minY, maxY) ->
     [
