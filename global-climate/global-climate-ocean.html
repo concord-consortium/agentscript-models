@@ -4,8 +4,7 @@
     <title>AgentScript Model</title>
     <script src="../lib/agentscript/agentscript.js"></script>
     <script src="../lib/agentscript/coffee-script.js"></script>
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/themes/base/jquery-ui.css" type="text/css" media="all" />
-    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
     <link href="css/global-climate.css" rel="stylesheet" type="text/css" />
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
@@ -17,6 +16,12 @@
     <script type="text/javascript">
       var modelLoaded = $.Deferred(),
           oceanModelLoaded = $.Deferred();
+
+      $(function() {
+        $("button").button();
+        $("#playback").buttonset();
+        $(".icon-pause").hide();
+      });
 
       $.when(modelLoaded, oceanModelLoaded).done(function() {
         climateModel = new OceanClimateModel("layers", 12, -24, 24, -15, 15, true);
@@ -80,24 +85,15 @@
         </ul>
       </div>
       <div id="playback-controls">
-        <ul>
-          <li>
-            <button id="reset-button">Reset</button>
-          </li>
-          <li>
-            <button id="play-button">Play</button>
-          </li>
-          <li>
-            <button id="step-button">Step</button>
-          </li>
-          <li>
-            <button id="stop-button">Stop</button>
-          </li>
-          <li>
-            <span class="slider-units">Slow <input id="speed-slider" type="range" min="0" max="10" step="1"/> Fast</span>
-          </li>
-          Model Ticks: <span id="tick-counter"></span>
-        </ul>
+        <div id="playback">
+          <button id="reset-button">
+            <i class="icon-step-backward"></i>
+          </button>
+          <button id="play-pause-button">
+            <i class="icon-play"></i>
+            <i class="icon-pause"></i>
+          </button>
+        </div>
       </div>
       <div id="year-box">
         Year: <span id="year"></span>
@@ -108,19 +104,12 @@
           subtractCO2Button = document.getElementById("subtract-co2-button"),
           albedoSlider = document.getElementById("albedo-slider"),
           sunBrightnessSlider = document.getElementById("sun-brightness-slider"),
-          speedSlider = document.getElementById("speed-slider"),
           co2Output = document.getElementById("co2-output"),
           temperatureOutput = document.getElementById("temperature-output"),
           addCloudsButton = document.getElementById("add-clouds-button"),
           subtractCloudsButton = document.getElementById("subtract-clouds-button"),
           followSunrayButton = document.getElementById("follow-sunray-button"),
           followCO2Button = document.getElementById("follow-co2-button"),
-          hideButton = document.getElementById("hide-button"),
-          resetButton = document.getElementById("reset-button"),
-          playButton = document.getElementById("play-button"),
-          stopButton = document.getElementById("stop-button"),
-          stepButton = document.getElementById("step-button"),
-          tickCounter = document.getElementById("tick-counter"),
           yearCounter = document.getElementById("year"),
           temperatureFormatter = d3.format("3.1f"),
           countFormatter = d3.format("3f"),
@@ -132,7 +121,6 @@
       function setupControls() {
         albedoSlider.value = climateModel.getAlbedo();
         sunBrightnessSlider.value = climateModel.getSunBrightness();
-        speedSlider.value = 5;
       }
 
       addCO2Button.onclick = function() {
@@ -165,15 +153,16 @@
         }
       }
 
-      hideButton.onclick = function() {
-        if (this.textContent === "Hide 90% of elements") {
+      $('#hide-button').click(function() {
+        $span = $(this).find("span");
+        if ($span.text() === "Hide 90% of elements") {
           climateModel.hide90();
-          this.textContent = "Show all elements";
+          $span.text("Show all elements");
         } else {
           climateModel.showAll();
-          this.textContent = "Hide 90% of elements";
+          $span.text("Hide 90% of elements");
         }
-      }
+      });
 
       albedoSlider.onchange = function() {
         climateModel.setAlbedo(+albedoSlider.value);
@@ -183,36 +172,29 @@
         climateModel.setSunBrightness(+sunBrightnessSlider.value);
       }
 
-      speedSlider.onchange = function() {
-        // scale value, 0=10, 5=60, 10=500
-        var val = speedSlider.value,
-            frequency = val <= 5 ? (val * 10)+10 : (val-5)*88 + 60;
-        climateModel.anim.setRate(frequency, true);
-      }
+      $('#play-pause-button').click(function() {
+        if (climateModel.anim.animStop) {
+          climateModel.start();
+          $(".icon-pause").show();
+          $(".icon-play").hide();
+        } else {
+          climateModel.stop();
+          $(".icon-pause").hide();
+          $(".icon-play").show();
+        }
+      });
 
-      resetButton.onclick = function() {
+      $('#reset-button').click(function() {
+        climateModel.stop();
+        $(".icon-pause").hide();
+        $(".icon-play").show();
         lastTick = 0;
         temperatureGraph.reset();
         co2Graph.reset();
         climateModel.setup();
-      }
-
-      playButton.onclick = function() {
-        climateModel.start();
-      }
-
-      stopButton.onclick = function() {
-        climateModel.stop();
-      }
-
-      stepButton.onclick = function() {
-        climateModel.stop();
-        climateModel.anim.animate();
-        updateTickCounter();
-      }
+      });
 
       function updateTickCounter() {
-        tickCounter.textContent = climateModel.anim.ticks;
         yearCounter.textContent = climateModel.getYear();
       }
 

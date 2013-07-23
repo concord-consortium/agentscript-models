@@ -30,8 +30,7 @@ ul {
   left: 10px;
   width: 588px;
   font-size: 1.1em;
-  display: inline-block;
-  background-color: #f8f8f8; }
+  display: inline-block;}
 #playback-controls li, button, span {
   font-size: 1.1em; }
 #controls {
@@ -127,4 +126,30 @@ circle {
   top: 1em;
   left: 40em;
   color: white;
+}
+
+#playback-controls {
+  position: absolute;
+  top: 385px;
+  left: 10px;
+}
+
+#playback-controls i {
+  color: #939598;
+  font-size: 1.35em;
+  vertical-align: middle;
+}
+
+#buttons {
+  display: inline-block;
+  margin-left: 15px;
+}
+
+#reset-button {
+  border-bottom-left-radius: 0.7em;
+}
+
+#play-pause-button {
+  min-width: 3.2em;
+  border-bottom-right-radius: 0.7em;
 }
