@@ -20,7 +20,7 @@
 
       $.when(modelLoaded, oceanModelLoaded).done(function() {
         climateModel = new OceanClimateModel("layers", 12, -24, 24, -15, 15, true);
-        climateModel.start();
+        climateModel.setup();
         setupControls();
       });
     </script>

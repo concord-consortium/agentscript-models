@@ -22,7 +22,7 @@
         climateModel = new OceanClimateModel("layers", 12, -24, 24, -15, 15, true);
         climateModel.setOceanAbsorbtionChangable(true);
         climateModel.setUseFixedTemperature(true);
-        climateModel.start();
+        climateModel.setup();
         setupControls();
       });
     </script>

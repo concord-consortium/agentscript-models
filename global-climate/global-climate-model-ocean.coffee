@@ -43,6 +43,7 @@ class OceanClimateModel extends ClimateModel
     @createCO2(13)
     @createVapor(5)
     @createHeat(22)
+    @draw()
 
   getVaporCount : ->
     @vapor.length

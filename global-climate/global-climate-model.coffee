@@ -53,6 +53,7 @@ class ClimateModel extends ABM.Model
     @createVolcano()
     @createCO2(30)
     @createHeat(20)
+    @draw()
 
   setAlbedo: (percent) ->
     @albedo = percent
