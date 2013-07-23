@@ -91,6 +91,27 @@
           </button>
         </div>
       </div>
+      <div id="show-agent-controls">
+        Show:
+        <div class="checkbox">
+          <input type="checkbox" value="None" id="showGases" name="check" checked/>
+          <label for="showGases"></label>
+          <span>Gases</span>
+        </div>
+        <div class="checkbox">
+          <input type="checkbox" value="None" id="showRays" name="check" checked/>
+          <label for="showRays"></label>
+          <span>Rays</span>
+        </div>
+        <div class="checkbox">
+          <input type="checkbox" value="None" id="showHeat" name="check" checked/>
+          <label for="showHeat"></label>
+          <span>Heat</span>
+        </div>
+      <div id="year-box">
+        Year: <span id="year"></span>
+      </div>
+    </div>
       <div id="year-box">
         Year: <span id="year"></span>
       </div>
@@ -182,6 +203,13 @@
         temperatureGraph.reset();
         co2Graph.reset();
         climateModel.setup();
+      });
+
+      $('#show-agent-controls input').click(function() {
+        var $this   = $(this),
+            func    = $this.attr('id'),
+            checked = $this.is(':checked');
+        climateModel[func](checked);
       });
 
       function updateTickCounter() {

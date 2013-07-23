@@ -100,7 +100,7 @@ class OceanClimateModel extends ClimateModel
     while num--
       @vapor.create 1, (a) =>
         a.heading = u.randomCentered(Math.PI)
-        a.hidden = unless @hiding90 and Math.random() > 0.1 then false else true
+        a.hidden = unless @hidingGases or (@hiding90 and Math.random() > 0.1) then false else true
         [x,y] = @getRandomLocation(@earthTop+1, @skyTop)
         a.setXY x, y
 
@@ -186,6 +186,17 @@ class OceanClimateModel extends ClimateModel
     for agentSet in [@vapor]
       for a in agentSet[Math.ceil(agentSet.length/10)..]
         a.hidden = true
+
+  showAll: ->
+    super
+    for a in @vapor
+      a.hidden = @hidingGases
+
+  showGases: (show) ->
+    @hidingGases = !show
+    for agentSet in [@CO2, @vapor]
+      for a in agentSet
+        a.hidden = @hidingGases
 
   # normalizes an angle to [0,2PI)
   # this would be useful to be in agentset
