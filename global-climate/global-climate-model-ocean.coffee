@@ -14,12 +14,13 @@ class OceanClimateModel extends ClimateModel
     @vapor.setDefaultColor [0, 0, 255]
 
     # globals
+    @temperature = 6
     @oceanLeft = -10
     @oceanBottom = -15
     @vaporPerDegree = 0.6
     @nCO2Emission = 0.25
 
-    @icePercent = 0;
+    @icePercent = 0
 
     @oceanAbsorbtionChangable = false
     @useFixedTemperature = false
@@ -44,7 +45,7 @@ class OceanClimateModel extends ClimateModel
     @updateAlbedoOfSurface()
     @createCO2(13)
     @createVapor(5)
-    @createHeat(22)
+    @createHeat(23)
     @draw()
 
   getVaporCount : ->

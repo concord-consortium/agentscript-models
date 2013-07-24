@@ -14,10 +14,10 @@ class ClimateModel extends ABM.Model
       @agents[@agents.length - 1].die()
 
     # globals
-    @sunBrightness = 100
+    @sunBrightness = 60
     @albedo = 0.3
     @iceAlbedo = 0.95
-    @temperature = 5
+    @temperature = 8
     @agentSize = 0.75
     @skyTop = (@patches.maxY) - 5
     @earthTop = 8 + @patches.minY
@@ -55,8 +55,8 @@ class ClimateModel extends ABM.Model
     p.color = [255, 200, 200] for p in @earthPatches
     @updateAlbedoOfSurface()
     @createVolcano()
-    @createCO2(30)
-    @createHeat(20)
+    @createCO2(19)
+    @createHeat(27)
     @draw()
 
   setAlbedo: (percent) ->
