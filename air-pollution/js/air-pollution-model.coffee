@@ -277,24 +277,36 @@ class AirPollutionModel extends ABM.Model
 
   _movePollutionAgent: (a)->
     u = ABM.util
-    a.heading = a.heading + u.randomCentered(Math.PI/9)
-    speed = 0.1
-    if a.y > 20 and a.y < 340
-      if @windSpeed < -10 or (a.x < @mountainsX and @windSpeed > 10)
-        speed = Math.abs(@windSpeed / 100)
-    a.forward speed
-    if a.x < @world.minX + 1 or a.x > @world.maxX - 1 or a.y < @world.minY + 1 or a.y > @world.maxX - 1
-      return true
-    else if a.y <= 20
-      a.heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
-    else if a.y >= 340
-      a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
-    else if @windSpeed < 0
-      a.heading = u.randomFloat2(Math.PI/2+0.1, Math.PI*3/2 - 0.1)
-    else if @windSpeed > 0 and a.x < @mountainsX
-      a.heading = u.randomFloat2(Math.PI/2-0.1, -Math.PI/2 + 0.1)
 
+    # First, do a basic movement based on a randomly drifting base heading,
+    # with speed determined by the turbulence of the model.
+    a.baseHeading += u.randomCentered(Math.PI/9)
+    a.heading = a.baseHeading
+    speed = 0.1 # TODO Base this on some turbulence factor!
+    a.forward speed
+    return true if @_shouldRemovePollution a
+
+    # Now move horizontally based on wind speed
+    if @windSpeed < 0
+      a.heading = @LEFT
+      speed = Math.abs(@windSpeed / 100)
+    else if a.x < @mountainsX and @windSpeed > 0
+      a.heading = @RIGHT
+      speed = Math.abs(@windSpeed / 100)
+    a.forward speed
+    return true if @_shouldRemovePollution a
+
+    @_resetBaseHeading a
     return false
+
+  _resetBaseHeading: (a)->
+    if a.y <= 20
+      a.baseHeading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
+    else if a.y >= 340
+      a.baseHeading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
+
+  _shouldRemovePollution: (a)->
+    return (a.x < @world.minX + 1 or a.x > @world.maxX - 1 or a.y < @world.minY + 1 or a.y > @world.maxX - 1)
 
   _killPollutionOnPatch: (p)->
     for a in p.agentsHere()
@@ -319,7 +331,8 @@ class AirPollutionModel extends ABM.Model
     converted = false
     for a in p.agentsHere()
       if a? and a.breed is @primary
-        a.changeBreed @secondary
+        newA = a.changeBreed(@secondary)[0]
+        newA.baseHeading = a.baseHeading
         converted = true
     return converted
 
@@ -360,6 +373,7 @@ class AirPollutionModel extends ABM.Model
         if @carPollutionRate isnt 100 and (@anim.ticks - c.createTick) % @carPollutionRate is 0
           if ABM.util.randomInt(100) > @carElectricRate
             @primary.create 1, (p)=>
+              p.baseHeading = p.heading
               x = if c.heading is 0 then c.x-37 else c.x+37
               p.moveTo @patches.patchXY x, c.y-10
 
@@ -367,6 +381,7 @@ class AirPollutionModel extends ABM.Model
       if f? and !f.hidden
         if @factoryPollutionRate isnt 100 and (@anim.ticks - f.createTick) % @factoryPollutionRate is 0
           @primary.create 1, (p)=>
+            p.baseHeading = p.heading
             offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(@FACTORY_POLLUTION_SPAWN_OFFSETS.length)]
             p.moveTo @patches.patchXY f.x + Math.round(offset.x * f.size), f.y + Math.round(offset.y * f.size)
 
