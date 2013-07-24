@@ -142,6 +142,7 @@
           countFormatter = d3.format("3f"),
           ticks = 0,
           lastTick = 0,
+          initialTemperature,
           temperatureGraph,
           co2Graph;
 
@@ -149,6 +150,7 @@
         albedoSlider.value = climateModel.getAlbedo();
         iceSlider.value = climateModel.getIcePercent();
         sunBrightnessSlider.value = climateModel.getSunBrightness();
+        initialTemperature = climateModel.getTemperature();
       }
 
       addCO2Button.onclick = function() {
@@ -239,13 +241,13 @@
 
       temperatureGraph = Lab.grapher.Graph('#temperature-graph',
         {
-          title:  "Temperature vs Time",
+          title:  "Temperature Change",
           xlabel: "Time (year)",
           ylabel: "Temperature",
           xmax:   2020,
           xmin:   2013,
-          ymax:   40,
-          ymin:   -10,
+          ymax:   20,
+          ymin:   -20,
           xTickCount: 4,
           yTickCount: 5,
           xFormatter: "d",
@@ -257,7 +259,7 @@
 
       co2Graph = Lab.grapher.Graph('#co2-graph',
         {
-          title:  "Air CO2 (red), Ocean CO2 (green), Vapor (blue) vs Time",
+          title:  "Air CO2 (red), Ocean CO2 (green), Vapor (blue)",
           xlabel: "Time (year)",
           ylabel: "Greenhouse gases",
           xmax:   2020,
@@ -287,7 +289,7 @@
           co2Output.textContent = countFormatter(atmosphereCO2Count);
           if (!climateModel.animStop && ticksElapsed) {
             while (ticksElapsed--) {  // duplicate data if multiple model steps passed
-              temperatureGraph.addSamples([temperature]);
+              temperatureGraph.addSamples([temperature-initialTemperature]);
               co2Graph.addSamples([atmosphereCO2Count, oceanCO2Count, vaporCount]);
             }
             updateTickCounter();

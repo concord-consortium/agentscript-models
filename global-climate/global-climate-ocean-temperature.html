@@ -137,7 +137,7 @@
           co2Graph;
 
       function setupControls() {
-        initialTemperature = climateModel.getTemperature(),
+        initialTemperature = climateModel.getTemperature();
         temperatureSlider.value = initialTemperature;
       }
 
@@ -239,7 +239,7 @@
 
       co2Graph = Lab.grapher.Graph('#co2-graph',
         {
-          title:  "Air CO2 (red), Ocean CO2 (green), Vapor (blue) vs Time",
+          title:  "Air CO2 (red), Ocean CO2 (green), Vapor (blue)",
           xlabel: "Time (year)",
           ylabel: "Greenhouse gases",
           xmax:   2020,
