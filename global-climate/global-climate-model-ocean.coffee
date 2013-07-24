@@ -19,6 +19,8 @@ class OceanClimateModel extends ClimateModel
     @vaporPerDegree = 0.6
     @nCO2Emission = 0.25
 
+    @icePercent = 0;
+
     @oceanAbsorbtionChangable = false
     @useFixedTemperature = false
     @fixedTemperature = 5
@@ -55,10 +57,27 @@ class OceanClimateModel extends ClimateModel
     @CO2.with("o.y <= #{@earthTop}").length
 
   updateAlbedoOfSurface: ->
-    earthAlbedo = (Math.floor(a+@albedo*100) for a in [96, 155, 96])
-    oceanAlbedo = (Math.floor(a+@albedo*200) for a in [0, 0, 220])
+    earthAlbedo = (Math.min(Math.floor(a+@albedo*120),255) for a in [96, 155, 96])
+    oceanAlbedo = (Math.min(Math.floor(a+@albedo*120),255) for a in [0, 0, 220])
     p.color = earthAlbedo for p in @earthSurfacePatches when p.x < @oceanLeft
     p.color = oceanAlbedo for p in @earthSurfacePatches when p.x >= @oceanLeft
+
+    if @icePercent
+      iceLeft  = @patches.minX - (@patches.minX - @oceanLeft) * @icePercent
+      iceRight = @patches.maxX - (@patches.maxX - @oceanLeft) * @icePercent
+      p.color = [255, 255, 255] for p in @earthSurfacePatches when p.x < iceLeft or p.x >= iceRight
+
+    @draw()
+
+  #
+  # Ice
+  #
+  getIcePercent: ->
+    @icePercent
+
+  setIcePercent: (p) ->
+    @icePercent = p
+    @updateAlbedoOfSurface()
 
   #
   # CO2

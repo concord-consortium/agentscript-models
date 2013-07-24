@@ -16,6 +16,7 @@ class ClimateModel extends ABM.Model
     # globals
     @sunBrightness = 100
     @albedo = 0.3
+    @iceAlbedo = 0.95
     @temperature = 5
     @agentSize = 0.75
     @skyTop = (@patches.maxY) - 5
@@ -283,7 +284,9 @@ class ClimateModel extends ABM.Model
   encounterEarth: ->
     for a in @sunrays
       if a? and a.y <= @earthTop
-        if @albedo * 100 > u.randomInt(100)
+        if "#{a.p.color}" is "#{[255,255,255]}" and @iceAlbedo * 100 > u.randomInt(100)  # if ice
+          @reflectOffHorizontalPlane(a)
+        else if @albedo * 100 > u.randomInt(100)
           @reflectOffHorizontalPlane(a)
         else
           @transformToHeat(a)

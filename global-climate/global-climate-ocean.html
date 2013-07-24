@@ -59,6 +59,12 @@
         </ul>
         <ul>
           <li>
+            <label for="ice-slider">Ice Cover:</label>
+            <span class="slider-units">0 <input id="ice-slider" type="range" min="0" max="1" step="0.01"/> 100%</span>
+          </li>
+        </ul>
+        <ul>
+          <li>
             <label for="sun-brightness-slider">Sun Brightness:</label>
             <span class="slider-units">0 <input id="sun-brightness-slider" type="range" min="0" max="200" step="1"/> 200</span>
           </li>
@@ -72,7 +78,7 @@
             <span id="co2-output" class="output digits3"></span>
           </li>
         </ul>
-        <ul>
+        <ul>jsjss
           <li>
             <button id="follow-sunray-button">Follow Energy Packet</button>
             <button id="follow-co2-button">Follow CO2</button>
@@ -124,6 +130,7 @@
       var addCO2Button = document.getElementById("add-co2-button"),
           subtractCO2Button = document.getElementById("subtract-co2-button"),
           albedoSlider = document.getElementById("albedo-slider"),
+          iceSlider = document.getElementById("ice-slider"),
           sunBrightnessSlider = document.getElementById("sun-brightness-slider"),
           co2Output = document.getElementById("co2-output"),
           temperatureOutput = document.getElementById("temperature-output"),
@@ -141,6 +148,7 @@
 
       function setupControls() {
         albedoSlider.value = climateModel.getAlbedo();
+        iceSlider.value = climateModel.getIcePercent();
         sunBrightnessSlider.value = climateModel.getSunBrightness();
       }
 
@@ -187,6 +195,10 @@
 
       albedoSlider.onchange = function() {
         climateModel.setAlbedo(+albedoSlider.value);
+      }
+
+      iceSlider.onchange = function() {
+        climateModel.setIcePercent(+iceSlider.value);
       }
 
       sunBrightnessSlider.onchange = function() {
