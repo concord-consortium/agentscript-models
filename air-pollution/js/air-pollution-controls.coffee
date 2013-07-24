@@ -117,6 +117,16 @@ class AirPollutionControls
         ABM.model.factoryPollutionRate = Math.abs ui.value
     ABM.model.factoryPollutionRate = 25
 
+    $("#temperature-slider").slider
+      orientation: 'horizontal'
+      min: 0
+      max: 100
+      step: 10
+      value: 50
+      slide: (evt, ui)->
+        ABM.model.temperature = ui.value
+    ABM.model.temperature = 50
+
   startStopModel: ->
     @stopModel() unless @startModel()
 

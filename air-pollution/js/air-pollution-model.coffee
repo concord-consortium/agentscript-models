@@ -37,6 +37,7 @@ class AirPollutionModel extends ABM.Model
   carElectricRate: 25
   factoryPollutionRate: 5
   raining: false
+  temperature: 50
 
   setup: ->
     @anim.setRate 30, false
@@ -282,7 +283,7 @@ class AirPollutionModel extends ABM.Model
     # with speed determined by the turbulence of the model.
     a.baseHeading += u.randomCentered(Math.PI/9)
     a.heading = a.baseHeading
-    speed = 0.1 # TODO Base this on some turbulence factor!
+    speed = (@temperature+1)/250 # TODO Base this on some turbulence factor!
     a.forward speed
     return true if @_shouldRemovePollution a
 
@@ -295,6 +296,11 @@ class AirPollutionModel extends ABM.Model
       speed = Math.abs(@windSpeed / 100)
     a.forward speed
     return true if @_shouldRemovePollution a
+
+    # Now move vertically based on temperature. The higher the temp, the more upward motion.
+    a.heading = @UP
+    speed = Math.pow(2, (@temperature-130)/20)
+    a.forward speed
 
     @_resetBaseHeading a
     return false
