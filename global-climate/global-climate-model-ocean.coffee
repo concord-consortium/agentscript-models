@@ -234,6 +234,7 @@ class OceanClimateModel extends ClimateModel
 
   setFixedTemperature: (t) ->
     @fixedTemperature = t
+    @updateTemperature()
 
   updateTemperature: ->
     super
