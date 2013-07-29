@@ -358,6 +358,50 @@ class ClimateModel extends ABM.Model
       @createCO2 1, [-17, -1.5], Math.PI/2
 
   #
+  # HumanEmissions (Factories)
+  #
+  setHumanEmissionRate: (r) ->
+    @humanEmissionRate = r
+    if r >= 0.9
+      @setNumFactories 3
+    else if r >= 0.5
+      @setNumFactories 2
+    else if r >= 0.1
+      @setNumFactories 1
+    else @setNumFactories 0
+
+  getHumanEmissionRate: ->
+    @humanEmissionRate
+
+  setNumFactories: (n) ->
+    return if n is @numFactories
+
+    while n < @numFactories
+      @factories[0].die()
+      @numFactories--
+
+    if n > @numFactories
+      while @factories.length
+        @factories.last().die()
+
+      @numFactories = n
+
+      while n--
+        @factories.create 1, (a) =>
+          a.setXY (-24 + (8/(1+(0.5*n)))), @earthTop+1
+          a.size = 1 / (1+(0.5*n))
+
+    @draw()
+
+  runPollution: ->
+    emissionStep = Math.floor 120 / (@humanEmissionRate * 2)
+    if @anim.ticks % emissionStep is 0
+      @emitPollution()
+
+  emitPollution: ->
+    @createCO2 1, [-15, @earthTop+4], Math.PI/2
+
+  #
   # Global Functions
   #
   hide90: ->
@@ -416,6 +460,7 @@ class ClimateModel extends ABM.Model
     @runHeat()
     @runIR()
     @runCO2()
+    @runPollution()
 
 window.ClimateModel = ClimateModel
 
