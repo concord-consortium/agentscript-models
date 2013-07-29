@@ -169,6 +169,9 @@ class ClimateModel extends ABM.Model
       a = agents.oneOf()
       @setSpotlight a
 
+  removeSpotlight: ->
+    @setSpotlight null
+
   #
   # IR
   #
