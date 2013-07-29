@@ -123,6 +123,7 @@ class ClimateModel extends ABM.Model
 
   transformToIR: (_a) ->
     a = _a.changeBreed(@IR)[0]
+    @setSpotlight a if _a is @spotlightAgent
     a.heading = -@sunlightHeading
     a.hidden = unless @hidingRays or (@hiding90 and Math.random() > 0.1) then false else true
     # a.heading = u.randomFloat2(2.6, 0.5)
@@ -130,6 +131,7 @@ class ClimateModel extends ABM.Model
 
   transformToHeat: (_a) ->
     a = _a.changeBreed(@heat)[0]
+    @setSpotlight a if _a is @spotlightAgent
     a.y = @earthTop-1
     a.heading = u.randomFloat2(-0.5, -Math.PI+0.5)
     a.shape = "circle"
@@ -181,7 +183,9 @@ class ClimateModel extends ABM.Model
         a.forward 0.5
         if @CO2.inRadius(a, 1).any()
           a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
-        a.die() if a.heading == -@sunlightHeading && a.y > (14)
+        if a.heading == -@sunlightHeading && a.y > (14)
+          a.die()
+          @setSpotlight null if a is @spotlightAgent
         if a.y <= @earthTop
           @transformToHeat(a)
 
@@ -214,6 +218,7 @@ class ClimateModel extends ABM.Model
     if heading < Math.PI && heading > 0
       if ypos < @patches.minY || ypos >= @patches.maxY
         a.die()
+        @setSpotlight null if a is @spotlightAgent
 
   createHeat: (num) ->
     while num--
