@@ -73,6 +73,12 @@
         </ul>
         <ul>
           <li>
+            <label for="human-emissions-slider">Human Emissions (% of 2010 levels):</label>
+            <span class="slider-units">0 <input id="human-emissions-slider" type="range" min="0" max="1" step="0.1"/> 200%</span>
+          </li>
+        </ul>
+        <ul>
+          <li>
             <button id="add-clouds-button">Add Cloud</button>
             <button id="subtract-clouds-button">Subtract Cloud</button>
           </li>
@@ -134,6 +140,7 @@
           albedoSlider = document.getElementById("albedo-slider"),
           iceSlider = document.getElementById("ice-slider"),
           sunBrightnessSlider = document.getElementById("sun-brightness-slider"),
+          humanEmissionsSlider = document.getElementById("human-emissions-slider"),
           co2Output = document.getElementById("co2-output"),
           temperatureOutput = document.getElementById("temperature-output"),
           addCloudsButton = document.getElementById("add-clouds-button"),
@@ -153,6 +160,7 @@
         albedoSlider.value = climateModel.getAlbedo();
         iceSlider.value = climateModel.getIcePercent();
         sunBrightnessSlider.value = climateModel.getSunBrightness();
+        humanEmissionsSlider.value = climateModel.getHumanEmissionRate();
         initialTemperature = climateModel.getTemperature();
       }
 
@@ -207,6 +215,10 @@
 
       sunBrightnessSlider.onchange = function() {
         climateModel.setSunBrightness(+sunBrightnessSlider.value);
+      }
+
+      humanEmissionsSlider.onchange = function() {
+        climateModel.setHumanEmissionRate(+humanEmissionsSlider.value);
       }
 
       $('#play-pause-button').click(function() {
