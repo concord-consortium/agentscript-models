@@ -17,7 +17,6 @@ class OceanClimateModel extends ClimateModel
     @temperature = 5
     @oceanLeft = -10
     @oceanBottom = -15
-    @vaporPerDegree = 0.5
     @nCO2Emission = 0.25
 
     @icePercent = 0
@@ -139,7 +138,11 @@ class OceanClimateModel extends ClimateModel
 
   # Adds or removes water vapor based on temp
   updateVapor: ->
-    target = Math.max 0, Math.round @temperature * @vaporPerDegree
+    ## original NLogo formula, with @vaporPerDegree = 0.6
+    #target = Math.max 0, Math.round @temperature * @vaporPerDegree
+    ## new log function to prevent vapor getting too high and causing too much pos feedback
+    target = Math.round((Math.log(@temperature+4)*5)-7)
+    target = Math.max 0, target
     count  = @getVaporCount()
 
     if count > target
