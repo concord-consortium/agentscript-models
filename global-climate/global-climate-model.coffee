@@ -1,12 +1,14 @@
 class ClimateModel extends ABM.Model
-  u = ABM.util # static variable
+
+  u = ABM.util
+
   setup: -> # called by Model ctor
     @anim.ticks = 1
     @refreshPatches = true
-    @agentBreeds "sunrays heat IR CO2 clouds"
+    @agentBreeds "sunrays heat IR CO2 clouds factories"
 
-    @patches.usePixels() # 24fps
-    @agents.setUseSprites() # 24->46-48fps
+
+    @setFastPatches()
     @anim.setRate 100, true
 
     # remove all existing agents
@@ -30,12 +32,27 @@ class ClimateModel extends ABM.Model
     @hidingGases = false
     @hidingHeat = false
     @showFPS = false
+    @humanEmissionRate = 0
+    @numFactories = 0
 
+    # import images
+    @setCacheAgentsHere()
+    factoryImg = document.getElementById('factory-sprite')
+    ABM.shapes.add "factory", false, (ctx)=>
+      ctx.scale(-0.05, 0.05);
+      ctx.translate(100,65)
+      ctx.rotate Math.PI
+      ctx.drawImage(factoryImg, 0, 0)
+
+    # set default agent shapes
     @agents.setDefaultSize @agentSize
     @agents.setDefaultShape "arrow"
     @sunrays.setDefaultColor [255,255,0]
     @heat.setDefaultShape "circle"
     @IR.setDefaultColor [200, 32, 200]
+    @factories.setDefaultShape "factory"
+    @factories.setDefaultColor [0,0,0]
+    @factories.setDefaultSize 1
 
     @spacePatches =        (p for p in @patches when p.y == @patches.maxY)
     @skyTopPatches =       (p for p in @patches when p.y <  @patches.maxY && p.y > @skyTop)

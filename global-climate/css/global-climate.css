@@ -230,3 +230,7 @@ circle {
   top: -15px;
   left: 24px;
 }
+
+#sprites {
+  display: none;
+}
