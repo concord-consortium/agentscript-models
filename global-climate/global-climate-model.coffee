@@ -322,7 +322,7 @@ class ClimateModel extends ABM.Model
   addSunraySpotlight: ->
     # try to add spotlight to a sunray at very top heading downwards
     foundOne = false
-    for a in @sunrays.shuffle()
+    for a in @sunrays
       if not @headingUp(a) and a.y > @patches.maxY-5 and not a.hidden
         foundOne = true
         @setSpotlight a
