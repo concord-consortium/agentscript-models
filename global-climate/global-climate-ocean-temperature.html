@@ -122,8 +122,6 @@
           temperatureOutput = document.getElementById("temperature-output"),
           addCloudsButton = document.getElementById("add-clouds-button"),
           subtractCloudsButton = document.getElementById("subtract-clouds-button"),
-          followSunrayButton = document.getElementById("follow-sunray-button"),
-          followCO2Button = document.getElementById("follow-co2-button"),
           yearCounter = document.getElementById("year"),
           temperatureFormatter = d3.format("3.1f"),
           countFormatter = d3.format("3f"),
@@ -154,19 +152,27 @@
         climateModel.subtractCloud();
       }
 
-      followSunrayButton.onclick = function() {
-        climateModel.addSunraySpotlight();
-      }
-
-      followCO2Button.onclick = function() {
-        if (this.textContent === "Follow CO2") {
-          climateModel.addCO2Spotlight();
-          this.textContent = "Stop following";
+      $('#follow-sunray-button').click(function() {
+        $span = $(this).find("span");
+        if ($span.text() === "Follow Energy Packet") {
+          climateModel.addSunraySpotlight();
+          $span.text("Stop following");
         } else {
           climateModel.removeSpotlight();
-          this.textContent = "Follow CO2";
+          $span.text("Follow Energy Packet");
         }
-      }
+      });
+
+      $('#follow-co2-button').click(function() {
+        $span = $(this).find("span");
+        if ($span.text() === "Follow CO2") {
+          climateModel.addCO2Spotlight();
+          $span.text("Stop following");
+        } else {
+          climateModel.removeSpotlight();
+          $span.text("Follow CO2");
+        }
+      });
 
       $('#hide-button').click(function() {
         $span = $(this).find("span");
