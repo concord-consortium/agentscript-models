@@ -164,7 +164,7 @@ class ClimateModel extends ABM.Model
           a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
 
   addCO2Spotlight: ->
-    agents = @CO2.getWithProp "hidden", false
+    agents = @CO2.getPropWith "hidden", false
     if agents.any()
       a = agents.oneOf()
       @setSpotlight a
@@ -326,7 +326,7 @@ class ClimateModel extends ABM.Model
         break
     if not foundOne
       # if we did not find one, add spotlight to random VISIBLE sunray
-      agents = @sunrays.getWithProp "hidden", false
+      agents = @sunrays.getPropWith "hidden", false
       if agents.any()
         a = agents.oneOf()
         @setSpotlight a
