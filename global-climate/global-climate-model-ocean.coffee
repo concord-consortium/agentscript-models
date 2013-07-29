@@ -14,7 +14,7 @@ class OceanClimateModel extends ClimateModel
     @vapor.setDefaultColor [0, 0, 255]
 
     # globals
-    @temperature = 6
+    @temperature = 5
     @oceanLeft = -10
     @oceanBottom = -15
     @vaporPerDegree = 0.6
@@ -90,12 +90,13 @@ class OceanClimateModel extends ClimateModel
         if a.y <= @oceanBottom                          # stop at bottom of ocean
           a.stamp()
           a.die()
+          return
         if a.y <= @earthTop + 1 and a.x < @oceanLeft    # bounce off land
           a.heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
-        if a.y <= @earthTop + 1 and a.y > @earthTop + 0.9 and a.x >= @oceanLeft    # bounce off sea?
+        else if a.y <= @earthTop + 1 and a.y > @earthTop + 0.9 and a.x >= @oceanLeft    # bounce off sea?
           if @oceanCO2Absorbtion < u.randomFloat 1
             a.heading = Math.PI/2
-        if a.y >= @skyTop + 1                           # bounce off sky
+        else if a.y >= @skyTop + 1                           # bounce off sky
           a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
 
         a.forward 0.1
