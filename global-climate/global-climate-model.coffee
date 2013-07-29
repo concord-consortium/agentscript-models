@@ -14,7 +14,7 @@ class ClimateModel extends ABM.Model
       @agents[@agents.length - 1].die()
 
     # globals
-    @sunBrightness = 60
+    @sunBrightness = 75
     @albedo = 0.3
     @iceAlbedo = 0.95
     @temperature = 8
@@ -55,7 +55,7 @@ class ClimateModel extends ABM.Model
     p.color = [255, 200, 200] for p in @earthPatches
     @updateAlbedoOfSurface()
     @createVolcano()
-    @createCO2(19)
+    @createCO2(13)
     @createHeat(27)
     @draw()
 
@@ -186,7 +186,7 @@ class ClimateModel extends ABM.Model
     u.randomInt(100) < (temperature * 20) && u.randomInt(20) < 2
 
   updateTemperature: ->
-    @temperature = 0.99 * @temperature + 0.01 * (-7 + 0.5 * @heat.length)
+    @temperature = 0.99 * @temperature + 0.01 * (-6 + 0.4 * @heat.length)
 
   leaveToSpace: (a) ->
     heading = a.heading % Math.PI

@@ -17,7 +17,7 @@ class OceanClimateModel extends ClimateModel
     @temperature = 5
     @oceanLeft = -10
     @oceanBottom = -15
-    @vaporPerDegree = 0.6
+    @vaporPerDegree = 0.5
     @nCO2Emission = 0.25
 
     @icePercent = 0
