@@ -19,8 +19,8 @@ class FrackingControls
       , 500
 
   setupPlayback: ->
-      $(".icon-pause").hide()
-      $(".icon-play").show()
+      $(".icon-pause").show()
+      $(".icon-play").hide()
       $("#controls").show()
       $("#play-pause-button").button()
       .click =>
