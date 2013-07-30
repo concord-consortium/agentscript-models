@@ -6,6 +6,8 @@ class FrackingModel extends ABM.Model
   waterDepth: 0
   oilDepth: 0
   baseDepth: 0
+  rock1Depth: 0
+  rock2Depth: 0
   width: 0
   height: 0
   shaleFractibility: 42
@@ -209,7 +211,12 @@ class FrackingModel extends ABM.Model
       when "land"  then [ 29, 159, 120]
       when "water" then [ 52,  93, 169]
       when "shale" then [237, 237,  49]
-      when "rock"  then [157, 110,  72]
+      when "rock"
+        if p.rockType is "rock1" then [157, 110,  72]
+        else if p.rockType is "rock2" then [157, 132,  72]
+        else if p.rockType is "rock3" then [90, 57,  40]
+        else if p.rockType is "rock4" then [157, 110,  64]
+        else [81, 61,  54]
       when "well"  then [141, 141, 141]
       when "wellWall" then [87, 87, 87]
       when "exploding" then [215, 50, 41]
@@ -225,6 +232,9 @@ class FrackingModel extends ABM.Model
     @airDepth   = @height - 90 # Math.round(@patches.minY + @patches.maxY * 0.8)
     @landDepth  = @airDepth - 20 # Math.round(@patches.minY + @patches.maxY * 0.75)
     @waterDepth = @landDepth - 50 # Math.round(@patches.minY + @patches.maxY * 0.6)
+    @rock1Depth = Math.round(@patches.minY + @waterDepth * 0.6)
+    @rock2Depth = Math.round(@patches.minY + @waterDepth * @u.randomFloat2(0.6,0.7))
+    @rock3Depth = Math.round(@patches.minY + @waterDepth * 0.4)
     @oilDepth   = Math.round(@patches.minY + @waterDepth * 0.2)
     @baseDepth  = Math.round(@patches.minY + @waterDepth * 0.1)
 
@@ -238,15 +248,22 @@ class FrackingModel extends ABM.Model
     @pondLeakProbability = 1 if FrackingModel.DEBUG
 
   setupPatches: ->
-    shaleUpperModifier = @u.randomFloat(1.5)
-    shaleLowerModifier = @u.randomFloat(1.5)
+    @shale = []
+
+    shaleUpperModifier = @u.randomFloat(0.2)
+    shaleLowerModifier = @u.randomFloat(0.4)
+    rock1Angle = @u.randomFloat(0.1)+0.2
+    rock2Angle = @u.randomFloat(0.1)+0.05
     for p in @patches
       p.type = "n/a"
       p.color = [255,255,255]
       # continue if p.isOnEdge()
       waterLowerDepth = (@waterDepth + @height * Math.sin(@u.degToRad(0.6*p.x - (@width / 4))) / 160)
+      rock1LowerDepth = (p.x*rock1Angle)+(@rock1Depth + @height * -Math.sin(@u.degToRad(0.3*p.x - (@width / 4))) / 160)
+      rock2LowerDepth = (p.x*rock2Angle)+(@rock2Depth + @height * Math.sin(@u.degToRad(0.4*p.x - (@width / 4))) / 160)
+      rock3LowerDepth = (@rock3Depth + @height * Math.sin(@u.degToRad(0.2*p.x - (@width / 4))) / 160)
       shaleUpperDepth = (@oilDepth + @height * Math.sin(@u.degToRad(shaleUpperModifier * p.x)) / 30)
-      shaleLowerDepth = (@baseDepth + @height * 0.9 * Math.sin(@u.degToRad(shaleLowerModifier * p.x + 45)) / 50 + (p.x / 10))
+      shaleLowerDepth = (@baseDepth + @height * 0.9 * -Math.sin(@u.degToRad(shaleLowerModifier * p.x + 45)) / 50 + (p.x / 10))
       if p.y > @airDepth
         p.type = "air"
         @setPatchColor(p, false)
@@ -256,14 +273,29 @@ class FrackingModel extends ABM.Model
       else if @landDepth >= p.y > waterLowerDepth
         p.type = "water"
         @setPatchColor(p, false) if FrackingModel.DEBUG
-      else if waterLowerDepth >= p.y > shaleUpperDepth
+      else if waterLowerDepth >= p.y > rock1LowerDepth
         p.type = "rock"
+        p.rockType = "rock1"
+        @setPatchColor(p, false) if FrackingModel.DEBUG
+      else if rock1LowerDepth >= p.y > rock2LowerDepth
+        p.type = "rock"
+        p.rockType = "rock2"
+        @setPatchColor(p, false) if FrackingModel.DEBUG
+      else if rock2LowerDepth >= p.y > rock3LowerDepth
+        p.type = "rock"
+        p.rockType = "rock3"
+        @setPatchColor(p, false) if FrackingModel.DEBUG
+      else if rock3LowerDepth >= p.y > shaleUpperDepth
+        p.type = "rock"
+        p.rockType = "rock4"
         @setPatchColor(p, false) if FrackingModel.DEBUG
       else if shaleUpperDepth >= p.y > shaleLowerDepth
+        @shale.push p
         p.type = "shale"
         @setPatchColor(p, false) if FrackingModel.DEBUG
       else if p.y <= shaleLowerDepth
         p.type = "rock"
+        p.rockType = "rock5"
         @setPatchColor(p, false) if FrackingModel.DEBUG
       @toRedraw.push p
       @redraw() if @toRedraw.length > 1000
