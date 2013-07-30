@@ -45,6 +45,8 @@ class FrackingModel extends ABM.Model
     @setupAgents()
     @setupGlobals()
     @setupPatches()
+    @spawnInitialShaleGas()
+    @draw()
 
     $(document).trigger 'model-ready'
 
@@ -54,9 +56,9 @@ class FrackingModel extends ABM.Model
     @anim.draw()
 
   setupAgents: ->
-    @agentBreeds "gas waterGas pondWater"
+    @agentBreeds "gas waterGas shaleGas pondWater"
 
-    for agents in [@gas, @waterGas]
+    for agents in [@gas, @waterGas, @shaleGas]
       agents.setDefaultShape "circle"
       agents.setDefaultSize 2
       agents.setDefaultColor [255, 0, 0]
@@ -64,6 +66,10 @@ class FrackingModel extends ABM.Model
     @pondWater.setDefaultShape "circle"
     @pondWater.setDefaultSize 3
     @pondWater.setDefaultColor [38,  90,  90]
+
+  spawnInitialShaleGas: ->
+    for p in @shale
+      p.sprout(1, @shaleGas) if @u.randomFloat(1) < 0.02
 
   step: ->
     # move gas turtles to the surface, if possible
@@ -81,6 +87,9 @@ class FrackingModel extends ABM.Model
           a.moveable = a.well.capped
       @moveAgentTowardPipeCenter(a)
 
+    for a in @shaleGas
+      @moveShaleGas(a)
+
     for a in @waterGas
       @moveWaterPollution(a)
 
@@ -97,9 +106,10 @@ class FrackingModel extends ABM.Model
     if @toKill.length > 0
       for a in @toKill
         a.die()
-        @killed++
-        a.well.killed++
-        a.well.totalKilled++
+        if a.well
+          @killed++
+          a.well.killed++
+          a.well.totalKilled++
       @toKill = []
 
     for well in @wells
@@ -170,6 +180,16 @@ class FrackingModel extends ABM.Model
         a.forward 1
       else
         console.log("Hit layer: " + a.p.type)
+
+  moveShaleGas: (a) ->
+    if a.p.type is "open"
+      @toKill.push a
+    else if a.p.type isnt "shale"
+      a.moveTo @shale[@u.randomInt @shale.length]
+    else
+      a.heading = @u.randomFloat(Math.PI*2)
+      a.forward 0.5
+    a.hidden = "#{a.p.color}" is "#{[255,255,255]}"
 
   moveWaterPollution: (a, offset=0)->
     return if a.hidden
