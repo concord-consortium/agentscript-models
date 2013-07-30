@@ -1,5 +1,6 @@
 class FrackingModel extends ABM.Model
   @DEBUG: false
+  @showEarthPatches: false
   u: ABM.util
   airDepth: 0
   landDepth: 0
@@ -272,31 +273,31 @@ class FrackingModel extends ABM.Model
         @setPatchColor(p, false)
       else if @landDepth >= p.y > waterLowerDepth
         p.type = "water"
-        @setPatchColor(p, false) if FrackingModel.DEBUG
+        @setPatchColor(p, false) if FrackingModel.showEarthPatches
       else if waterLowerDepth >= p.y > rock1LowerDepth
         p.type = "rock"
         p.rockType = "rock1"
-        @setPatchColor(p, false) if FrackingModel.DEBUG
+        @setPatchColor(p, false) if FrackingModel.showEarthPatches
       else if rock1LowerDepth >= p.y > rock2LowerDepth
         p.type = "rock"
         p.rockType = "rock2"
-        @setPatchColor(p, false) if FrackingModel.DEBUG
+        @setPatchColor(p, false) if FrackingModel.showEarthPatches
       else if rock2LowerDepth >= p.y > rock3LowerDepth
         p.type = "rock"
         p.rockType = "rock3"
-        @setPatchColor(p, false) if FrackingModel.DEBUG
+        @setPatchColor(p, false) if FrackingModel.showEarthPatches
       else if rock3LowerDepth >= p.y > shaleUpperDepth
         p.type = "rock"
         p.rockType = "rock4"
-        @setPatchColor(p, false) if FrackingModel.DEBUG
+        @setPatchColor(p, false) if FrackingModel.showEarthPatches
       else if shaleUpperDepth >= p.y > shaleLowerDepth
         @shale.push p
         p.type = "shale"
-        @setPatchColor(p, false) if FrackingModel.DEBUG
+        @setPatchColor(p, false) if FrackingModel.showEarthPatches
       else if p.y <= shaleLowerDepth
         p.type = "rock"
         p.rockType = "rock5"
-        @setPatchColor(p, false) if FrackingModel.DEBUG
+        @setPatchColor(p, false) if FrackingModel.showEarthPatches
       @toRedraw.push p
       @redraw() if @toRedraw.length > 1000
 
