@@ -23,6 +23,19 @@ Then
 
 You can then find the index at file://path.to.agentscript-models/index.html
 
+## Locally viewing models
+
+The models cannot be viewed using a simple `file://` URL.
+So you can either use a webserver like apache to serve the files, or use an included ruby based rack server.
+To use the rack server you should:
+
+    cd local-server
+    bundle install --binstubs
+    bin/rackup
+    open http://localhost:9292/
+
+If you haven't used bundler, ruby, and rvm or rbenv before, you will probably need to learn a bit about those before this will work for you.
+
 ## GitHub pages
 
 The live version of this site can be found at [http://concord-consortium.github.io/agentscript-models/](http://concord-consortium.github.io/agentscript-models/)
