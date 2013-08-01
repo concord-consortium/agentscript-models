@@ -1,0 +1,144 @@
+<meta http-equiv="content-type" content="text/html; charset=UTF8">
+<html>
+  <head>
+    <title>AgentScript Model</title>
+    <script src="../lib/agentscript/agentscript.js"></script>
+    <script src="../lib/agentscript/coffee-script.js"></script>
+    <link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
+    <link href="css/layout.css" rel="stylesheet" type="text/css" />
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js"></script>
+    <!-- <script src="http://lab.concord.org/vendor/d3/d3.js"></script> -->
+    <!-- <script src="../lib/lab.grapher.js"></script> -->
+    <script type="text/coffeescript" src="js/air-pollution-aerial-model.coffee"></script>
+    <script type="text/javascript">
+      var modelLoaded = $.Deferred();
+
+      $(function() {
+        $("button").button();
+        $("#playback").buttonset();
+        $(".icon-pause").hide();
+      });
+
+      $.when(modelLoaded).done(function() {
+        model = new AirPollutionAerial("layers", 3, 0, 150, 0, 150, false);
+        //model.start();
+      });
+    </script>
+    <script src="http://shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
+    <script type="text/javascript">new Shutterbug('#content', '', null, null);</script>
+  </head>
+  <body>
+    <div id="sprites">
+      <img id="factory-sprite" src="img/factory.png" />
+    </div>
+    <div id="content">
+      <div id="model">
+        <canvas id="canvas" >Your browser does not support HTML5 Canvas.</canvas>
+        <div id="layers"></div>
+      </div>
+      <div id="playback-controls">
+        <div id="playback">
+          <button id="reset-button">
+            <i class="icon-step-backward"></i>
+          </button>
+          <button id="play-pause-button">
+            <i class="icon-play"></i>
+            <i class="icon-pause"></i>
+          </button>
+        </div>
+      </div>
+      <div id="joystick-control">
+        <div id="base">
+            <div id="joystick"></div>
+        </div>
+    </div>
+    <script>
+      $('#play-pause-button').click(function() {
+        if (model.anim.animStop) {
+          model.start();
+          $(".icon-pause").show();
+          $(".icon-play").hide();
+        } else {
+          model.stop();
+          $(".icon-pause").hide();
+          $(".icon-play").show();
+        }
+      });
+
+      $('#reset-button').click(function() {
+        model.stop();
+        model.setup();
+      });
+
+
+      var baseEl = document.getElementById("base");
+      var joystickEl = document.getElementById("joystick");
+      var base = {
+          width: baseEl.offsetWidth,
+          height: baseEl.offsetHeight,
+          top: baseEl.offsetTop,
+          left: baseEl.offsetLeft
+      };
+      var joystick = {
+          halfWidth: joystickEl.offsetWidth/2,
+          halfHeight: joystickEl.offsetHeight/2
+      };
+      base.center = [base.width / 2, base.height / 2];
+      base.radius = base.width / 2;
+
+
+      $("#joystick").draggable({
+          revert: false,    // set to true to have joystick slide back to center
+          create: function () {
+              joystick.startLeft = parseInt($(this).css("left"));
+              joystick.startRight = parseInt($(this).css("top"));
+              $(this).data("startLeft", joystick.startLeft);
+              $(this).data("startTop", joystick.startRight);
+          },
+          drag: function (event, ui) {
+              loc = limitXY(ui.position.left+joystick.halfWidth, ui.position.top+joystick.halfHeight);
+              if (loc) {
+                  ui.position.left = loc.x-joystick.halfWidth;
+                  ui.position.top = loc.y-joystick.halfHeight;
+              }
+              var rel_left = ui.position.left - joystick.startLeft;
+              var rel_top = ui.position.top - joystick.startRight;
+              joystickMoved(rel_left, rel_top);
+              //$('#coords').text(rel_left + ", " + rel_top);
+          },
+          stop: function () {
+              //$('#coords').html("&nbsp;");
+          }
+      });
+
+      function limitXY(x, y) {
+          var dist = distance([x, y], base.center);
+          if (dist <= base.radius - joystick.halfWidth) {
+              return null;
+          } else {
+              x = x - base.center[0];
+              y = y - base.center[1];
+              var radians = Math.atan2(y, x);
+              return {
+                  x: Math.cos(radians) * (base.radius-joystick.halfWidth) + base.center[0],
+                  y: Math.sin(radians) * (base.radius-joystick.halfWidth) + base.center[1]
+              };
+          }
+      }
+
+      function distance(dot1, dot2) {
+          var x1 = dot1[0],
+              y1 = dot1[1],
+              x2 = dot2[0],
+              y2 = dot2[1];
+          return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+      }
+
+      function joystickMoved(x, y) {
+        model.setWindSpeed(x/30, -y/30);
+      }
+    </script>
+  </body>
+</html>

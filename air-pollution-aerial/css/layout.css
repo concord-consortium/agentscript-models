@@ -1,0 +1,51 @@
+#playback-controls {
+  position: absolute;
+  top: 455px;
+  left: 10px;
+}
+
+#playback-controls i {
+  color: #939598;
+  font-size: 1.35em;
+  vertical-align: middle;
+}
+
+#buttons {
+  display: inline-block;
+  margin-left: 15px;
+}
+
+#reset-button {
+  border-bottom-left-radius: 0.7em;
+}
+
+#play-pause-button {
+  min-width: 3.2em;
+  border-bottom-right-radius: 0.7em;
+}
+
+#joystick-control {
+    position: absolute;
+    left: 500px;
+    top: 300px;
+}
+
+#base {
+    background-color: lightgray;
+    width: 100px;
+    height: 100px;
+    padding:0px;
+    border-radius: 100px
+}
+
+#joystick {
+    background-color:red;
+    position:relative;
+    margin:0px;
+    padding:0px;
+    width: 40px;
+    height: 40px;
+    left:30px;
+    top:30px;
+    border-radius: 100px
+}
