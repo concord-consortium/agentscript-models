@@ -128,44 +128,36 @@ class FrackingControls
   outputGraph: null
   outputGraphs: null
   setupGraph: ->
-    @outputGraphs = []
     defaultOptions =
       title:  "Combined Output vs Time"
       xlabel: "Time (years)"
       ylabel: "Methane"
       xmax:   40
       xmin:   0
-      ymax:   1000
+      ymax:   600
       ymin:   0
       xTickCount: 4
       yTickCount: 5
       xFormatter: "3.3r"
-      sample: 1
-      realTime: true
+      realTime: false
       fontScaleRelativeToParent: true
 
     @outputGraph = Lab.grapher.Graph '#output-graph', defaultOptions
 
-    # start the graph at 0,0
-    @outputGraph.addSamples [0]
+    # start the graph with four lines, each at 0,0
+    @outputGraph.addSamples [0, 0, 0, 0]
 
     $(document).on FrackingModel.YEAR_ELAPSED, =>
-      killed = ABM.model.killed
-      ABM.model.killed = 0
-      @outputGraph.addSamples [killed] if killed > 0
+      killed = [0,0,0,0]
+      killed[3] = ABM.model.killed
 
-    $(document).on Well.YEAR_ELAPSED, (evt,well)=>
-      killed = well.killed
-      well.killed = 0
-      @outputGraphs[well.id].addSamples [killed] if killed > 0
+      for well, i in ABM.model.wells
+        killed[i] = well.killed
+        well.killed = 0
 
-    $(document).on Well.CREATED, (evt,well)=>
-      # Add the graph to the DOM
-      $("#output-graphs").append "<div id='output-graph-" + well.id + "' class='graph'></div>"
-      # init the graph
-      defaultOptions.title = "Well " + well.id + " Output vs Time"
-      @outputGraphs[well.id] = Lab.grapher.Graph '#output-graph-'+well.id, defaultOptions
-      @outputGraphs[well.id].addSamples [0]
+      #contaminants = ABM.model.contaminants
+      ABM.model.killed = ABM.model.contaminants = 0
+      @outputGraph.addSamples killed if killed[0] > 0
 
   startStopModel: ->
     @stopModel() unless @startModel()
