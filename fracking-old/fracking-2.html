@@ -1,0 +1,88 @@
+<meta http-equiv="content-type" content="text/html; charset=UTF8">
+<html>
+  <head>
+    <title>Fracking Model</title>
+    <link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="http://lab.concord.org/vendor/d3/d3.js"></script>
+    <script src="../lib/lab.grapher.js"></script>
+    <script src="../lib/agentscript/agentscript.js"></script>
+    <script src="../lib/agentscript/coffee-script.js"></script>
+
+    <link href="css/fracking.css" rel="stylesheet" type="text/css" />
+    <link href="css/graph.css" rel="stylesheet" type="text/css" />
+    <script src="js/fracking-model.coffee" type="text/coffeescript"></script>
+    <script src="js/fracking-controls.coffee" type="text/coffeescript"></script>
+    <script src="http://shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
+    <script type="text/javascript">new Shutterbug('body', '', null, null);</script>
+  </head>
+  <body>
+    <div id="controls">
+      <div id="playback" class="button-set">
+        <button id="reset-button">
+          <i class="icon-step-backward"></i>
+        </button>
+        <button id="play-pause-button">
+          <i class="icon-play"></i>
+          <i class="icon-pause"></i>
+        </button>
+      </div>
+      <div class="button-set">
+        <div id="drilling">
+          <div id="drilling-header">Drill</div>
+          <div id="drilling-buttons">
+            <input type="checkbox" id="drill-left" /><label for="drill-left"><i class="icon-long-arrow-left"></i></label>
+            <input type="checkbox" id="drill-down" /><label for="drill-down"><i class="icon-long-arrow-down"></i></label>
+            <input type="checkbox" id="drill-right" /><label for="drill-right"><i class="icon-long-arrow-right"></i></label>
+          </div>
+        </div>
+      </div>
+      <div class="button-set">
+        <button id="explosion">Set off explosions</button>
+      </div>
+      <div id="filling" class="button-set">
+        <div>
+          <button id="fill-water">Fill with water</button>
+        </div>
+        <div>
+          <button id="fill-propane">Fill with propane</button>
+        </div>
+      </div>
+      <div class="button-set">
+        <button id="remove-fluid">Pump out fracking fluid</button>
+      </div>
+    </div>
+    <div id="model-viewport">
+      <div id="model">
+        <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+        <div id="layers"></div>
+        <div id="mouse-catcher"></div>
+      </div>
+    </div>
+    <div id='output-graphs'>
+      <div id='output-graph' class="graph"></div>
+    </div>
+    <script>
+      var modelReady = false, controls = null;
+      $(document).one('fracking-model-loaded', function() {
+        APP=new FrackingModel("layers", 1, 0, 799, 0, 1444, false);
+        APP.setRootVars();
+      });
+      $(document).on('model-ready', function() {
+        if (controls !== null) {
+          controls.setup();
+        }
+        modelReady = true;
+      });
+      $(document).one('fracking-controls-loaded', function() {
+        controls = new FrackingControls();
+        if (modelReady) {
+          controls.setup();
+          APP.start();
+        }
+      });
+    </script>
+  </body>
+</html>
