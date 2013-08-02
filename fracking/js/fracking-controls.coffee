@@ -128,7 +128,7 @@ class FrackingControls
   outputGraph: null
   outputGraphs: null
   setupGraph: ->
-    defaultOptions =
+    outputOptions =
       title:  "Combined Output vs Time"
       xlabel: "Time (years)"
       ylabel: "Methane"
@@ -142,7 +142,7 @@ class FrackingControls
       realTime: false
       fontScaleRelativeToParent: true
 
-    @outputGraph = Lab.grapher.Graph '#output-graph', defaultOptions
+    @outputGraph = Lab.grapher.Graph '#output-graph', outputOptions
 
     # start the graph with four lines, each at 0,0
     @outputGraph.addSamples [0, 0, 0, 0]
@@ -155,9 +155,45 @@ class FrackingControls
         killed[i] = well.killed
         well.killed = 0
 
-      #contaminants = ABM.model.contaminants
-      ABM.model.killed = ABM.model.contaminants = 0
+      ABM.model.killed = 0
       @outputGraph.addSamples killed if killed[0] > 0
+
+    if $('#contaminant-graph').length > 0
+      contaminantOptions =
+        title:  "Methane in the water"
+        xlabel: "Time (years)"
+        ylabel: "Methane"
+        xmax:   40
+        xmin:   0
+        ymax:   250
+        ymin:   0
+        xTickCount: 4
+        yTickCount: 5
+        xFormatter: "3.3r"
+        realTime: false
+        fontScaleRelativeToParent: true
+
+      @contaiminantGraph = Lab.grapher.Graph '#contaminant-graph', contaminantOptions
+
+      # start the graph with just methane in water
+      @contaiminantGraph.addSamples [FrackingModel.baseMethaneInWater, 0]
+
+      $(document).on FrackingModel.YEAR_ELAPSED, =>
+        baseMethane   = ABM.model.baseMethaneInWater
+        leakedMethane = ABM.model.leakedMethane
+        pondWaste     = ABM.model.pondWaste
+
+        ABM.model.leakedMethane *= 0.6
+        ABM.model.pondWaste     *= 0.6
+
+        @contaiminantGraph.addSamples [baseMethane+leakedMethane, pondWaste]
+
+        if pondWaste && !~@contaiminantGraph.title().indexOf("Contaminants")
+          @contaiminantGraph.title "Methane and Contaminants in the water"
+          @contaiminantGraph.yLabel "Amount"
+          @contaiminantGraph.repaint()
+
+
 
   startStopModel: ->
     @stopModel() unless @startModel()

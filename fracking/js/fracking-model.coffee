@@ -20,6 +20,7 @@ class FrackingModel extends ABM.Model
   wells: null
   toRedraw: null
   toMoveToWaterGas: null
+  baseMethaneInWater: 25
 
   leaks: false
   # 1/N wells will leak
@@ -29,9 +30,14 @@ class FrackingModel extends ABM.Model
   # every tick that it is within the water layer. Currently gas agents are
   # within that layer for about 6 ticks.
   leakRate: 600
+  # each leaked methane molecule or pond water contributes x scale
+  leakedMethaneScale: 30
+  pondWasteScale: 30
 
   toKill: null
   killed: 0
+  leakedMethane: 0
+  pondWaste: 0
 
   @YEAR_ELAPSED: "modelYearElapsed"
 
@@ -146,6 +152,7 @@ class FrackingModel extends ABM.Model
             # Leak into the water
             a.moveTo pWater
             @toMoveToWaterGas.push a
+            @leakedMethane += @leakedMethaneScale
           else
             # move vertically toward the well head
             a.heading = @u.degToRad(90)
@@ -536,8 +543,8 @@ class Well
 
     p = @model.patches.patchXY(@head.x, @head.y + 1)
     p.label = "" + @id
-    p.label += "*" if @leaks and FrackingModel.DEBUG
-    p.label += "+" if @pondLeaks and FrackingModel.DEBUG
+    console.log "*" if @leaks
+    console.log "+" if @pondLeaks
     p.drawLabel(@model.contexts.drawing)
 
     @drawUI Well.WELL_IMG, @head.x + 4, @head.y + 7
@@ -819,9 +826,10 @@ class Well
 
   leakWastePondWater: ->
     if @pondLeaks and @capped and @pond.length > 0 and ABM.util.randomInt(50) is 0
+      @model.pondWaste += @model.pondWasteScale
       @model.pondWater.create 1, (a)=>
         a.well = @
-        a.moveTo @model.patches.patchXY(@head.x + ABM.util.randomInt(25) + 11, @head.y - 15)
+        a.moveTo @model.patches.patchXY(@head.x + ABM.util.randomInt(12) + 6, @head.y - 8)
 
   drawUI: (img, x, y)->
     ctx = @model.contexts.drawing
