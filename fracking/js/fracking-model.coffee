@@ -13,6 +13,7 @@ class FrackingModel extends ABM.Model
   height: 0
   shaleFractibility: 40
   rockFractibility: 10
+  wellLimit: 3
   drillSpeed: 15
   gasSpeed: 20
   ticksPerYear: 100
@@ -347,6 +348,7 @@ class FrackingModel extends ABM.Model
           for i in [0...@drillSpeed]
             @drillHorizontal(well)
     else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 38)
+      return if @wells.length >= @wellLimit
       for w in @wells
         return if (0 < Math.abs(p.x - w.head.x) < 30)
       leaks = (@leaks and @u.randomInt(@leakProbability) == 0)
