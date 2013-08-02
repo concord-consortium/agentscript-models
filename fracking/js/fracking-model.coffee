@@ -545,6 +545,11 @@ class Well
     p.label = "" + @id
     console.log "*" if @leaks
     console.log "+" if @pondLeaks
+    @model.contexts.drawing.labelColor = switch @id
+      when 1 then [200,0,0]
+      when 2 then [50,255,20]
+      when 3 then [0,0,255]
+      else [255,255,255]
     p.drawLabel(@model.contexts.drawing)
 
     @drawUI Well.WELL_IMG, @head.x + 4, @head.y + 7
