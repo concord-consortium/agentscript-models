@@ -11,7 +11,7 @@ class FrackingModel extends ABM.Model
   rock2Depth: 0
   width: 0
   height: 0
-  shaleFractibility: 42
+  shaleFractibility: 40
   rockFractibility: 10
   drillSpeed: 15
   gasSpeed: 20
@@ -60,16 +60,16 @@ class FrackingModel extends ABM.Model
 
     for agents in [@gas, @waterGas, @shaleGas]
       agents.setDefaultShape "circle"
-      agents.setDefaultSize 2
+      agents.setDefaultSize 1
       agents.setDefaultColor [255, 0, 0]
 
     @pondWater.setDefaultShape "circle"
-    @pondWater.setDefaultSize 3
+    @pondWater.setDefaultSize 2
     @pondWater.setDefaultColor [38,  90,  90]
 
   spawnInitialShaleGas: ->
     for p in @shale
-      p.sprout(1, @shaleGas) if @u.randomFloat(1) < 0.02
+      p.sprout(1, @shaleGas) if @u.randomFloat(1) < 0.03
 
   step: ->
     # move gas turtles to the surface, if possible
@@ -138,7 +138,7 @@ class FrackingModel extends ABM.Model
       when "air"
         @toKill.push a
         return
-      when "well"
+      when "well", "wellWall"
         dist = @u.randomInt(@gasSpeed)+3
         if -0.5 < (a.x - a.well.head.x) < 0.5
           if a.well.leaks and @u.randomInt(@leakRate) == 0 and (pWater = @patches.patchXY(a.x + (if @u.randomInt(2) is 0 then 3 else -3), a.y))?.type is "water"
@@ -154,7 +154,7 @@ class FrackingModel extends ABM.Model
           dx = a.x - a.well.head.x
           a.heading = if dx > 0 then @u.degToRad(180) else 0
           if Math.abs(dx) > dist then a.forward(dist) else a.forward(Math.abs(dx))
-      when "shale", "rock", "wellWall", "open"
+      when "shale", "rock", "open"
         if a.y > a.well.depth and -0.5 < (a.x - a.well.head.x) < 0.5
           # somehow we're right under the well head, but not on a well patch...
           # move vertically toward the well head anyway
@@ -188,7 +188,7 @@ class FrackingModel extends ABM.Model
       a.moveTo @shale[@u.randomInt @shale.length]
     else
       a.heading = @u.randomFloat(Math.PI*2)
-      a.forward 0.5
+      a.forward 0.2
     a.hidden = "#{a.p.color}" is "#{[255,255,255]}"
 
   moveWaterPollution: (a, offset=0)->
@@ -250,9 +250,9 @@ class FrackingModel extends ABM.Model
   setupGlobals: ->
     @width  = @patches.maxX - @patches.minX
     @height = @patches.maxY - @patches.minY
-    @airDepth   = @height - 90 # Math.round(@patches.minY + @patches.maxY * 0.8)
-    @landDepth  = @airDepth - 20 # Math.round(@patches.minY + @patches.maxY * 0.75)
-    @waterDepth = @landDepth - 50 # Math.round(@patches.minY + @patches.maxY * 0.6)
+    @airDepth   = @patches.minY + Math.round(@height * 0.93)
+    @landDepth  = @airDepth - Math.round(@height * 0.02)
+    @waterDepth = @landDepth - Math.round(@height * 0.03)
     @rock1Depth = Math.round(@patches.minY + @waterDepth * 0.6)
     @rock2Depth = Math.round(@patches.minY + @waterDepth * @u.randomFloat2(0.6,0.7))
     @rock3Depth = Math.round(@patches.minY + @waterDepth * 0.4)
@@ -348,7 +348,7 @@ class FrackingModel extends ABM.Model
             @drillHorizontal(well)
     else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 38)
       for w in @wells
-        return if (0 < Math.abs(p.x - w.head.x) < 50)
+        return if (0 < Math.abs(p.x - w.head.x) < 30)
       leaks = (@leaks and @u.randomInt(@leakProbability) == 0)
       pondLeaks = (@leaks and @u.randomInt(@pondLeakProbability) == 0)
       well = new Well @, p.x, @airDepth+1, leaks, pondLeaks
@@ -367,12 +367,12 @@ class FrackingModel extends ABM.Model
     return if lookahead? and @u.contains(["wellWall","open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type)
 
     #draw the well
-    for x in [(well.x - 1)..(well.x + 1)]
-      pw = @patches.patchXY x, y
-      well.addPatch pw
+    #for x in [(well.x - 1)..(well.x + 1)]
+    pw = @patches.patchXY well.x, y
+    well.addPatch pw
 
     # and the well walls
-    for x in [(well.x - 2), (well.x + 2)]
+    for x in [(well.x - 1), (well.x + 1)]
       pw = @patches.patchXY x, y
       well.addWall pw
 
@@ -392,9 +392,9 @@ class FrackingModel extends ABM.Model
           p = @patches.patchXY x, y
           if (well.toTheRight and x <= pivot.x) or (not well.toTheRight and x >= pivot.x)
             d = @u.distance(pivot.x, pivot.y, p.x, p.y)
-            if d > 3.9 and d < 4.5
+            if d > 2.25 and d < 3.25
               well.addWall p
-            else if d <= 3.9
+            else if d <= 2.25
               well.addPatch p
           @setPatchColor p
       well.depth = well.depth - 2
@@ -410,21 +410,21 @@ class FrackingModel extends ABM.Model
       return if lookahead? and @u.contains(["wellWall","open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type)
 
       #draw the well
-      for y in [(well.depth - 1)..(well.depth + 1)]
-        pw = @patches.patchXY x, y
-        well.addPatch pw
+      #for y in [(well.depth - 1)..(well.depth + 1)]
+      pw = @patches.patchXY x, well.depth
+      well.addPatch pw
 
       # and the well walls
-      for y in [(well.depth - 2), (well.depth + 2)]
+      for y in [(well.depth - 1), (well.depth + 1)]
         pw = @patches.patchXY x, y
         well.addWall pw
 
-      # set up "exploding" patches every 20
-      if Math.abs(x - well.head.x) % 20 == 0
-        for y in [(well.depth-7)..(well.depth-3)]
+      # set up "exploding" patches every 10
+      if Math.abs(x - well.head.x) % 10 == 0
+        for y in [(well.depth-4)..(well.depth-2)]
           pw = @patches.patchXY x, y
           well.addExploding pw
-        for y in [(well.depth+7)..(well.depth+3)]
+        for y in [(well.depth+4)..(well.depth+2)]
           pw = @patches.patchXY x, y
           well.addExploding pw
         well.exploded = false
@@ -538,7 +538,7 @@ class Well
     p.label += "+" if @pondLeaks and FrackingModel.DEBUG
     p.drawLabel(@model.contexts.drawing)
 
-    @drawUI Well.WELL_IMG, @head.x + 7, @head.y + 15
+    @drawUI Well.WELL_IMG, @head.x + 4, @head.y + 7
 
     @model.draw()
 
@@ -805,10 +805,10 @@ class Well
         g.hidden = false
 
   createWastePond: ->
-    @drawUI Well.POND_IMG, @head.x + 35, @head.y
+    @drawUI Well.POND_IMG, @head.x + 17, @head.y
 
-    for y in [(@head.y-13)...(@head.y)]
-      for x in [(@head.x+12)...(@head.x+33)]
+    for y in [(@head.y-7)...(@head.y)]
+      for x in [(@head.x+6)...(@head.x+16)]
         p = @model.patches.patchXY x, y
         if p?
           @pond.push p
@@ -825,6 +825,7 @@ class Well
     ctx = @model.contexts.drawing
     ctx.save()
     ctx.translate x, y
+    ctx.scale 0.5, 0.5
     ctx.rotate ABM.util.degToRad(180)
     ctx.drawImage img, 0, 0
     ctx.restore()

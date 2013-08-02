@@ -93,7 +93,7 @@ class FrackingControls
         ABM.model.drill p
         well = ABM.model.findNearbyWell(p)
         if well?
-          depthBelowViewport = $("#model").height() - ($("#model-viewport").scrollTop() + $("#model-viewport").height()) - well.depth
+          depthBelowViewport = $("#model").height() - ($("#model-viewport").scrollTop() + $("#model-viewport").height()) - (well.depth*2)
           if depthBelowViewport > -5
             $("#model-viewport").animate {scrollTop: "+=" + (depthBelowViewport + 100)}, 50
       , 100
