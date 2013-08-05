@@ -35,6 +35,9 @@
     width: 100px;
     height: 100px;
     padding:0px;
+    -moz-box-shadow:    inset 2px 2px 3px #888888;
+    -webkit-box-shadow: inset 2px 2px 3px #888888;
+    box-shadow:         inset 2px 2px 3px #888888;
     border-radius: 100px
 }
 
@@ -47,5 +50,43 @@
     height: 40px;
     left:30px;
     top:30px;
+    -moz-box-shadow:    3px 3px 3px #888888;
+    -webkit-box-shadow: 3px 3px 3px #888888;
+    box-shadow:         3px 3px 3px #888888;
     border-radius: 100px
+}
+
+#joystick-n {
+  position: relative;
+  top: -119px;
+  left: 45px;
+}
+
+#joystick-e {
+  position: relative;
+  top: -58px;
+  left: 90px;
+}
+
+#joystick-s {
+  position: relative;
+  left: 15px;
+}
+
+#joystick-w {
+  position: relative;
+  top: -58px;
+  left: -62px;
+}
+
+#windspeed {
+  position: relative;
+  top: 23px;
+  left: -82px;
+}
+
+#instructions {
+  position: absolute;
+  top: 469px;
+  left: 145px;
 }

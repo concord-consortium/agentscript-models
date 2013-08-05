@@ -53,6 +53,12 @@
         <div id="base">
             <div id="joystick"></div>
         </div>
+        <span id="joystick-n">N</span>
+        <span id="joystick-e">E</span>
+        <span id="joystick-s">S</span>
+        <span id="joystick-w">W</span>
+        <span id="windspeed">Wind speed: <span id="joystick-speed">0</span> MPH <span id="joystick-direction"></span></span>
+      </div>
     </div>
     <script>
       $('#play-pause-button').click(function() {
@@ -106,12 +112,31 @@
               var rel_left = ui.position.left - joystick.startLeft;
               var rel_top = ui.position.top - joystick.startRight;
               joystickMoved(rel_left, rel_top);
-              //$('#coords').text(rel_left + ", " + rel_top);
+
+              var speed = Math.round(Math.sqrt(rel_left*rel_left + rel_top*rel_top));
+              $('#joystick-speed').text(speed);
+              if (speed > 0) {
+                var angle = Math.acos(rel_top/speed);
+                $('#joystick-direction').text(getCardinalDirection(angle, rel_left));
+              }
           },
           stop: function () {
               //$('#coords').html("&nbsp;");
           }
       });
+
+      function getCardinalDirection(angle, distLeft) {
+        var direction = ["", ""];
+        if (angle < 3*Math.PI/8)
+          direction[0] = "south";
+        else if (angle > 5*Math.PI/8)
+          direction[0] = "north";
+        if (angle > Math.PI/8 && angle < 7*Math.PI/8) {
+          direction[1] = (distLeft > 0) ? "east" : "west"
+        }
+        direction = direction.join("");
+        return direction.charAt(0).toUpperCase() + direction.slice(1);
+      }
 
       function limitXY(x, y) {
           var dist = distance([x, y], base.center);
