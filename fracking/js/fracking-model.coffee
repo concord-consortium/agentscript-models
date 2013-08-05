@@ -39,6 +39,8 @@ class FrackingModel extends ABM.Model
   leakedMethane: 0
   pondWaste: 0
 
+  hiddenPatchColor: [220,220,220]
+
   @YEAR_ELAPSED: "modelYearElapsed"
 
   setup: ->
@@ -197,7 +199,7 @@ class FrackingModel extends ABM.Model
     else
       a.heading = @u.randomFloat(Math.PI*2)
       a.forward 0.2
-    a.hidden = "#{a.p.color}" is "#{[255,255,255]}"
+    a.hidden = "#{a.p.color}" is "#{@hiddenPatchColor}"
 
   moveWaterPollution: (a, offset=0)->
     return if a.hidden
@@ -330,6 +332,10 @@ class FrackingModel extends ABM.Model
         p.type = "rock"
         p.rockType = "rock5"
         @setPatchColor(p, false) if @showEarthPatches
+
+      if p.y <= @landDepth and not @showEarthPatches
+        p.color = @hiddenPatchColor
+
       @toRedraw.push p
       @redraw() if @toRedraw.length > 1000
 
