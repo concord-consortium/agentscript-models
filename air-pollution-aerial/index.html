@@ -59,6 +59,9 @@
         <span id="joystick-w">W</span>
         <span id="windspeed">Wind speed: <span id="joystick-speed">0</span> MPH <span id="joystick-direction"></span></span>
       </div>
+      <div id="instructions">
+        <span>Click on the model to add up to four factories.</span>
+      </div>
     </div>
     <script>
       $('#play-pause-button').click(function() {
@@ -75,9 +78,24 @@
 
       $('#reset-button').click(function() {
         model.stop();
+        $(".icon-pause").hide();
+        $(".icon-play").show();
         model.setup();
       });
 
+      function offsetX(evt, target) {
+        return evt.offsetX !== null ? evt.offsetX : (evt.pageX - target.offset().left)
+      }
+
+      function offsetY(evt, target) {
+        return evt.offsetY !== null ? evt.offsetY : (evt.pageY - target.offset().top)
+      }
+
+      var target = $("#layers");
+      target.bind('mousedown', function (evt) {
+        var p = model.patches.patchAtPixel(offsetX(evt, target), offsetY(evt, target));
+        model.addFactoryTo(p)
+      });
 
       var baseEl = document.getElementById("base");
       var joystickEl = document.getElementById("joystick");
