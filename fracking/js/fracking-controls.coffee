@@ -129,7 +129,7 @@ class FrackingControls
   outputGraphs: null
   setupGraph: ->
     outputOptions =
-      title:  "Combined Output vs Time"
+      title:  "Methane Production"
       xlabel: "Time (years)"
       ylabel: "Methane"
       xmax:   40
@@ -160,9 +160,9 @@ class FrackingControls
 
     if $('#contaminant-graph').length > 0
       contaminantOptions =
-        title:  "Methane in the water"
+        title:  "Contaminants in the aquifer"
         xlabel: "Time (years)"
-        ylabel: "Methane"
+        ylabel: "Contaminants"
         xmax:   40
         xmin:   0
         ymax:   250
@@ -187,11 +187,6 @@ class FrackingControls
         ABM.model.pondWaste     *= 0.6
 
         @contaiminantGraph.addSamples [baseMethane+leakedMethane, pondWaste]
-
-        if pondWaste && !~@contaiminantGraph.title().indexOf("Contaminants")
-          @contaiminantGraph.title "Methane and Contaminants in the water"
-          @contaiminantGraph.yLabel "Amount"
-          @contaiminantGraph.repaint()
 
 
 
