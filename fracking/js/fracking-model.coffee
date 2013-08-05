@@ -14,7 +14,7 @@ class FrackingModel extends ABM.Model
   shaleFractibility: 40
   rockFractibility: 10
   wellLimit: 3
-  drillSpeed: 14
+  drillSpeed: 13
   gasSpeed: 20
   ticksPerYear: 100
   wells: null
@@ -29,7 +29,7 @@ class FrackingModel extends ABM.Model
   # a methane turtle has a 1/N chance it will leak into the water layer
   # every tick that it is within the water layer. Currently gas agents are
   # within that layer for about 6 ticks.
-  leakRate: 600
+  leakRate: 500
   # each leaked methane molecule or pond water contributes x scale
   leakedMethaneScale: 30
   pondWasteScale: 30
@@ -272,6 +272,10 @@ class FrackingModel extends ABM.Model
     @toKill = []
     @toMoveToWaterGas = []
 
+    @killed = 0
+    @leakedMethane = 0
+    @pondWaste = 0
+
     @drillSpeed = 10 if FrackingModel.DEBUG
     @leakProbability = 1 if FrackingModel.DEBUG
     @pondLeakProbability = 1 if FrackingModel.DEBUG
@@ -301,31 +305,31 @@ class FrackingModel extends ABM.Model
         @setPatchColor(p, false)
       else if @landDepth >= p.y > waterLowerDepth
         p.type = "water"
-        @setPatchColor(p, false) if FrackingModel.showEarthPatches
+        @setPatchColor(p, false) if @showEarthPatches
       else if waterLowerDepth >= p.y > rock1LowerDepth
         p.type = "rock"
         p.rockType = "rock1"
-        @setPatchColor(p, false) if FrackingModel.showEarthPatches
+        @setPatchColor(p, false) if @showEarthPatches
       else if rock1LowerDepth >= p.y > rock2LowerDepth
         p.type = "rock"
         p.rockType = "rock2"
-        @setPatchColor(p, false) if FrackingModel.showEarthPatches
+        @setPatchColor(p, false) if @showEarthPatches
       else if rock2LowerDepth >= p.y > rock3LowerDepth
         p.type = "rock"
         p.rockType = "rock3"
-        @setPatchColor(p, false) if FrackingModel.showEarthPatches
+        @setPatchColor(p, false) if @showEarthPatches
       else if rock3LowerDepth >= p.y > shaleUpperDepth
         p.type = "rock"
         p.rockType = "rock4"
-        @setPatchColor(p, false) if FrackingModel.showEarthPatches
+        @setPatchColor(p, false) if @showEarthPatches
       else if shaleUpperDepth >= p.y > shaleLowerDepth
         @shale.push p
         p.type = "shale"
-        @setPatchColor(p, false) if FrackingModel.showEarthPatches
+        @setPatchColor(p, false) if @showEarthPatches
       else if p.y <= shaleLowerDepth
         p.type = "rock"
         p.rockType = "rock5"
-        @setPatchColor(p, false) if FrackingModel.showEarthPatches
+        @setPatchColor(p, false) if @showEarthPatches
       @toRedraw.push p
       @redraw() if @toRedraw.length > 1000
 
@@ -474,7 +478,6 @@ class FrackingModel extends ABM.Model
 window.FrackingModel = FrackingModel
 
 class Well
-  @IDX: 0
   id: 0
   x: 0
   depth: 0
@@ -526,7 +529,7 @@ class Well
 
   constructor: (@model, @x, @depth, @leaks=false, @pondLeaks=false)->
     # set these here so all Well instances don't share the same arrays
-    @id = ++Well.IDX
+    @id = @model.wells.length + 1
     @head = {x: 0, y: 0}
     @patches = []
     @walls = []

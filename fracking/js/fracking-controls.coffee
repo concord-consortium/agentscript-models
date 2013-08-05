@@ -156,7 +156,7 @@ class FrackingControls
         well.killed = 0
 
       ABM.model.killed = 0
-      @outputGraph.addSamples killed if killed[0] > 0
+      @outputGraph.addSamples killed if killed[3] > 0
 
     if $('#contaminant-graph').length > 0
       contaminantOptions =
@@ -221,8 +221,16 @@ class FrackingControls
     $("#controls").hide()
     $(".icon-pause").hide()
     $(".icon-play").show()
-    setTimeout ->
+
+    @outputGraph.reset()
+    @outputGraph.addSamples [0, 0, 0, 0]
+    if @contaiminantGraph
+      @contaiminantGraph.reset()
+      @contaiminantGraph.addSamples [FrackingModel.baseMethaneInWater,0]
+
+    setTimeout =>
       ABM.model.reset()
+      @startModel()
     , 10
 
   offsetX: (evt, target)->
