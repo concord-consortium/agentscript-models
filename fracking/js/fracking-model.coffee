@@ -14,7 +14,7 @@ class FrackingModel extends ABM.Model
   shaleFractibility: 40
   rockFractibility: 10
   wellLimit: 3
-  drillSpeed: 15
+  drillSpeed: 14
   gasSpeed: 20
   ticksPerYear: 100
   wells: null
