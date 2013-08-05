@@ -80,6 +80,9 @@
         model.stop();
         $(".icon-pause").hide();
         $(".icon-play").show();
+        $("#joystick").css({left: 30, top: 30});
+        $("#joystick-speed").text("0");
+        $("#joystick-direction").text("");
         model.setup();
       });
 
