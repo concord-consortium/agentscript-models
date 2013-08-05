@@ -38,7 +38,7 @@
     -moz-box-shadow:    inset 2px 2px 3px #888888;
     -webkit-box-shadow: inset 2px 2px 3px #888888;
     box-shadow:         inset 2px 2px 3px #888888;
-    border-radius: 100px
+    border-radius: 100px;
 }
 
 #joystick {
@@ -53,7 +53,8 @@
     -moz-box-shadow:    3px 3px 3px #888888;
     -webkit-box-shadow: 3px 3px 3px #888888;
     box-shadow:         3px 3px 3px #888888;
-    border-radius: 100px
+    border-radius: 100px;
+    cursor: pointer;
 }
 
 #joystick-n {
