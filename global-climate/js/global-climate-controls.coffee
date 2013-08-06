@@ -50,8 +50,8 @@ $('#reset-button').click ->
   $(".icon-pause").hide()
   $(".icon-play").show()
   lastTick = 0
-  temperatureGraph.reset()
-  co2Graph.reset()
+  temperatureGraph.reset() if temperatureGraph?
+  co2Graph.reset() if co2Graph?
   climateModel.setup()
 
 $('#add-co2-button').click ->
@@ -125,13 +125,15 @@ updateTickCounter = ->
   $yearCounter.text(climateModel.getYear())
 
 setupGraphs = ->
-  title = "Temperature Change"
-  if isOceanTemperatureModel then title += " (red), Ocean Temp change (blue)"
+  if $('#temperature-graph').length
 
-  ymax = if isOceanTemperatureModel then 12 else 20
-  ymin = if isOceanTemperatureModel then -12 else -20
+    title = "Temperature Change"
+    if isOceanTemperatureModel then title += " (red), Ocean Temp change (blue)"
 
-  temperatureGraph = Lab.grapher.Graph('#temperature-graph',
+    ymax = if isOceanTemperatureModel then 12 else 20
+    ymin = if isOceanTemperatureModel then -12 else -20
+
+    temperatureGraph = Lab.grapher.Graph('#temperature-graph',
       title:  title
       xlabel: "Time (year)"
       ylabel: "Temperature"
@@ -148,25 +150,27 @@ setupGraphs = ->
       fontScaleRelativeToParent: true
     )
 
-  title = if isOceanModel then "Air CO2 (red), Ocean CO2 (green), Vapor (blue)" else "CO2 in atmosphere"
-  ymax  = if isOceanModel then 30 else 100
+  if $('#co2-graph').length
 
-  co2Graph = Lab.grapher.Graph('#co2-graph',
-      title:  title
-      xlabel: "Time (year)"
-      ylabel: if isOceanModel then "Greenhouse gases" else "CO2"
-      xmax:   2020
-      xmin:   2013
-      ymax:   ymax
-      ymin:   0
-      xTickCount: 4
-      yTickCount: 5
-      xFormatter: "d"
-      dataSampleStart: 2013
-      sampleInterval: 1/300
-      realTime: true
-      fontScaleRelativeToParent: true
-    )
+    title = if isOceanModel then "Air CO2 (red), Ocean CO2 (green), Vapor (blue)" else "CO2 in atmosphere"
+    ymax  = if isOceanModel then 30 else 100
+
+    co2Graph = Lab.grapher.Graph('#co2-graph',
+        title:  title
+        xlabel: "Time (year)"
+        ylabel: if isOceanModel then "Greenhouse gases" else "CO2"
+        xmax:   2020
+        xmin:   2013
+        ymax:   ymax
+        ymin:   0
+        xTickCount: 4
+        yTickCount: 5
+        xFormatter: "d"
+        dataSampleStart: 2013
+        sampleInterval: 1/300
+        realTime: true
+        fontScaleRelativeToParent: true
+      )
 
 d3.timer (elapsed) ->
   if climateModel?
@@ -190,14 +194,14 @@ d3.timer (elapsed) ->
     if ticksElapsed and not climateModel.animStop
       while ticksElapsed--  # duplicate data if multiple model steps passed
         if not isOceanTemperatureModel
-          temperatureGraph.addSamples [temperature-initialTemperature]
+          temperatureGraph.addSamples [temperature-initialTemperature] unless !temperatureGraph?
         else
-          temperatureGraph.addSamples [temperature-initialTemperature, 0, oceanTemperature-initialTemperature]
+          temperatureGraph.addSamples [temperature-initialTemperature, 0, oceanTemperature-initialTemperature] unless !temperatureGraph?
         
         if not isOceanModel
-          co2Graph.addSamples [co2Count]
+          co2Graph.addSamples [co2Count] unless !co2Graph?
         else
-          co2Graph.addSamples [atmosphereCO2Count, oceanCO2Count, vaporCount]
+          co2Graph.addSamples [atmosphereCO2Count, oceanCO2Count, vaporCount] unless !co2Graph?
 
       updateTickCounter()
       lastTick = tick
