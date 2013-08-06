@@ -152,7 +152,8 @@ setupGraphs = ->
 
   if $('#co2-graph').length
 
-    title = if isOceanModel then "Air CO2 (red), Ocean CO2 (green), Vapor (blue)" else "CO2 in atmosphere"
+    title = if isOceanModel then "Air CO2 (red), Ocean CO2 (green)" else "CO2 in atmosphere"
+    if climateModel.includeVapor then title += ", Vapor (blue)"
     ymax  = if isOceanModel then 30 else 100
 
     co2Graph = Lab.grapher.Graph('#co2-graph',

@@ -1,6 +1,9 @@
 class OceanClimateModel extends ClimateModel
   u = ABM.util # static variable
   twoPI = Math.PI * 2
+
+  includeVapor: true
+
   setup: -> # called by Model ctor
     super
 
@@ -43,9 +46,15 @@ class OceanClimateModel extends ClimateModel
 
     @updateAlbedoOfSurface()
     @createCO2(13)
-    @createVapor(5)
+    @createVapor(5) if @includeVapor
     @createHeat(23)
     @draw()
+
+  setIncludeWaterVapor: (b) ->
+    @includeVapor = b
+    if not @includeVapor
+      while @vapor.length
+        @vapor[@vapor.length - 1].die()
 
   getVaporCount : ->
     @vapor.length
@@ -117,6 +126,7 @@ class OceanClimateModel extends ClimateModel
   # Water vapor
   #
   createVapor: (num) ->
+    if not @includeVapor then return
     while num--
       @vapor.create 1, (a) =>
         a.heading = u.randomCentered(Math.PI)
