@@ -12,6 +12,7 @@ co2Graph = null
 
 initialTemperature = 0
 lastTick = 0
+isFollowingAgent = false
 
 temperatureFormatter = d3.format "3.1f"
 countFormatter = d3.format "3f"
@@ -88,18 +89,22 @@ $('#follow-sunray-button').click ->
   if $span.text() is "Follow Energy Packet"
     climateModel.addSunraySpotlight()
     $span.text "Stop following"
+    isFollowingAgent = true
   else
     climateModel.removeSpotlight()
     $span.text "Follow Energy Packet"
+    isFollowingAgent = false
 
 $('#follow-co2-button').click ->
   $span = $(this).find("span")
   if $span.text() is "Follow CO2"
     climateModel.addCO2Spotlight()
     $span.text "Stop following"
+    isFollowingAgent = true
   else
     climateModel.removeSpotlight()
     $span.text "Follow CO2"
+    isFollowingAgent = false
 
 $('#hide-button').click ->
   $span = $(this).find("span")
@@ -145,7 +150,7 @@ setupGraphs = ->
 
   title = if isOceanModel then "Air CO2 (red), Ocean CO2 (green), Vapor (blue)" else "CO2 in atmosphere"
   ymax  = if isOceanModel then 30 else 100
-  
+
   co2Graph = Lab.grapher.Graph('#co2-graph',
       title:  title
       xlabel: "Time (year)"
@@ -196,6 +201,12 @@ d3.timer (elapsed) ->
 
       updateTickCounter()
       lastTick = tick
+
+    if isFollowingAgent and not climateModel.spotlightAgent?
+      $(".follow-agent").each ->
+        if ~$(this).find("span").text().indexOf("Stop")
+          this.click()
+
   return null
 
 controlsLoaded.resolve()
