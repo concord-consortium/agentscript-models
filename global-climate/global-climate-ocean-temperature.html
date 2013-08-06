@@ -13,9 +13,11 @@
     <script src="../lib/lab.grapher.js"></script>
     <script type="text/coffeescript" src="js/global-climate-model.coffee"></script>
     <script type="text/coffeescript" src="js/global-climate-model-ocean.coffee"></script>
+    <script type="text/coffeescript" src="js/global-climate-controls.coffee"></script>
     <script type="text/javascript">
       var modelLoaded = $.Deferred(),
-          oceanModelLoaded = $.Deferred();
+          oceanModelLoaded = $.Deferred(),
+          controlsLoaded = $.Deferred();
 
       $(function() {
         $("button").button();
@@ -23,13 +25,14 @@
         $(".icon-pause").hide();
       });
 
-      $.when(modelLoaded, oceanModelLoaded).done(function() {
+      $.when(modelLoaded, oceanModelLoaded, controlsLoaded).done(function() {
         climateModel = new OceanClimateModel("layers", 12, -24, 24, -15, 15, true);
         climateModel.setOceanAbsorbtionChangable(true);
         climateModel.setUseFixedTemperature(true);
         climateModel.setFixedTemperature(10);
         climateModel.oceanTemperature = 10;
-        setupControls();
+
+        initControls({oceanModel: true, oceanTemperatureModel: true});
       });
     </script>
     <script src="http://shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
@@ -59,7 +62,7 @@
         <ul>
           <li>
             <label for="temperature-slider">Temperature:</label>
-            <span class="slider-units">0 <input id="temperature-slider" type="range" min="0" max="20" step="0.2"/> 20&deg;C</span>
+            <span class="slider-units">0 <div id="temperature-slider"></div> 20&deg;C</span>
           </li>
         </ul>
         <ul>
@@ -116,174 +119,5 @@
         Year: <span id="year"></span>
       </div>
     </div>
-    <script>
-      var addCO2Button = document.getElementById("add-co2-button"),
-          subtractCO2Button = document.getElementById("subtract-co2-button"),
-          temperatureSlider = document.getElementById("temperature-slider"),
-          co2Output = document.getElementById("co2-output"),
-          temperatureOutput = document.getElementById("temperature-output"),
-          addCloudsButton = document.getElementById("add-clouds-button"),
-          subtractCloudsButton = document.getElementById("subtract-clouds-button"),
-          yearCounter = document.getElementById("year"),
-          temperatureFormatter = d3.format("3.1f"),
-          countFormatter = d3.format("3f"),
-          ticks = 0,
-          lastTick = 0,
-          initialTemperature,
-          temperatureGraph,
-          co2Graph;
-
-      function setupControls() {
-        initialTemperature = climateModel.getTemperature();
-        temperatureSlider.value = initialTemperature;
-      }
-
-      addCO2Button.onclick = function() {
-        climateModel.addCO2();
-      }
-
-      subtractCO2Button.onclick = function() {
-        climateModel.subtractCO2();
-      }
-
-      addCloudsButton.onclick = function() {
-        climateModel.addCloud();
-      }
-
-      subtractCloudsButton.onclick = function() {
-        climateModel.subtractCloud();
-      }
-
-      $('#follow-sunray-button').click(function() {
-        $span = $(this).find("span");
-        if ($span.text() === "Follow Energy Packet") {
-          climateModel.addSunraySpotlight();
-          $span.text("Stop following");
-        } else {
-          climateModel.removeSpotlight();
-          $span.text("Follow Energy Packet");
-        }
-      });
-
-      $('#follow-co2-button').click(function() {
-        $span = $(this).find("span");
-        if ($span.text() === "Follow CO2") {
-          climateModel.addCO2Spotlight();
-          $span.text("Stop following");
-        } else {
-          climateModel.removeSpotlight();
-          $span.text("Follow CO2");
-        }
-      });
-
-      $('#hide-button').click(function() {
-        $span = $(this).find("span");
-        if ($span.text() === "Hide 90% of elements") {
-          climateModel.hide90();
-          $span.text("Show all elements");
-        } else {
-          climateModel.showAll();
-          $span.text("Hide 90% of elements");
-        }
-      });
-
-      temperatureSlider.onchange = function() {
-        climateModel.setFixedTemperature(+temperatureSlider.value);
-      }
-
-      $('#play-pause-button').click(function() {
-        if (climateModel.anim.animStop) {
-          climateModel.start();
-          $(".icon-pause").show();
-          $(".icon-play").hide();
-        } else {
-          climateModel.stop();
-          $(".icon-pause").hide();
-          $(".icon-play").show();
-        }
-      });
-
-      $('#reset-button').click(function() {
-        climateModel.stop();
-        $(".icon-pause").hide();
-        $(".icon-play").show();
-        lastTick = 0;
-        temperatureGraph.reset();
-        co2Graph.reset();
-        climateModel.setup();
-      });
-
-      $('#show-agent-controls input').click(function() {
-        var $this   = $(this),
-            func    = $this.attr('id'),
-            checked = $this.is(':checked');
-        climateModel[func](checked);
-      });
-
-      function updateTickCounter() {
-        yearCounter.textContent = climateModel.getYear();
-      }
-
-      temperatureGraph = Lab.grapher.Graph('#temperature-graph',
-        {
-          title:  "Temperature change (red), Ocean Temp change (blue)",
-          xlabel: "Time (year)",
-          ylabel: "Temperature",
-          xmax:   2020,
-          xmin:   2013,
-          ymax:   12,
-          ymin:   -12,
-          xTickCount: 4,
-          yTickCount: 5,
-          xFormatter: "d",
-          dataSampleStart: 2013,
-          sampleInterval: 1/300,
-          realTime: true,
-          fontScaleRelativeToParent: true
-        });
-
-      co2Graph = Lab.grapher.Graph('#co2-graph',
-        {
-          title:  "Air CO2 (red), Ocean CO2 (green), Vapor (blue)",
-          xlabel: "Time (year)",
-          ylabel: "Greenhouse gases",
-          xmax:   2020,
-          xmin:   2013,
-          ymax:   30,
-          ymin:   0,
-          xTickCount: 4,
-          yTickCount: 5,
-          xFormatter: "d",
-          dataSampleStart: 2013,
-          sampleInterval: 1/300,
-          realTime: true,
-          fontScaleRelativeToParent: true
-        });
-
-      lastTick = 0;
-
-      d3.timer(function(elapsed) {
-        if (typeof climateModel !== "undefined") {
-          var temperature = climateModel.getTemperature(),
-              oceanTemperature = climateModel.oceanTemperature,
-              atmosphereCO2Count = climateModel.getAtmosphereCO2Count(),
-              oceanCO2Count = climateModel.getOceanCO2Count(),
-              vaporCount = climateModel.getVaporCount(),
-              tick = climateModel.anim.ticks,
-              ticksElapsed = tick - lastTick;
-          temperatureOutput.textContent = temperatureFormatter(temperature);
-          co2Output.textContent = countFormatter(atmosphereCO2Count);
-          if (!climateModel.animStop && ticksElapsed) {
-            while (ticksElapsed--) {  // duplicate data if multiple model steps passed
-              temperatureGraph.addSamples([temperature-initialTemperature, 0, oceanTemperature-initialTemperature]);
-              co2Graph.addSamples([atmosphereCO2Count, oceanCO2Count, vaporCount]);
-            }
-            updateTickCounter();
-            lastTick = tick;
-          }
-        }
-      });
-
-    </script>
   </body>
 </html>
