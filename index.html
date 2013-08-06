@@ -2,59 +2,123 @@
   <head>
     <title>AgentScript Models</title>
     <style type="text/css">
-      body { font: 13px sans-serif; }
-      #content {
-        margin: 0em;
-        padding: 0em; }
-      #three-columns { }
-      #column1 {
-        width: 30%;
-        max-width: 16em;
-        display: inline-block;
-        vertical-align: top; }
-      #column2 {
-        width: 30%;
-        max-width: 16em;
-        display: inline-block;
-        vertical-align: top; }
-      #column3 {
-        width: 30%;
-        max-width: 16em;
-        display: inline-block;
-        vertical-align: top; }
-      h1 { font-size: 1.3em; }
-      h2 {
-        margin-left: 0.5em;
-        font-size: 1.2em; }
-      h3 {
-        margin-left: 1.0em;
-        font-size: 1.1em; }
-      p { font-size: 1.0em;
-        margin-left: 1.0em }
-      a {
-        text-decoration: none; }
+      body {
+        font-family: 'Lato', georgia, times, "times new roman", serif;
+        color: #555;
+      }
+
+      #header {
+        background: #f48c30;
+        background: -moz-linear-gradient(top,  #f48c30 1%, #edb782 100%);
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(1%,#f48c30), color-stop(100%,#edb782));
+        background: -webkit-linear-gradient(top,  #f48c30 1%,#edb782 100%);
+        background: -o-linear-gradient(top,  #f48c30 1%,#edb782 100%);
+        background: -ms-linear-gradient(top,  #f48c30 1%,#edb782 100%);
+        background: linear-gradient(to bottom,  #f48c30 1%,#edb782 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f48c30', endColorstr='#edb782',GradientType=0 );
+        color: white;
+        padding: 0.5em 1em;
+        font-size: 1em;
+        font-weight: 600;
+      }
+
+      #credits {
+        font-size: 0.8em;
+        color: #777;
+      }
+
+      #credits p {
+        padding-left: 2em;
+        margin-bottom: -0.5em;
+      }
+
+      .model-collection div {
+        background-color: #EEE;
+        border-radius: 10px;
+        border: #CCC 1px solid;
+        width: 700px;
+        margin: 7px;
+      }
+
       ul {
         list-style-type: none;
-        margin: 1em 1em;
-        padding-left: 1em; }
-        ul li {
-          margin: 0.2em 0em;
-          padding: 0.2em 0.4em;
-          width: 9em;
-          background-color: #eee;
-          border: solid 1px #bbb;
-          border-radius: 0.25em; }
-          ul li:hover {
-            background-color: #ddd;
-            cursor: pointer; }
+      }
+      
+      /*
+      div {
+        width: 700px;
+        margin: 0 auto;
+        overflow: auto;
+      }
+
+      li {
+        float: left;
+        margin: 10px;
+      }
+      */
+
+      a {
+        color: #3a878b;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      a:hover {
+        color: #da5936;
+      }
     </style>
   </head>
   <body>
-    <h1>AgentScript Models</h1>
-    <p>AgentScript repository: <a href="https://github.com/backspaces/agentscript">github.com/backspaces/agentscript</a></p>
-    <div id="three-columns">
-      <div id="column1">
-        <h2>Samples</h2>
+    <div id="header">
+      <h1>AgentScript Models</h1>
+    </div>
+
+    <div id="credits">
+      <p>AgentScript repository: <a href="https://github.com/backspaces/agentscript">github.com/backspaces/agentscript</a></p>
+      <p>Concord Consortium's AgentScript model repository: <a href="https://github.com/concord-consortium/agentscript-models">github.com/concord-consortium/agentscript-models</a></p>
+    </div>
+
+    <div class="model-collection">
+      <h2>HAS Models</h2>
+      <div>
+        <ul>
+          <li><a href="air-pollution/index.html" target="_blank">Air Pollution</a></li>
+          <li><a href="air-pollution-aerial/index.html" target="_blank">Air Pollution Aerial View</a></li>
+        </ul>
+      </div>
+      <div>
+        <ul>
+          <li><a href="fracking/fracking-1.html" target="_blank">Fracking Variant 1</a></li>
+          <li><a href="fracking/fracking-2.html" target="_blank">Fracking Variant 2</a></li>
+          <li><a href="fracking/fracking-3.html" target="_blank">Fracking Variant 3</a></li>
+        </ul>
+      </div>
+      <div>
+        <ul>
+          <li><a href="global-climate/global-climate.html" target="_blank">Global Climate</a></li>
+          <li><a href="global-climate/global-climate-ocean.html" target="_blank">Global Climate with Ocean</a></li>
+          <li><a href="global-climate/global-climate-ocean-temperature.html" target="_blank">Global Climate with Ocean and Temperature Control</a></li>
+        </ul>
+      </div>
+      <div>
+        <ul>
+          <li><a href="water/index.html" target="_blank">Water</a></li>
+          <li><a href="water/static-layers.html" target="_blank">Water (with pre-set static layers)</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="model-collection">
+      <h2>Other CC Models</h2>
+      <div>
+        <ul>
+          <li><a href="solar-panel/solar-panel-2.0.html" target="_blank">Solar Panel 2.0</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="model-collection">
+      <h2>AgentScript Sample Models</h2>
+      <div>
         <ul>
           <li><a href="lib/agentscript/models/ants.html" target="_blank">Ants</a></li>
           <li><a href="lib/agentscript/models/buttons.html" target="_blank">Buttons</a></li>
@@ -67,29 +131,21 @@
           <li><a href="lib/agentscript/models/prefattach.html" target="_blank">Ants</a></li>
           <li><a href="lib/agentscript/models/tspga.html" target="_blank">TSPGA</a></li>
         </ul>
-        <h2>Samples from Concord Consortium</h2>
-        <ul>
-          <li><a href="air-pollution/index.html" target="_blank">Air Pollution</a></li>
-          <li><a href="air-pollution-aerial/index.html" target="_blank">Air Pollution Aerial View</a></li>
-          <li><a href="fracking/fracking-1.html" target="_blank">Fracking Variant 1</a></li>
-          <li><a href="fracking/fracking-2.html" target="_blank">Fracking Variant 2</a></li>
-          <li><a href="fracking/fracking-3.html" target="_blank">Fracking Variant 3</a></li>
-          <li><a href="global-climate/global-climate.html" target="_blank">Global Climate</a></li>
-          <li><a href="global-climate/global-climate-ocean.html" target="_blank">Global Climate with Ocean</a></li>
-          <li><a href="global-climate/global-climate-ocean-temperature.html" target="_blank">Global Climate with Ocean and Temperature Control</a></li>
-          <li><a href="solar-panel/solar-panel-2.0.html" target="_blank">Solar Panel 2.0</a></li>
-          <li><a href="water/index.html" target="_blank">Water</a></li>
-          <li><a href="water/static-layers.html" target="_blank">Water (with pre-set static layers)</a></li>
-        </ul>
       </div>
-      <div id="column1">
-        <h2>Test Models</h2>
+    </div>
+
+    <div class="model-collection">
+      <h2>AgentScript Test Models</h2>
+      <div>
         <ul>
           <li><a href="lib/agentscript/testmodels/testcone.html" target="_blank">Test Cone</a></li>
           <li><a href="lib/agentscript/testmodels/testshapes.html" target="_blank">Test Shapes</a></li>
+        </ul>
       </div>
-      <div id="column3">
-        <h2>Documentation</h2>
+    </div>
+
+    <div id="documentation">
+      <h2>Documentation</h2>
         <ul>
           <li><a href="lib/agentscript/docs/agentset.html" target="_blank">AgentSet</a></li>
           <li><a href="lib/agentscript/docs/agentsets.html" target="_blank">AgentSets</a></li>
@@ -98,7 +154,6 @@
           <li><a href="lib/agentscript/docs/template" target="_blank">Template</a></li>
           <li><a href="lib/agentscript/docs/util.html" target="_blank">Utilities</a></li>
         </ul>
-      </div>
     </div>
   </body>
 </html>
