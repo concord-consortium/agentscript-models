@@ -258,3 +258,9 @@ circle {
     border-radius: 100px;
     border: 1px solid #858484;
 }
+
+#model-bottom {
+  position: absolute;
+  top: 381px;
+  left: 156px;
+}
