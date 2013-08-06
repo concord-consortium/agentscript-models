@@ -3,6 +3,7 @@ class OceanClimateModel extends ClimateModel
   twoPI = Math.PI * 2
 
   includeVapor: true
+  nCO2Emission: 0.25
 
   setup: -> # called by Model ctor
     super
@@ -20,7 +21,6 @@ class OceanClimateModel extends ClimateModel
     @temperature = 5
     @oceanLeft = -10
     @oceanBottom = -15
-    @nCO2Emission = 0.25
 
     @icePercent = 0
 
@@ -28,7 +28,7 @@ class OceanClimateModel extends ClimateModel
     @useFixedTemperature = false
     @fixedTemperature = 5
     @oceanTemperature = 5
-    @oceanTimeConstant = 1 / (10 * @ticksPerYear)
+    @oceanTimeConstant = 1 / (1 * @ticksPerYear)
     @oceanZeroAbsorbtionTemp = 20
     @oceanCO2AbsorbtionMax = 1
     @oceanCO2Absorbtion = @oceanCO2AbsorbtionMax
