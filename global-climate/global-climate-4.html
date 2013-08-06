@@ -27,15 +27,20 @@
 
       $.when(modelLoaded, oceanModelLoaded, controlsLoaded).done(function() {
         climateModel = new OceanClimateModel("layers", 12, -24, 24, -15, 15, true);
-        climateModel.setOceanAbsorbtionChangable(true);
-        climateModel.setUseFixedTemperature(true);
-        climateModel.setFixedTemperature(10);
-        climateModel.oceanTemperature = 10;
-        climateModel.vaporPerDegreeModifier = 10;
-        climateModel.createVapor(7)
 
+        setup = function() {
+          climateModel.setOceanAbsorbtionChangable(true);
+          climateModel.setUseFixedTemperature(true);
+          climateModel.setFixedTemperature(10);
+          climateModel.oceanTemperature = 10;
+          climateModel.vaporPerDegreeModifier = 10;
+          climateModel.createVapor(7);
 
-        initControls({oceanModel: true, oceanTemperatureModel: true});
+          climateModel.draw();
+        }
+        setup();
+
+        initControls({setup: setup, oceanModel: true, oceanTemperatureModel: true});
       });
     </script>
     <script src="http://shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>

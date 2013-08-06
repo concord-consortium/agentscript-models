@@ -20,6 +20,7 @@ countFormatter = d3.format "3f"
 isOceanModel = false
 isOceanTemperatureModel = false
 
+modelSetup = null
 
 window.initControls = (args) ->
   $albedoSlider.slider  min: 0, max: 1, step: 0.01, value: climateModel.getAlbedo()
@@ -32,6 +33,8 @@ window.initControls = (args) ->
 
   isOceanModel = true if args?.oceanModel
   isOceanTemperatureModel = true if args?.oceanTemperatureModel
+
+  modelSetup = args?.setup
   
   setupGraphs()
 
@@ -53,6 +56,8 @@ $('#reset-button').click ->
   temperatureGraph.reset() if temperatureGraph?
   co2Graph.reset() if co2Graph?
   climateModel.setup()
+  $temperatureSlider.slider('value', initialTemperature) if $temperatureSlider
+  modelSetup() if modelSetup
 
 $('#add-co2-button').click ->
   climateModel.addCO2()
