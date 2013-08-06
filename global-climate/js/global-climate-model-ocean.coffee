@@ -4,6 +4,7 @@ class OceanClimateModel extends ClimateModel
 
   includeVapor: true
   nCO2Emission: 0.25
+  vaporPerDegreeModifier: 5
 
   setup: -> # called by Model ctor
     super
@@ -151,7 +152,7 @@ class OceanClimateModel extends ClimateModel
     ## original NLogo formula, with @vaporPerDegree = 0.6
     #target = Math.max 0, Math.round @temperature * @vaporPerDegree
     ## new log function to prevent vapor getting too high and causing too much pos feedback
-    target = Math.round((Math.log(@temperature+4)*5)-7)
+    target = Math.round((Math.log(@temperature+4)*@vaporPerDegreeModifier)-(@vaporPerDegreeModifier/5*7))
     target = Math.max 0, target
     count  = @getVaporCount()
 
