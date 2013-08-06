@@ -15,7 +15,7 @@ class FrackingModel extends ABM.Model
   rockFractibility: 10
   wellLimit: 3
   drillSpeed: 13
-  gasSpeed: 20
+  gasSpeed: 12
   ticksPerYear: 100
   wells: null
   toRedraw: null
@@ -148,6 +148,11 @@ class FrackingModel extends ABM.Model
         @toKill.push a
         return
       when "well", "wellWall"
+        # kill if we're close to the top
+        if @landDepth < a.y < @airDepth
+          @toKill.push a
+          return
+        # otherwise move up well
         dist = @u.randomInt(@gasSpeed)+3
         if -0.5 < (a.x - a.well.head.x) < 0.5
           if a.well.leaks and @u.randomInt(@leakRate) == 0 and (pWater = @patches.patchXY(a.x + (if @u.randomInt(2) is 0 then 3 else -3), a.y))?.type is "water"
