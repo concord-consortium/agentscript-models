@@ -3,6 +3,7 @@ $sunSlider         = $ '#sun-brightness-slider'
 $iceSlider         = $ '#ice-slider'
 $emissionsSlider   = $ '#human-emissions-slider'
 $temperatureSlider = $ '#temperature-slider'
+$speedSlider       = $ '#speed-slider'
 $yearCounter       = $ '#year'
 $co2Output         = $ '#co2-output'
 $temperatureOutput = $ '#temperature-output'
@@ -28,7 +29,8 @@ window.initControls = (args) ->
   $iceSlider.slider     min: 0, max: 1, step: 0.01,  value: climateModel.getIcePercent() if climateModel.getIcePercent
   $emissionsSlider.slider   min: 0, max: 1, step: 0.1,  value: climateModel.getHumanEmissionRate() if climateModel.getHumanEmissionRate
   $temperatureSlider.slider min: 0, max: 20, step: 0.2,  value: climateModel.getTemperature()
-  
+  $speedSlider.slider   min: 20, max: 60, step: 2,  value: climateModel.anim.rate
+
   initialTemperature = climateModel.getTemperature()
 
   isOceanModel = true if args?.oceanModel
@@ -89,6 +91,9 @@ $emissionsSlider.on 'slide', (event, ui) ->
 $temperatureSlider.on 'slide', (event, ui) ->
   climateModel.setFixedTemperature ui.value
 
+$speedSlider.on 'slide', (event, ui) ->
+  climateModel.anim.setRate ui.value, false
+
 $('#follow-sunray-button').click ->
   $span = $(this).find("span")
   if $span.text() is "Follow Energy Packet"
@@ -135,8 +140,8 @@ setupGraphs = ->
     title = "Temperature Change"
     if isOceanTemperatureModel then title += " (red), Ocean Temp change (blue)"
 
-    ymax = if isOceanTemperatureModel then 12 else 20
-    ymin = if isOceanTemperatureModel then -12 else -20
+    ymax = if isOceanTemperatureModel then 12 else 15
+    ymin = if isOceanTemperatureModel then -12 else -15
 
     temperatureGraph = Lab.grapher.Graph('#temperature-graph',
       title:  title

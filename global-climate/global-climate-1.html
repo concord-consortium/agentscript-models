@@ -25,7 +25,13 @@
 
       $.when(modelLoaded, controlsLoaded).done(function() {
         climateModel = new ClimateModel("layers", 12, -24, 24, -15, 15, true);
-        initControls();
+
+        setup = function() {
+         climateModel.anim.setRate(60, false);
+        }
+        setup();
+
+        initControls({setup: setup});
       });
     </script>
     <script src="http://shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
@@ -55,7 +61,7 @@
         </ul>
       </div>
       <div id="playback-controls">
-        <div id="playback">
+        <div id="playback" style="margin-left: 8px;">
           <button id="reset-button">
             <i class="icon-step-backward"></i>
           </button>
@@ -64,6 +70,7 @@
             <i class="icon-pause"></i>
           </button>
         </div>
+        <span class="slider-units" title="Change the speed of the model"><img src="img/tortoise.jpg" style="margin-left: -10px;margin-right: -9px;margin-bottom: 4px;width: 36px;"/><div id="speed-slider" style="width:40px;margin:0.7em;margin-left:1em;"></div><img src="img/hare.jpg" style="margin-left: -8px;margin-bottom: 4px;width: 37px;"/></span>
       </div>
       <div id="show-agent-controls">
         Show:
