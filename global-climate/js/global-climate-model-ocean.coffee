@@ -4,7 +4,7 @@ class OceanClimateModel extends ClimateModel
 
   includeVapor: true
   nCO2Emission: 0.25
-  vaporPerDegreeModifier: 5
+  vaporPerDegreeModifier: 7
 
   setup: -> # called by Model ctor
     super

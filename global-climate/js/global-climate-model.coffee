@@ -16,10 +16,10 @@ class ClimateModel extends ABM.Model
       @agents[@agents.length - 1].die()
 
     # globals
-    @sunBrightness = 75
-    @albedo = 0.3
+    @sunBrightness = 70
+    @albedo = 0.4
     @iceAlbedo = 0.95
-    @temperature = 8
+    @temperature = 6
     @agentSize = 0.75
     @skyTop = (@patches.maxY) - 5
     @earthTop = 8 + @patches.minY
@@ -73,7 +73,8 @@ class ClimateModel extends ABM.Model
     @updateAlbedoOfSurface()
     @createVolcano()
     @createCO2(13)
-    @createHeat(27)
+    @createHeat(15)
+
     @draw()
 
   setAlbedo: (percent) ->
@@ -210,7 +211,7 @@ class ClimateModel extends ABM.Model
     u.randomInt(100) < (temperature * 20) && u.randomInt(20) < 2
 
   updateTemperature: ->
-    @temperature = 0.99 * @temperature + 0.01 * (-6 + 0.4 * @heat.length)
+    @temperature = 0.99 * @temperature + 0.01 * (1 + 0.2 * @heat.length)
 
   leaveToSpace: (a) ->
     heading = a.heading % Math.PI
@@ -402,7 +403,7 @@ class ClimateModel extends ABM.Model
     @draw()
 
   runPollution: ->
-    emissionStep = Math.floor 120 / (@humanEmissionRate * 2)
+    emissionStep = Math.floor 100 / (@humanEmissionRate * 2)
     if @anim.ticks % emissionStep is 0
       @emitPollution()
 
