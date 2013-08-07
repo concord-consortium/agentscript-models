@@ -237,18 +237,20 @@ class ClimateModel extends ABM.Model
   #
   addCloud: ->
     @numClouds++
-    @setupClouds(@numClouds)
+    @makeCloud @numClouds-1, @numClouds, false
 
   subtractCloud: ->
-    @numClouds = Math.max @numClouds-1, 0
-    @setupClouds(@numClouds)
+    return if @numClouds is 0
+    @numClouds--
+    for a in @clouds by -1
+      if a.cloudNum is @numClouds then a.die()
 
   setupClouds: (num) ->
     hiddenClouds = {}
-    for a in @clouds
-      if a
-        if a.hidden then hiddenClouds[a.cloudNum] = true
-        a.die()
+    while @clouds.length
+      a = @agents.last()
+      if a.hidden then hiddenClouds[a.cloudNum] = true
+      a.die()
     numHiddenClouds = Object.keys(hiddenClouds).length
     i = 0
     while i < num
