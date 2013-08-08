@@ -9,7 +9,6 @@ class AirPollutionAerial extends ABM.Model
     @factoryLimit = 4
 
     @patches.importColors "img/map-mask.png" # draws patches based on on the number of patches created when the model is initialized
-    #@refreshPatches = true
     @patches.importDrawing "img/map.png" # draws the smoothly rendered image on top of the interpreted patches
 
     @windSpeedEast  = 0
@@ -28,7 +27,15 @@ class AirPollutionAerial extends ABM.Model
     @smoke.setDefaultShape "circle"
     @smoke.setDefaultColor [82,98,114]
     @smoke.setDefaultSize 0.4
-    
+
+    @aLimits = {minX: 105, maxX: 120, minY: 135, maxY: 150}
+    @bLimits = {minX: 79, maxX: 101, minY: 76, maxY: 94}
+    @cLimits = {minX: 26, maxX: 56, minY: 16, maxY: 38}
+
+    @aQuality = 100
+    @bQuality = 100
+    @cQuality = 100
+
     @draw()
 
   step: ->
@@ -36,6 +43,8 @@ class AirPollutionAerial extends ABM.Model
     @moveSmoke()
     if @anim.ticks % 5 is 0
       @capAgents()
+    if @anim.ticks % 20 is 0
+      @calculateAirPollution()
 
   createSmoke: ->
     for f in @factories
@@ -73,6 +82,23 @@ class AirPollutionAerial extends ABM.Model
       patch.sprout 1, @factories
       @draw()
 
+  calculateAirPollution: ->
+    aPollution = 0
+    bPollution = 0
+    cPollution = 0
+    for a in @smoke
+      if @aLimits.minX < a.x < @aLimits.maxX and  @aLimits.minY < a.y < @aLimits.maxY
+        aPollution++
+      else if @bLimits.minX < a.x < @bLimits.maxX and  @bLimits.minY < a.y < @bLimits.maxY
+        bPollution++
+      else if @cLimits.minX < a.x < @cLimits.maxX and  @cLimits.minY < a.y < @cLimits.maxY
+        cPollution++
+
+    cPollution /= 2
+
+    @aQuality = Math.max 100-aPollution, 0
+    @bQuality = Math.max 100-bPollution, 0
+    @cQuality = Math.max 100-cPollution, 0
 
 window.AirPollutionAerial = AirPollutionAerial
 

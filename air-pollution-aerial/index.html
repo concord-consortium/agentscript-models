@@ -209,6 +209,21 @@
       function joystickMoved(x, y) {
         model.setWindSpeed(x/30, -y/30);
       }
+
+      // city: 'city-a'; quality: 0-100
+      function setAirQualityScale(city, quality) {
+        var color = "hsl("+quality+",100%,50%)";
+        $("#"+city+" .quality-measure").css("background-color", color);
+      }
+
+      function updateAirQuality() {
+        requestAnimationFrame(updateAirQuality);
+        setAirQualityScale('city-a', model.aQuality);
+        setAirQualityScale('city-b', model.bQuality);
+        setAirQualityScale('city-c', model.cQuality);
+      }
+
+      updateAirQuality();
     </script>
   </body>
 </html>
