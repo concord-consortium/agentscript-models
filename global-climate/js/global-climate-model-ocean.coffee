@@ -4,7 +4,7 @@ class OceanClimateModel extends ClimateModel
 
   includeVapor: true
   nCO2Emission: 0.25
-  vaporPerDegreeModifier: 7
+  vaporPerDegreeModifier: 10
 
   setup: -> # called by Model ctor
     super
@@ -23,7 +23,13 @@ class OceanClimateModel extends ClimateModel
     @oceanLeft = -10
     @oceanBottom = -15
 
+    @cloudsFormedByVapor = false
+    @numCloudsPerVapor = 0.3
+
+    @iceFormedByTemperature = false
     @icePercent = 0
+    @zeroIceTemp = 10
+    @maxIceTemp = -2
 
     @oceanAbsorbtionChangable = false
     @useFixedTemperature = false
@@ -88,6 +94,12 @@ class OceanClimateModel extends ClimateModel
   setIcePercent: (p) ->
     @icePercent = p
     @updateAlbedoOfSurface()
+
+  updateIce: (p) ->
+    return unless @iceFormedByTemperature
+
+    targetPercent = 1 - (@temperature - @maxIceTemp) / (@zeroIceTemp - @maxIceTemp)
+    @setIcePercent(targetPercent)
 
   #
   # CO2
@@ -258,11 +270,25 @@ class OceanClimateModel extends ClimateModel
     super
     if @useFixedTemperature
       @temperature = @fixedTemperature
-      @oceanTemperature = (1-@oceanTimeConstant) * @oceanTemperature + @oceanTimeConstant * @temperature
+    @oceanTemperature = (1-@oceanTimeConstant) * @oceanTemperature + @oceanTimeConstant * @temperature
 
   setOceanCO2Absorption: ->
     if @oceanAbsorbtionChangable
       @oceanCO2Absorbtion = (1 - @oceanTemperature / @oceanZeroAbsorbtionTemp) * @oceanCO2AbsorbtionMax
+
+  #
+  # Cloud updating from vapor
+  #
+  updateClouds: ->
+    return unless @cloudsFormedByVapor
+
+    target = Math.round @vapor.length * @numCloudsPerVapor
+
+    while target > @numClouds
+      @addCloud()
+
+    while target < @numClouds
+      @subtractCloud()
 
   #
   # Main Model Loop
@@ -274,9 +300,12 @@ class OceanClimateModel extends ClimateModel
     # less-frequent functions
     if @anim.ticks % 20 is 0
       @emitCO2()
-    if @anim.ticks % 30 is 0
+    if @anim.ticks % 40 is 0
       @updateVapor()
       @setOceanCO2Absorption()
+    if @anim.ticks % 100 is 0
+      @updateClouds()
+      @updateIce()
 
 
 window.OceanClimateModel = OceanClimateModel
