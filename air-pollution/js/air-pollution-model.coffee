@@ -168,13 +168,13 @@ class AirPollutionModel extends ABM.Model
     @primary.setDefaultSize 3
     @primary.setDefaultHeading @UP
     @primary.setDefaultShape "pollutant"
-    @primary.setDefaultColor [120,30,30]
+    @primary.setDefaultColor [100,100,100]
     @primary.setDefaultHidden false
 
     @secondary.setDefaultSize 3
     @secondary.setDefaultHeading @UP
     @secondary.setDefaultShape "pollutant"
-    @secondary.setDefaultColor [30,120,30]
+    @secondary.setDefaultColor [160,130,50]
     @secondary.setDefaultHidden false
 
   setupRain: ->
