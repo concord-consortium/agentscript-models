@@ -23,7 +23,7 @@ class AirPollutionModel extends ABM.Model
 
   mountainsX: 410
   oceanX: 120
-  rainMax: 310
+  rainMax: 350
   sunX: 91
   sunY: 349
 
@@ -53,7 +53,6 @@ class AirPollutionModel extends ABM.Model
 
     carImg = document.getElementById('car-sprite')
     factoryImg = document.getElementById('factory-sprite')
-    cloudImg = document.getElementById('cloud-sprite')
 
     ABM.shapes.add "left-car", false, (ctx)=>
       ctx.scale(-1, 1) # if heading leftward...
@@ -73,9 +72,6 @@ class AirPollutionModel extends ABM.Model
       ctx.fill()
       ctx.arc 0, 0.5, 0.5, 0, @PI2, false
       ctx.fill()
-    ABM.shapes.add "cloud", false, (ctx)=>
-      ctx.rotate @LEFT
-      ctx.drawImage(cloudImg, 0, 0)
 
     @CAR_SPAWN = [
       {x: @world.maxX -  45, heading: @LEFT},
@@ -90,7 +86,7 @@ class AirPollutionModel extends ABM.Model
       {x: @world.maxX -  48, heading: @RIGHT}
     ]
 
-    @agentBreeds "wind cars factories primary secondary clouds rain sunlight"
+    @agentBreeds "wind cars factories primary secondary rain sunlight"
 
     @setupFactories()
     @setupWind()
@@ -116,7 +112,7 @@ class AirPollutionModel extends ABM.Model
     @pollute()
 
     @moveAndEmitSunlight()
-    @moveRainAndClouds()
+    @moveRain()
     @startRain() if @anim.ticks % 600 is 0
     @stopRain() if @raining and @anim.ticks % 600 is 200
 
@@ -182,16 +178,6 @@ class AirPollutionModel extends ABM.Model
     @secondary.setDefaultHidden false
 
   setupRain: ->
-    # Create clouds which move left to right, or right to left, depending on wind speed
-    @clouds.create 8, (c)=>
-      c.heading = 0
-      c.size = 1
-      c.shape = "cloud"
-      c.hidden = false
-      x = (@clouds.length-1) * 71 + 1
-      y = @world.maxY-1
-      c.moveTo @patches.patchXY(x,y)
-
     # Create rain which falls according to wind speed.
     @rain.create 220, (c)=>
       x = ABM.util.randomInt(@world.maxX - @world.minX) + @world.minX
@@ -219,9 +205,6 @@ class AirPollutionModel extends ABM.Model
 
     for r in @rain
       r.heading = @DOWN + ABM.util.degToRad(@windSpeed/2)
-
-    for c in @clouds
-      c.heading = if @windSpeed >= 0 then 0 else @LEFT
 
     @draw() if @anim.animStop
 
@@ -319,11 +302,7 @@ class AirPollutionModel extends ABM.Model
       if a? and (a.breed is @primary or a.breed is @secondary)
         a.die()
 
-  moveRainAndClouds: ->
-    for c in @clouds
-      continue if c.hidden
-      c.forward 1
-
+  moveRain: ->
     if @raining
       for r in @rain
         continue if r.hidden
