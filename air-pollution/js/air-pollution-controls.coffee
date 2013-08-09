@@ -21,7 +21,7 @@ class AirPollutionControls
       ylabel: "AQI"
       xmax:   2100
       xmin:   0
-      ymax:   500
+      ymax:   300
       ymin:   0
       xTickCount: 7
       yTickCount: 10
@@ -34,6 +34,10 @@ class AirPollutionControls
 
     # start the graph at 0,0
     @pollutionGraph.addSamples [[0],[0]]
+
+    # hack (for now) to make y-axis non-draggable
+    $(".draggable-axis[x=24]").css("cursor","default").attr("pointer-events", "none")
+    $(".y text").css("cursor", "default")
 
     $(document).on AirPollutionModel.GRAPH_INTERVAL_ELAPSED, =>
       p = ABM.model.primaryAQI()
