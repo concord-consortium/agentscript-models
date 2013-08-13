@@ -81,6 +81,16 @@ class AirPollutionControls
         ABM.model.setCars ui.value
     ABM.model.setCars 1
 
+    $("#sunlight-slider").slider
+      orientation: 'horizontal'
+      min: 0
+      max: 10
+      step: 1
+      value: 6
+      slide: (evt, ui)->
+        ABM.model.setSunlight ui.value
+    ABM.model.setSunlight 6
+
     $("#cars-pollution-slider").slider
       orientation: 'horizontal'
       min: -100

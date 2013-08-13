@@ -10,7 +10,7 @@
   top: 5px;
   left: 5px;
   width: 820px;
-  height: 445px;
+  height: 355px;
   overflow: auto;
 }
 
@@ -34,8 +34,12 @@
 #controls {
   display: none;
   position: absolute;
-  top: 450px;
+  top: 410px;
   left: 5px;
+}
+
+#playback {
+  vertical-align: top;
 }
 
 .button-set {

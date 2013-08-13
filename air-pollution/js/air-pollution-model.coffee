@@ -324,8 +324,12 @@ class AirPollutionModel extends ABM.Model
         converted = true
     return converted
 
+  setSunlight: (amount) ->
+    @sunlightAmount = amount
+
   moveAndEmitSunlight: ->
-    interval = if @raining then 20 else 5
+    interval = 21 - (@sunlightAmount * 2)
+    interval = 30 if @raining
     if @anim.ticks % interval is 0
       @sunlight.create 1, (s)=>
         [x,y] = @randomLocationFromNWCorner()
@@ -337,7 +341,7 @@ class AirPollutionModel extends ABM.Model
       for p in @patches.patchRect(s.p, 2, 2, true)
         converted ||= @_convertPollutionOnPatch p
 
-      if converted or s.x + 2 > @world.maxX or s.x - 2 < @world.minX or s.y - 2 < @world.minY
+      if s.x + 2 > @world.maxX or s.x - 2 < @world.minX or s.y - 2 < @world.minY
         toKill.push s
       else
         s.forward 2
