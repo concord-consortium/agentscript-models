@@ -23,9 +23,8 @@ class AirPollutionModel extends ABM.Model
 
   mountainsX: 410
   oceanX: 120
+  landY: 85
   rainMax: 350
-  sunX: 91
-  sunY: 349
 
   graphSampleInterval: 10
 
@@ -190,8 +189,8 @@ class AirPollutionModel extends ABM.Model
       c.hidden = true
 
   setupSunlight: ->
-    @sunlight.setDefaultSize 1
-    @sunlight.setDefaultHeading @DOWN
+    @sunlight.setDefaultSize 2
+    @sunlight.setDefaultHeading Math.PI*7/4
     @sunlight.setDefaultShape "circle"
     @sunlight.setDefaultColor [255,255,0]
     @sunlight.setDefaultHidden false
@@ -316,7 +315,7 @@ class AirPollutionModel extends ABM.Model
     converted = false
     for a in p.agentsHere()
       if a? and a.breed is @primary
-        if u.randomInt 4 is 0             # 25% of the time generate a new secondary
+        if u.randomInt(4) is 0             # 25% of the time generate a new secondary
           p.sprout 1, @secondary, (_a)->
             _a.baseHeading = Math.PI/2
         else                              # else simply convert to secondary
@@ -329,8 +328,8 @@ class AirPollutionModel extends ABM.Model
     interval = if @raining then 20 else 5
     if @anim.ticks % interval is 0
       @sunlight.create 1, (s)=>
-        s.setXY @sunX, @sunY
-        s.heading = ABM.util.randomFloat2 Math.PI, @PI2
+        [x,y] = @randomLocationFromNWCorner()
+        s.setXY x, y
 
     toKill = []
     for s in @sunlight
@@ -345,6 +344,13 @@ class AirPollutionModel extends ABM.Model
 
     for s in toKill
       s.die()
+
+  randomLocationFromNWCorner: ->
+    loc = u.randomInt (@world.width + @world.height - @landY)
+    if loc < @world.width
+      return [loc, @world.maxY]
+    else
+      return [2, (@landY + loc - @world.width)]
 
   startRain: ->
     for r in @rain
