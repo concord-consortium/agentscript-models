@@ -390,12 +390,12 @@ class AirPollutionModel extends ABM.Model
   primaryAQI: ->
     p = @primary.length
     # TODO Better coversion from raw pollutants to AQI
-    return p / 4
+    return p
 
   secondaryAQI: ->
     p = @secondary.length
     # TODO Better coversion from raw pollutants to AQI
-    return p / 4
+    return p
 
   _intSpeed: (divisor)->
     speed = @windSpeed/divisor
