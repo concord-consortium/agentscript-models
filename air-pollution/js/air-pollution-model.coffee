@@ -316,8 +316,12 @@ class AirPollutionModel extends ABM.Model
     converted = false
     for a in p.agentsHere()
       if a? and a.breed is @primary
-        newA = a.changeBreed(@secondary)[0]
-        newA.baseHeading = a.baseHeading
+        if u.randomInt 4 is 0             # 25% of the time generate a new secondary
+          p.sprout 1, @secondary, (_a)->
+            _a.baseHeading = Math.PI/2
+        else                              # else simply convert to secondary
+          newA = a.changeBreed(@secondary)[0]
+          newA.baseHeading = a.baseHeading
         converted = true
     return converted
 
