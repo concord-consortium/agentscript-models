@@ -34,7 +34,7 @@
 #controls {
   display: none;
   position: absolute;
-  top: 410px;
+  top: 360px;
   left: 5px;
 }
 
@@ -45,6 +45,7 @@
 .button-set {
   display: inline-block;
   margin-right: 20px;
+  vertical-align: middle;
 }
 
 .button-label-left {

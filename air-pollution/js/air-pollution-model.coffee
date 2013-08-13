@@ -21,6 +21,8 @@ class AirPollutionModel extends ABM.Model
   ]
   CAR_SPAWN: null
 
+  includeSunlight: true
+
   mountainsX: 410
   oceanX: 120
   landY: 85
@@ -96,7 +98,7 @@ class AirPollutionModel extends ABM.Model
     @setupCars()
     @setupPollution()
     @setupRain()
-    @setupSunlight()
+    @setupSunlight() if @includeSunlight
 
     @draw()
     @refreshPatches = false
@@ -114,7 +116,7 @@ class AirPollutionModel extends ABM.Model
     @movePollution()
     @pollute()
 
-    @moveAndEmitSunlight()
+    @moveAndEmitSunlight() if @includeSunlight
     @moveRain()
     @checkForRain()
 
