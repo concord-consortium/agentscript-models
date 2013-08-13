@@ -38,6 +38,10 @@ class AirPollutionModel extends ABM.Model
   raining: false
   temperature: 50
 
+  sunlightAmount: 6
+  rainRate: 3
+  nextRainEnd: 0
+
   setup: ->
     @anim.setRate 30, false
     @setFastPatches()
@@ -112,8 +116,7 @@ class AirPollutionModel extends ABM.Model
 
     @moveAndEmitSunlight()
     @moveRain()
-    @startRain() if @anim.ticks % 600 is 0
-    @stopRain() if @raining and @anim.ticks % 600 is 200
+    @checkForRain()
 
     @notifyGraphs() if @anim.ticks % @graphSampleInterval is 0
 
@@ -301,6 +304,22 @@ class AirPollutionModel extends ABM.Model
       if a? and (a.breed is @primary or a.breed is @secondary)
         a.die()
 
+  setRainRate: (@rainRate) ->
+    @nextRainEnd = 0
+    @checkForRain(@rainRate is 6)
+
+  checkForRain: (force=false) ->
+    if @anim.ticks > @nextRainEnd or force
+      rainRateInv = 7 - @rainRate
+      @nextRainStart = @anim.ticks + u.randomInt(300) + 1200 - (@rainRate*200)
+      if force then @nextRainStart = @anim.ticks + 10
+
+      @nextRainEnd =  u.randomInt(180) + (30 * @rainRate)
+      @nextRainEnd += if @raining then @anim.ticks else @nextRainStart
+
+    @startRain() if @anim.ticks is @nextRainStart
+    @stopRain() if @anim.ticks is @nextRainEnd
+
   moveRain: ->
     if @raining
       for r in @rain
@@ -310,6 +329,24 @@ class AirPollutionModel extends ABM.Model
         r.forward 2
         if r.y > @rainMax
           r.setXY r.x, @rainMax
+
+  startRain: ->
+    return if @raining
+
+    for r in @rain
+      r.hidden = false
+
+    @raining = true
+    @nextRainStart = null
+
+  stopRain: ->
+    return unless @raining
+
+    for r in @rain
+      r.hidden = true
+
+    @raining = false
+    @nextRainEnd = null
 
   _convertPollutionOnPatch: (p)->
     converted = false
@@ -355,16 +392,6 @@ class AirPollutionModel extends ABM.Model
       return [loc, @world.maxY]
     else
       return [2, (@landY + loc - @world.width)]
-
-  startRain: ->
-    for r in @rain
-      r.hidden = false
-    @raining = true
-
-  stopRain: ->
-    for r in @rain
-      r.hidden = true
-    @raining = false
 
   pollute: ->
     for c in @cars
