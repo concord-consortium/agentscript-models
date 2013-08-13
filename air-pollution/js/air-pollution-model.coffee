@@ -380,7 +380,7 @@ class AirPollutionModel extends ABM.Model
       for p in @patches.patchRect(s.p, 2, 2, true)
         converted ||= @_convertPollutionOnPatch p
 
-      if s.x + 2 > @world.maxX or s.x - 2 < @world.minX or s.y - 2 < @world.minY
+      if converted or s.x + 2 > @world.maxX or s.x - 2 < @world.minX or s.y - 2 < @world.minY
         toKill.push s
       else
         s.forward 2
