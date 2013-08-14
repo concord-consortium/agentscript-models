@@ -126,7 +126,7 @@ class AirPollutionModel extends ABM.Model
 
   setupWind: ->
     @wind.setDefaultSize 5
-    @wind.setDefaultColor [0, 0, 255]
+    @wind.setDefaultColor [0, 0, 255, 0.2]
     @wind.setDefaultShape "arrow"
     @wind.setDefaultHidden true
     @wind.setDefaultHeading 0
