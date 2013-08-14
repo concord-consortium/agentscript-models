@@ -22,10 +22,12 @@ class AirPollutionModel extends ABM.Model
   CAR_SPAWN: null
 
   includeSunlight: true
+  includeInversionLayer: false
 
   mountainsX: 410
   oceanX: 120
   landY: 85
+  inversionY: 190
   rainMax: 350
 
   graphSampleInterval: 10
@@ -39,6 +41,8 @@ class AirPollutionModel extends ABM.Model
   factoryPollutionRate: 5
   raining: false
   temperature: 50
+
+  inversionStrength: 0
 
   sunlightAmount: 6
   rainRate: 3
@@ -210,6 +214,10 @@ class AirPollutionModel extends ABM.Model
     for r in @rain
       r.heading = @DOWN + ABM.util.degToRad(@windSpeed/2)
 
+    if speed <= 0
+      @inversionStrength = 0
+    else
+      @inversionStrength = speed*4.5 / 100
     @draw() if @anim.animStop
 
   setCars: (n)->
@@ -269,7 +277,14 @@ class AirPollutionModel extends ABM.Model
     # First, do a basic movement based on a randomly drifting base heading,
     # with speed determined by the turbulence of the model.
     a.baseHeading += u.randomCentered(Math.PI/9)
-    a.heading = a.baseHeading
+    a.heading = (a.heading + a.baseHeading)/2
+    if @includeInversionLayer
+      if (@inversionY-10) < a.p.y <= @inversionY
+        if 0 < a.heading < Math.PI
+          trapProb = @inversionStrength - (@inversionY - a.p.y) * (@inversionStrength/10)
+          if Math.random() < trapProb
+            a.heading += Math.PI
+
     speed = (@temperature+1)/250 # TODO Base this on some turbulence factor!
     a.forward speed
     return true if @_shouldRemovePollution a
@@ -285,11 +300,12 @@ class AirPollutionModel extends ABM.Model
     return true if @_shouldRemovePollution a
 
     # Now move vertically based on temperature. The higher the temp, the more upward motion.
-    a.heading = @UP
-    speed = Math.pow(2, (@temperature-130)/20)
-    a.forward speed
+    if not @includeInversionLayer
+      a.heading = @UP
+      speed = Math.pow(2, (@temperature-130)/20)
+      a.forward speed
 
-    @_resetBaseHeading a
+      @_resetBaseHeading a
     return false
 
   _resetBaseHeading: (a)->

@@ -7,6 +7,11 @@
   overflow: auto;
 }
 
+#output-graphs.pushed-right {
+  left: 645px;
+  width: 540px;
+}
+
 div.graph {
    background-color: #ddf2ff;
    border-radius: 0.25em;

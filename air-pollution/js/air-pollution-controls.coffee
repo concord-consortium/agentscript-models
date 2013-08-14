@@ -69,6 +69,11 @@ class AirPollutionControls
       value: 0
       slide: (evt, ui)->
         ABM.model.setWindSpeed ui.value
+        if ui.value > 0
+          opacity = 0.5 - (ui.value/60)
+          $("#lower-air-temperature").stop().animate({opacity: opacity})
+        else
+          $("#lower-air-temperature").stop().animate({opacity: 1})
     ABM.model.setWindSpeed 0
 
     $("#cars-slider").slider
@@ -89,6 +94,8 @@ class AirPollutionControls
       value: 6
       slide: (evt, ui)->
         ABM.model.setSunlight ui.value
+      change: (evt, ui)->
+        ABM.model.setSunlight ui.value
     ABM.model.setSunlight 6
 
     $("#rain-slider").slider
@@ -98,6 +105,8 @@ class AirPollutionControls
       step: 1
       value: 3
       slide: (evt, ui)->
+        ABM.model.setRainRate ui.value
+      change: (evt, ui)->
         ABM.model.setRainRate ui.value
     ABM.model.setRainRate 3
 
