@@ -102,6 +102,9 @@ class AirPollutionModel extends ABM.Model
     @setupRain()
     @setupSunlight() if @includeSunlight
 
+    @nextRainEnd = 0
+    @raining = false
+
     @draw()
     @refreshPatches = false
 
@@ -352,7 +355,7 @@ class AirPollutionModel extends ABM.Model
       r.hidden = false
 
     @raining = true
-    @nextRainStart = null
+    @nextRainStart = 0
 
   stopRain: ->
     return unless @raining
@@ -361,7 +364,7 @@ class AirPollutionModel extends ABM.Model
       r.hidden = true
 
     @raining = false
-    @nextRainEnd = null
+    @nextRainEnd = 0
 
   _convertPollutionOnPatch: (p)->
     converted = false

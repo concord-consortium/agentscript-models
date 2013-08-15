@@ -183,9 +183,12 @@ class AirPollutionControls
 
   resetModel: ->
     @stopModel()
-    $("#controls").hide()
     $(".icon-pause").hide()
     $(".icon-play").show()
+
+    @pollutionGraph.reset()
+    @pollutionGraph.addSamples [[0],[0],[0],[0]]
+
     setTimeout ->
       ABM.model.reset()
     , 10
