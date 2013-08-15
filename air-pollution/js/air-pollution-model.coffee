@@ -49,7 +49,7 @@ class AirPollutionModel extends ABM.Model
   nextRainEnd: 0
 
   setup: ->
-    @anim.setRate 30, false
+    @anim.setRate 50, false
     @setFastPatches()
     @patches.usePixels true
     @setTextParams {name: "drawing"}, "10px sans-serif"
