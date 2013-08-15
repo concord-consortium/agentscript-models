@@ -2,22 +2,26 @@
   position: absolute;
   top: 6px;
   left: 610px;
-  width: 580px;
-  height: 435px;
+  width: 450px;
+  height: 380px;
   overflow: auto;
 }
 
 #output-graphs.pushed-right {
   left: 645px;
-  width: 540px;
+  width: 415px;
 }
 
 div.graph {
    background-color: #ddf2ff;
    border-radius: 0.25em;
-   width: 495px;
+   width: 450px;
    height: 350px;
    margin-bottom: 10px;
+}
+
+#output-graphs.pushed-right .graph {
+  width: 415px;
 }
 
 .graph {
