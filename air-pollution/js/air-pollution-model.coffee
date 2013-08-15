@@ -48,8 +48,6 @@ class AirPollutionModel extends ABM.Model
   rainRate: 3
   nextRainEnd: 0
 
-  TEMP_pollutantShape: "pollutant"
-
   setup: ->
     @anim.setRate 30, false
     @setFastPatches()
@@ -175,13 +173,13 @@ class AirPollutionModel extends ABM.Model
   setupPollution: ->
     @primary.setDefaultSize 3
     @primary.setDefaultHeading @UP
-    @primary.setDefaultShape @TEMP_pollutantShape
+    @primary.setDefaultShape "circle"
     @primary.setDefaultColor [100,100,100]
     @primary.setDefaultHidden false
 
     @secondary.setDefaultSize 3
     @secondary.setDefaultHeading @UP
-    @secondary.setDefaultShape @TEMP_pollutantShape
+    @secondary.setDefaultShape "circle"
     @secondary.setDefaultColor [160,130,50]
     @secondary.setDefaultHidden false
 
