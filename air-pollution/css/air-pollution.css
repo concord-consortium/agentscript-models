@@ -67,6 +67,23 @@
   font-size: 0.7em;
 }
 
+.top-labels .button-title-top {
+  position: relative;
+  font-weight: bold;
+  width: 385px;
+  height: 1em;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.top-labels div {
+  left: 50px;
+}
+
+.top-labels .button-label-top {
+  left: -82px;
+}
+
 #wind-top-labels {
   font-size: 1.5em;
 }
