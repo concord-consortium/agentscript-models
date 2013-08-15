@@ -100,7 +100,7 @@ class AirPollutionControls
 
     $("#rain-slider").slider
       orientation: 'horizontal'
-      min: 1
+      min: 0
       max: 6
       step: 1
       value: 3

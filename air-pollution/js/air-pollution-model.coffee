@@ -326,11 +326,10 @@ class AirPollutionModel extends ABM.Model
 
   checkForRain: (force=false) ->
     if @anim.ticks > @nextRainEnd or force
-      rainRateInv = 7 - @rainRate
-      @nextRainStart = @anim.ticks + u.randomInt(300) + 1200 - (@rainRate*200)
+      @nextRainStart = @anim.ticks + u.randomInt(300) + 1800 - (@rainRate*300)
       if force then @nextRainStart = @anim.ticks + 10
 
-      @nextRainEnd =  u.randomInt(180) + (30 * @rainRate)
+      @nextRainEnd =  u.randomInt(130) + (30 * @rainRate)
       @nextRainEnd += if @raining then @anim.ticks else @nextRainStart
 
     @startRain() if @anim.ticks is @nextRainStart
