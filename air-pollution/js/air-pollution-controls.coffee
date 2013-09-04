@@ -14,6 +14,8 @@ class AirPollutionControls
 
   pollutionGraph: null
   setupGraph: ->
+    if $("#output-graphs").length == 0 then return
+
     ABM.model.graphSampleInterval = 10
     defaultOptions =
       title:  "Primary (red), Secondary (black) Pollutants"

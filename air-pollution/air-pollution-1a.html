@@ -1,0 +1,99 @@
+<meta http-equiv="content-type" content="text/html; charset=UTF8">
+<html>
+  <head>
+    <title>Air Pollution Model</title>
+    <link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="http://lab.concord.org/vendor/d3/d3.js"></script>
+    <script src="../lib/lab.grapher.js"></script>
+    <script src="../lib/agentscript/agentscript.js"></script>
+    <script src="../lib/agentscript/coffee-script.js"></script>
+
+    <link href="css/air-pollution.css" rel="stylesheet" type="text/css" />
+    <link href="css/graph.css" rel="stylesheet" type="text/css" />
+    <script src="js/air-pollution-model.coffee" type="text/coffeescript"></script>
+    <script src="js/air-pollution-controls.coffee" type="text/coffeescript"></script>
+    <script src="http://shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
+    <script type="text/javascript">new Shutterbug('body', '', null, null);</script>
+  </head>
+  <body>
+    <div id="sprites">
+      <img id="car-sprite" src="img/air-pollution-car.png" />
+      <img id="factory-sprite" src="img/air-pollution-factory.png" />
+      <img id="cloud-sprite" src="img/cloud.svg" />
+    </div>
+    <div id="controls">
+      <div id="playback" class="button-set">
+        <button id="reset-button">
+          <i class="icon-step-backward"></i>
+        </button>
+        <button id="play-pause-button">
+          <i class="icon-play"></i>
+          <i class="icon-pause"></i>
+        </button>
+      </div>
+      <div class="button-set">
+        <div id="wind-top-labels" class="button-label-top">
+          <span class="left"><i class="icon-long-arrow-left"></i></span>
+          <span class="center">None</span>
+          <span class="right"><i class="icon-long-arrow-right"></i></span>
+        </div>
+        <div class="button-label-left">Wind:</div>
+        <div id="wind-slider" class="horizontal-slider"></div>
+        <div id="cars-top-labels" class="button-label-top">
+          <span class="left"><i class="icon-truck"></i></span>
+          <span class="right">
+            <i class="icon-truck"></i>
+            <i class="icon-truck"></i>
+            <i class="icon-truck"></i>
+          </span>
+        </div>
+        <div class="button-label-left">Cars:</div>
+        <div id="cars-slider" class="horizontal-slider"></div>
+        <div id="factories-top-labels" class="button-label-top">
+          <span class="left"><i class="icon-building"></i></span>
+          <span class="right">
+            <i class="icon-building"></i>
+            <i class="icon-building"></i>
+            <i class="icon-building"></i>
+          </span>
+        </div>
+        <div class="button-label-left">Factories:</div>
+        <div id="factories-slider" class="horizontal-slider"></div>
+      </div>
+      <div id="filling" class="button-set">
+      </div>
+      <div class="button-set">
+      </div>
+    </div>
+    <div id="model-viewport">
+      <div id="model">
+        <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+        <div id="layers"></div>
+        <div id="mouse-catcher"></div>
+      </div>
+    </div>
+    <script>
+      var modelReady = false, controls = null;
+      $(document).one('air-pollution-model-loaded', function() {
+        APP=new AirPollutionModel("layers", 1, 0, 572, 0, 349, true);
+        APP.includeSunlight = false;
+        APP.setRootVars();
+      });
+      $(document).on('model-ready', function() {
+        if (controls !== null) {
+          controls.setup();
+        }
+        modelReady = true;
+      });
+      $(document).one('air-pollution-controls-loaded', function() {
+        controls = new AirPollutionControls();
+        if (modelReady) {
+          controls.setup();
+        }
+      });
+    </script>
+  </body>
+</html>
