@@ -94,8 +94,8 @@ class FrackingControls
         well = ABM.model.findNearbyWell(p)
         if well?
           depthBelowViewport = $("#model").height() - ($("#model-viewport").scrollTop() + $("#model-viewport").height()) - (well.depth*2)
-          if depthBelowViewport > -100
-            $("#model-viewport").animate {scrollTop: "+=" + (depthBelowViewport + 280)}, 200
+          if depthBelowViewport > -200
+            $("#model-viewport").animate {scrollTop: "+=" + (depthBelowViewport + 400)}, 300
       , 100
     .bind 'mouseup mouseleave', =>
       clearInterval @timerId if @timerId?
