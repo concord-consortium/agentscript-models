@@ -20,6 +20,7 @@ class ClimateModel extends ABM.Model
     @albedo = 0.4
     @iceAlbedo = 0.95
     @temperature = 6
+    @temperaturePerHeat = 0.2
     @agentSize = 0.75
     @skyTop = (@patches.maxY) - 5
     @earthTop = 8 + @patches.minY
@@ -211,7 +212,7 @@ class ClimateModel extends ABM.Model
     u.randomInt(100) < (temperature * 20) && u.randomInt(20) < 2
 
   updateTemperature: ->
-    @temperature = 0.99 * @temperature + 0.01 * (1 + 0.2 * @heat.length)
+    @temperature = 0.99 * @temperature + 0.01 * (1 + @temperaturePerHeat * @heat.length)
 
   leaveToSpace: (a) ->
     heading = a.heading % Math.PI
