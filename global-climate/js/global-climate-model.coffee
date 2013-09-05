@@ -406,7 +406,7 @@ class ClimateModel extends ABM.Model
     @draw()
 
   runPollution: ->
-    emissionStep = Math.floor 100 / (@humanEmissionRate * 2)
+    emissionStep = Math.floor 1/(@humanEmissionRate/30)+30    # 0.5 = 90 steps, 1.0 = 60 steps
     if @anim.ticks % emissionStep is 0
       @emitPollution()
 

@@ -32,11 +32,14 @@
           climateModel.oceanAbsorbtionChangable = true;
           climateModel.cloudsFormedByVapor = true;
           climateModel.iceFormedByTemperature = true;
+          climateModel.temperature = 4;
+          climateModel.temperaturePerHeat = 0.16;
           climateModel.vaporPerDegreeModifier = 14;
-          climateModel.setAlbedo(0.55);
-          climateModel.oceanZeroAbsorbtionTemp = 40;
+          climateModel.setAlbedo(0.31);
+          climateModel.oceanZeroAbsorbtionTemp = 45;
           climateModel.nCO2Emission = 0.05;
           climateModel.setHumanEmissionRate(0.5);
+         climateModel.createCO2(15);
 
           climateModel.updateVapor();
           climateModel.updateClouds();
