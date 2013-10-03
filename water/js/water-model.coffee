@@ -14,6 +14,11 @@ class WaterModel extends ABM.Model
       p.type = "sky"
 
     @setCacheAgentsHere()
+
+    @agentBreeds "rain"
+
+    @setupRain()
+
     @draw()
     @refreshPatches = false
 
@@ -30,26 +35,27 @@ class WaterModel extends ABM.Model
   step: ->
     console.log @anim.toString() if @anim.ticks % 100 is 0
 
-    @createAgents()
+    @createRain()
 
-    for a in @agents
-      @moveFallingWater(a)
+    for r in @rain
+      @moveFallingWater(r)
     return true # avoid inadventently returning a large array of things
 
-  createAgents: ->
+  setupRain: ->
+    @rain.setDefaultSize 2/@world.size  # try to keep water around 2px in size
+    @rain.setDefaultColor [0, 0, 255]
+    @rain.setDefaultShape "circle"
+    @rain.setDefaultHeading @DOWN
+
+  createRain: ->
     # too many agents will make it really slow
-    if @agents.length < 8000
-      @agents.create 5, (a)=>
-        a.shape = "circle"
-        a.color = [0,0,255]
-        a.breed = "falling-water"
-        a.size = 2/@world.size  # try to keep water around 2px in size
+    if @rain.length < 8000
+      @rain.create 5, (a)=>
         p = null
         while not @isPatchFree(p)
           px = @random(@patches.maxX - @patches.minX) + @patches.minX
           p = @patches.patchXY px, @patches.maxY
         a.moveTo p
-        a.heading = @DOWN
 
   isOnSurface: (p)->
     # The first patch of a layer is the "surface".
