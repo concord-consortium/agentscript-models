@@ -198,4 +198,20 @@ class WaterModel extends ABM.Model
 
     a.forward 1
 
+  addRainSpotlight: ->
+    # try to add spotlight to a raindrop at very top
+    foundOne = false
+    for a in @rain
+      if a? and a.y > @patches.maxY-5
+        foundOne = true
+        @setSpotlight a
+        break
+    if not foundOne
+      # if we did not find one, add spotlight to random raindrop
+      a = @rain.oneOf()
+      @setSpotlight a
+
+  removeSpotlight: ->
+    @setSpotlight null
+
 window.WaterModel = WaterModel

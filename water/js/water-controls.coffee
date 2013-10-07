@@ -57,6 +57,16 @@ window.WaterControls =
           @setDrawColor layerOption.prop('className').split(/\s+/)
           # automatically put us into fill mode when we select a layer type
           @stopDraw() and $("#fill-button").click() unless $("#fill-button")[0].checked
+      $('#follow-water-button').button(
+        label: "Follow Water Droplet"
+      ).click ->
+        $span = $('#follow-water-button').find('span')
+        if $span.text() is "Follow Water Droplet"
+          ABM.model.addRainSpotlight()
+          $span.text "Stop following"
+        else
+          ABM.model.removeSpotlight()
+          $span.text "Follow Water Droplet"
     else
       console.log("delaying...")
       setTimeout =>

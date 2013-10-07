@@ -86,7 +86,7 @@ span.layer-option {
   display: inline-block;
 }
 
-#edit-button-set {
+#edit-button-set, #view-button-set {
   display: inline-block;
   margin-left: 15px;
 }
