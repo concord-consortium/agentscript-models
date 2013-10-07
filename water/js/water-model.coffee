@@ -4,6 +4,8 @@ class WaterModel extends ABM.Model
   UP:    ABM.util.degToRad(90)
   CONE:  ABM.util.degToRad(110)
   RIGHT: 0
+  evapProbability: 10
+
   setup: ->
     @anim.setRate 30, false
     @setFastPatches()
@@ -15,9 +17,10 @@ class WaterModel extends ABM.Model
 
     @setCacheAgentsHere()
 
-    @agentBreeds "rain"
+    @agentBreeds "rain evap"
 
     @setupRain()
+    @setupEvap()
 
     @draw()
     @refreshPatches = false
@@ -31,6 +34,7 @@ class WaterModel extends ABM.Model
     super
     for p in @patches
       p.isOnSurface = @isOnSurface(p)
+      p.isOnAirSurface = @isOnAirSurface(p)
 
   step: ->
     console.log @anim.toString() if @anim.ticks % 100 is 0
@@ -39,6 +43,12 @@ class WaterModel extends ABM.Model
 
     for r in @rain
       @moveFallingWater(r)
+
+    for e in @evap
+      @moveEvaporation(e)
+
+    @evaporateWater()
+
     return true # avoid inadventently returning a large array of things
 
   setupRain: ->
@@ -46,6 +56,12 @@ class WaterModel extends ABM.Model
     @rain.setDefaultColor [0, 0, 255]
     @rain.setDefaultShape "circle"
     @rain.setDefaultHeading @DOWN
+
+  setupEvap: ->
+    @evap.setDefaultSize 2/@world.size  # try to keep water around 2px in size
+    @evap.setDefaultColor [0, 255, 0]
+    @evap.setDefaultShape "circle"
+    @evap.setDefaultHeading @UP
 
   createRain: ->
     # too many agents will make it really slow
@@ -66,6 +82,20 @@ class WaterModel extends ABM.Model
            (p.type isnt p.n[7]?.type and p.n4[7]?.type isnt "rock4")
 
     return isSurface
+
+  isOnAirSurface: (p)->
+    # Patches with an air patch directly or diagonally above is on the "air surface".
+    # This is used to decide whether water is eligible for evaporation
+    isFirstRockLayer = p.type isnt "sky" and
+                (p.n[5]?.type is "sky" or
+                 p.n[6]?.type is "sky" or
+                 p.n[7]?.type is "sky")
+    isLastSkyLayer = p.type is "sky" and
+                (p.n[0]?.type isnt "sky" or
+                 p.n[1]?.type isnt "sky" or
+                 p.n[2]?.type isnt "sky")
+
+    return isFirstRockLayer or isLastSkyLayer
 
   getNextPatch: (a)->
     dir = Math.round(ABM.util.radToDeg(a.heading))
@@ -142,5 +172,24 @@ class WaterModel extends ABM.Model
         return true
 
     return false
+
+  evaporateWater: ->
+    for a in @rain
+      if a? and a.p.isOnAirSurface and @random(10000) < @evapProbability
+        a.changeBreed(@evap)
+
+  moveEvaporation: (a)->
+    return unless a?
+    a.heading = ABM.util.degToRad(@random(90)+45)
+    if a.y+1 > @world.maxY
+      a.die()
+      return
+
+    # keep agents within the left-right bounds of the model
+    if (a.heading > @UP and a.x-1 < @world.minX) or
+       (a.heading < @UP and a.x+1 > @world.maxX)
+      a.heading = @UP + (@UP - a.heading)
+
+    a.forward 1
 
 window.WaterModel = WaterModel
