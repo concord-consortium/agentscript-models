@@ -176,6 +176,12 @@ class WaterModel extends ABM.Model
   evaporateWater: ->
     for a in @rain
       if a? and a.p.isOnAirSurface and @random(10000) < @evapProbability
+        # move to the surface of any pools of water
+        nextP = a.p.n4[3]
+        while nextP? and nextP.agentsHere().length > 0
+          nextP = nextP.n4[3]
+
+        a.moveTo nextP if nextP?
         a.changeBreed(@evap)
 
   moveEvaporation: (a)->
