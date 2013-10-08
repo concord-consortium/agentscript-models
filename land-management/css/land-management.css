@@ -56,6 +56,13 @@ label {
   left: 150px;
 }
 
+#percipitation {
+  position: absolute;
+  top: 0;
+  left: 300px;
+  width: 240px;
+}
+
 .ui-slider {
   display:inline-block;
   margin: 0.5em;

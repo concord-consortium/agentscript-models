@@ -15,7 +15,7 @@ class LandGenerator
 
   amplitude = -4
   erosionProbability = 30
-  precipitation = 100
+  precipitation = 166
   maxSlope = 2 # necessary?
   showErosion: true
 
@@ -49,6 +49,9 @@ class LandGenerator
       when "Rolling"      then amplitude = -10
       when "Hilly"        then amplitude = -20
       else                     amplitude = 0
+
+  setPercipitation: (p) ->
+    precipitation = p
 
   #
   # Set soil depth such that the top of each "column" of soil's depth is 0,
