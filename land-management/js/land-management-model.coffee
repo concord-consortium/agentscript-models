@@ -6,7 +6,7 @@ mixOf = (base, mixins...) ->
   Mixed
 
 
-class LandManagementModel extends mixOf ABM.Model, LandGenerator
+class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine
   RIGHT: 0
   UP:    1/2 * Math.PI
   LEFT:  Math.PI
