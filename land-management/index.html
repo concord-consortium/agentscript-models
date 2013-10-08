@@ -36,7 +36,7 @@
       </div>
 
       <div id="terrain">
-        <label for="terrain-options">Terrain</label>
+        <label for="terrain-options" class="title">Terrain</label>
         <select id="terrain-options" class="chosen-select">
           <option value="Nearly Flat">Nearly Flat</option>
           <option value="Plain" selected>Plain</option>
@@ -46,8 +46,16 @@
       </div>
 
       <div id="percipitation">
-        <label for="percipitation-slider">Average percipitation:</label>
+        <label for="percipitation-slider" class="title">Average percipitation:</label>
         <span class="slider-units">0 <div id="percipitation-slider"></div> 500</span>
+      </div>
+
+      <div id="show-erosion">
+        <div class="checkbox">
+          <input type="checkbox" value="None" id="showErosion" name="check" class="property" checked/>
+          <label for="showErosion"></label>
+          <span class="multiline">Show erosion</span>
+        </div>
       </div>
 
     </div>
