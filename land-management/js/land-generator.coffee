@@ -11,6 +11,7 @@ class LandGenerator
 
   u = ABM.util
 
+  type = "Plain"
   amplitude = -4
 
   setupLand: ->
@@ -19,7 +20,7 @@ class LandGenerator
     @landPatches = []
 
     for p in @patches
-      p.zone = if p.y <= 0 then 1 else 2
+      p.zone = if p.x <= 0 then 1 else 2
       if p.y > @landShapeFunction p.x
         p.color = SKY_COLOR
         p.type = SKY
@@ -36,7 +37,8 @@ class LandGenerator
     @setSoilDepths()
 
 
-  setLandType: (type) ->
+  setLandType: (t) ->
+    type = t
     switch type
       when "Nearly Flat"  then amplitude = -0.00001
       when "Plain"        then amplitude = -4
@@ -45,6 +47,14 @@ class LandGenerator
       else                     amplitude = 0
 
   landShapeFunction: (x) ->
-    amplitude * Math.sin( u.degToRad(x - 10) )
+    if type isnt "Terraced"
+      amplitude * Math.sin( u.degToRad(x - 10) )
+    else
+      if x < 0
+        step = Math.floor (x+1) / (@patches.minX/5)
+        height = @patches.maxY - @patches.minY
+        @patches.minY + height * (0.6 - (0.1*step))
+      else
+        -25 * Math.sin( u.degToRad(x - 20) ) - 1
 
 window.LandGenerator = LandGenerator

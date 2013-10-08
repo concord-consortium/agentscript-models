@@ -84,6 +84,10 @@ class ErosionEngine
         p.direction = 0
         continue
 
+      # check below target to make sure it drops down to solid ground
+      while target.n[1].type is SKY
+        target = target.n[1]
+
       # "move" patch to target
       p.type = SKY
       p.color = SKY_COLOR
