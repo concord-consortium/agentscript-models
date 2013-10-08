@@ -3,7 +3,8 @@ class ImportExport
   @import: (model, state)->
     # TODO
 
-  # returns an object representing the model state, which can be passed to import.
+  # returns an object representing the model state, which can be passed to import,
+  # or JSON.stringify'd and persisted.
   @export: (model)->
     state = {
       agentProperties: {},
@@ -18,21 +19,20 @@ class ImportExport
       breed = breedSet.name
       [props, vals] = @_processSet(breedSet, breed)
       state.agentProperties[breed] = props
-      state.agents = vals
+      state.agents = state.agents.concat(vals)
 
     for patchSet in (ABM.patchBreeds || [model.patches])
       breed = patchSet.name
       [props, vals] = @_processSet(patchSet, breed)
       state.patchProperties[breed] = props
-      state.patches = vals
+      state.patches = state.patches.concat(vals)
 
     for linkSet in (ABM.linkBreeds || [model.links])
       breed = linkSet.name
       [props, vals] = @_processSet(linkSet, breed)
       state.linkProperties[breed] = props
-      state.links = vals
+      state.links = state.links.concat(vals)
 
-    console.log "State generated", state
     return state
 
   @_processSet: (objSet, breed)->
