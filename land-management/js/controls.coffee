@@ -36,3 +36,10 @@ $("#terrain-options").change (evt, ui) ->
 
 $percipitationSlider.on 'slide', (event, ui) ->
   model.setPercipitation ui.value
+
+$('input.property').click ->
+  $this    = $(this)
+  property = $this.attr('id')
+  checked  = $this.is(':checked')
+  model[property] = checked
+  true
