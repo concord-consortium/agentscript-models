@@ -50,6 +50,11 @@ label {
   padding: 5px;
 }
 
+.model-top {
+  position: absolute;
+  color: white;
+}
+
 #terrain {
   position: absolute;
   top: 0px;
@@ -61,6 +66,16 @@ label {
   top: 0;
   left: 300px;
   width: 240px;
+}
+
+#zone-1 {
+  top: 227px;
+  left: 170px;
+}
+
+#zone-2 {
+  top: 227px;
+  left: 541px;
 }
 
 .ui-slider {
