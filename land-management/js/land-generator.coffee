@@ -25,7 +25,7 @@ class LandGenerator
     @landPatches = []
 
     for p in @patches
-      p.zone = if p.y <= 0 then 1 else 2
+      p.zone = if p.x <= 0 then 1 else 2
       if p.y > @landShapeFunction p.x
         p.color = SKY_COLOR
         p.type = SKY
