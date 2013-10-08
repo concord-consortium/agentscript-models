@@ -1,7 +1,39 @@
 class ImportExport
   @skipProperties: ["id", "p", "n", "n4", "agents"]
   @import: (model, state)->
-    # TODO
+    for items in [["patchProperties","patches"],["agentProperties","agents"],["linkProperties","links"]]
+      props = state[items[0]]
+      objs = state[items[1]]
+
+      unless items[1] == "patches"
+        for own breed of props
+          model[breed].clear()
+
+      for obj in objs
+        breed = obj[0]
+        if items[1] == "patches"
+          # apply the values directly to the existing patches
+          pxIdx = props[breed].indexOf('x')
+          pyIdx = props[breed].indexOf('y')
+          if pxIdx? and pyIdx?
+            existingPatch = model[breed].patch(obj[pxIdx], obj[pyIdx])
+            if existingPatch?
+              @_applyValues existingPatch, props[breed], obj
+            else
+              console.log "No patch at (" + obj[pxIdx] + ", " + obj[pyIdx] + ")"
+          else
+            console.log "Missing x or y coordinate for patch!"
+        else
+          # apply the values to a newly created agent/link
+          model[breed].create 1, (a)=>
+            @_applyValues a, props[breed], obj
+            a.setXY a.x, a.y
+
+    oldRefreshPatches = model.refreshPatches
+    model.refreshPatches = true
+    model.draw()
+    model.refreshPatches = oldRefreshPatches
+    return true
 
   # returns an object representing the model state, which can be passed to import,
   # or JSON.stringify'd and persisted.
@@ -34,6 +66,11 @@ class ImportExport
       state.links = state.links.concat(vals)
 
     return state
+
+  @_applyValues: (obj, properties, values)->
+    for prop,i in properties
+      continue if prop == "breed"
+      obj[prop] = values[i]
 
   @_processSet: (objSet, breed)->
     return [[],[]] unless objSet? and objSet.length > 0
