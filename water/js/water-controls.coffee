@@ -67,6 +67,18 @@ window.WaterControls =
         else
           ABM.model.removeSpotlight()
           $span.text "Follow Water Droplet"
+      importButton = $("#import-button")
+      exportButton = $("#export-button")
+      exportDataField = $("#exported-data")
+      if importButton? and exportButton? and exportDataField?
+        exportButton.button().click ->
+          state = ImportExport.export(ABM.model)
+          stateStr = JSON.stringify(state, null, 2)
+          exportDataField.val(stateStr)
+        importButton.button().click ->
+          if exportDataField.val()? and exportDataField.val().length > 0
+            state = JSON.parse(exportDataField.val())
+            ImportExport.import(ABM.model, state)
     else
       console.log("delaying...")
       setTimeout =>

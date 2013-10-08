@@ -8,6 +8,7 @@
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
     <script src="../lib/agentscript/agentscript.js"></script>
     <script src="../lib/agentscript/coffee-script.js"></script>
+    <script src="../lib/import-export.coffee" type="text/coffeescript"></script>
 
     <link href="css/water.css" rel="stylesheet" type="text/css" />
     <script src="js/water-model.coffee" type="text/coffeescript"></script>
@@ -52,6 +53,12 @@
       <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
       <div id="layers"></div>
       <div id="mouse-catcher"></div>
+    </div>
+    <div id="export">
+      <button id="export-button">Save State</button>
+      <button id="import-button">Load State</button>
+      <br/>
+      <textarea id="exported-data"></textarea>
     </div>
     <script>
       $(document).one('controls-ready', function() {

@@ -105,3 +105,13 @@ span.layer-option {
   min-width: 3.2em;
   border-bottom-right-radius: 0.7em;
 }
+
+#export {
+  position: absolute;
+  top: 330px;
+}
+
+#exported-data {
+  width: 600px;
+  height: 300px;
+}
