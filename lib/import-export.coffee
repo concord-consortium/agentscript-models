@@ -78,16 +78,20 @@ class ImportExport
     vals = []
 
     for obj in objSet
-      objVals = [breed]
-      for own prop of obj
-        continue if prop == "breed"
-        if @skipProperties.indexOf(prop) == -1 and prop[0] != '_'
-          if props.indexOf(prop) == -1
-            props.push(prop)
-
-          objVals[props.indexOf(prop)] = obj[prop]
+      objVals = @_processObj(obj, props, breed)
       vals.push(objVals)
 
     return [props, vals]
+
+  @_processObj: (obj, props, breed, skip=[])->
+    objVals = [breed]
+    for own prop of obj
+      continue if prop == "breed"
+      if @skipProperties.indexOf(prop) == -1 and skip.indexOf(prop) == -1 and prop[0] != '_'
+        if props.indexOf(prop) == -1
+          props.push(prop)
+
+        objVals[props.indexOf(prop)] = obj[prop]
+    return objVals
 
 window.ImportExport = ImportExport
