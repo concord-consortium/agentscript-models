@@ -30,6 +30,7 @@
 #draw-button-type-options {
   position: absolute;
   width: 150px;
+  z-index: 5;
 }
 
 #draw-button-type-options .ui-corner-all {
