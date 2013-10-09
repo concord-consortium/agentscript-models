@@ -1,33 +1,26 @@
 class ImportExport
   @skipProperties: ["id", "p", "n", "n4", "agents"]
   @import: (model, state)->
-    for items in [["patchProperties","patches"],["agentProperties","agents"],["linkProperties","links"]]
+    # first, set up the patches
+    props = state.patchProperties
+    objs = state.patches
+
+    for region in objs
+      @_applyPatchRegion(region, props, model)
+
+    for items in [["agentProperties","agents"],["linkProperties","links"]]
       props = state[items[0]]
       objs = state[items[1]]
 
-      unless items[1] == "patches"
-        for own breed of props
-          model[breed].clear()
+      for own breed of props
+        model[breed].clear()
 
       for obj in objs
         breed = obj[0]
-        if items[1] == "patches"
-          # apply the values directly to the existing patches
-          pxIdx = props[breed].indexOf('x')
-          pyIdx = props[breed].indexOf('y')
-          if pxIdx? and pyIdx?
-            existingPatch = model[breed].patch(obj[pxIdx], obj[pyIdx])
-            if existingPatch?
-              @_applyValues existingPatch, props[breed], obj
-            else
-              console.log "No patch at (" + obj[pxIdx] + ", " + obj[pyIdx] + ")"
-          else
-            console.log "Missing x or y coordinate for patch!"
-        else
-          # apply the values to a newly created agent/link
-          model[breed].create 1, (a)=>
-            @_applyValues a, props[breed], obj
-            a.setXY a.x, a.y
+        # apply the values to a newly created agent/link
+        model[breed].create 1, (a)=>
+          @_applyValues a, props[breed], obj
+          a.setXY a.x, a.y
 
     oldRefreshPatches = model.refreshPatches
     model.refreshPatches = true
@@ -53,24 +46,45 @@ class ImportExport
       state.agentProperties[breed] = props
       state.agents = state.agents.concat(vals)
 
-    for patchSet in (ABM.patchBreeds || [model.patches])
-      breed = patchSet.name
-      [props, vals] = @_processSet(patchSet, breed)
-      state.patchProperties[breed] = props
-      state.patches = state.patches.concat(vals)
-
     for linkSet in (ABM.linkBreeds || [model.links])
       breed = linkSet.name
       [props, vals] = @_processSet(linkSet, breed)
       state.linkProperties[breed] = props
       state.links = state.links.concat(vals)
 
+    @_processPatches(model, state)
+
     return state
 
-  @_applyValues: (obj, properties, values)->
+  @_applyValues: (obj, properties, values, setBreed=null)->
     for prop,i in properties
-      continue if prop == "breed"
-      obj[prop] = values[i]
+      if prop == "breed"
+        if setBreed? and obj.changeBreed?
+          obj.changeBreed setBreed
+        continue
+
+      obj[prop] = values[i] if values[i]?
+
+  @_applyPatchRegion: (region, properties, model)->
+    startX = region[0][0]
+    startY = region[0][1]
+    endX   = region[1][0]
+    endY   = region[1][1]
+    values = region[2]
+
+    for y in [startY..endY] by -1
+      for x in [(model.world.minX)..(model.world.maxX)] by 1
+        if y == startY and x < startX
+          continue
+        else if y == endY and x > endX
+          continue
+        else
+          # apply the values directly to the existing patches
+          existingPatch = model.patches.patchXY(x, y)
+          if existingPatch?
+            @_applyValues existingPatch, properties, values
+          else
+            console.log "No patch at (" + x + ", " + y + ")"
 
   @_processSet: (objSet, breed)->
     return [[],[]] unless objSet? and objSet.length > 0
@@ -93,5 +107,26 @@ class ImportExport
 
         objVals[props.indexOf(prop)] = obj[prop]
     return objVals
+
+  @_processPatches: (model, state)->
+    startPatch = prevPatch = currentPatch = null
+    props = ['breed']
+    for y in [(model.world.maxY)..(model.world.minY)] by -1
+      for x in [(model.world.minX)..(model.world.maxX)] by 1
+        currentPatch = model.patches.patchXY x, y
+        if startPatch?
+          if @_unequal(startPatch, currentPatch)
+            state.patches.push([[startPatch.x, startPatch.y],[prevPatch.x, prevPatch.y],@_processObj(startPatch, props, startPatch.breed.name, ['x','y'])])
+            startPatch = currentPatch
+        else
+          startPatch = currentPatch
+        prevPatch = currentPatch
+    state.patches.push([[startPatch.x, startPatch.y],[prevPatch.x, prevPatch.y],@_processObj(startPatch, props, startPatch.breed.name, ['x','y'])])
+    state.patchProperties = props
+
+  @_unequal: (obj1, obj2)->
+    obj1State = @_processObj(obj1, [], obj1.breed.name, ['x','y'])
+    obj2State = @_processObj(obj2, [], obj2.breed.name, ['x','y'])
+    return !(JSON.stringify(obj1State) == JSON.stringify(obj2State))
 
 window.ImportExport = ImportExport
