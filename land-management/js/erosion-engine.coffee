@@ -19,6 +19,9 @@ class ErosionEngine
   maxSlope = 2 # necessary?
   showErosion: true
 
+  zone1ErosionCount: 0
+  zone2ErosionCount: 0
+
   #
   # Set soil depth such that the top of each "column" of soil's depth is 0,
   # the next depth is 1, etc, up to MAX_INTERESTING_SOIL_DEPTH
@@ -98,6 +101,10 @@ class ErosionEngine
       target.eroded = true
       target.zone = p.zone
 
+      # count erosion in zones -- note this is not the same as the target's
+      # origin zone (it's color), but where is it *currently* eroding from.
+      if p.x < 0 then @zone1ErosionCount++ else @zone2ErosionCount++
+
 
   getLocalSlope: (x, y) ->
     xStep = 3
@@ -118,5 +125,9 @@ class ErosionEngine
       rightHeight++
 
     slope = (rightHeight - leftHeight) / (rightEdge - leftEdge)
+
+  resetErosionCounts: ->
+    @zone1ErosionCount = 0
+    @zone2ErosionCount = 0
 
 window.ErosionEngine = ErosionEngine

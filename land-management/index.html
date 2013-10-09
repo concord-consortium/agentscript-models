@@ -10,6 +10,9 @@
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
     <script src="../lib/jquery/chosen_v1.0.0/chosen.jquery.min.js"></script>
 
+    <script src="http://lab.concord.org/vendor/d3/d3.js"></script>
+    <script src="../lib/lab.grapher.js"></script>
+
     <script src="../lib/agentscript/agentscript.js"></script>
     <script src="../lib/agentscript/coffee-script.js"></script>
 
@@ -71,6 +74,7 @@
     </div>
     <span class="model-top" id="zone-1">Zone 1</span>
     <span class="model-top" id="zone-2">Zone 2</span>
+    <div id='erosion-graph' class="graph"></div>
     <script>
     var modelLoaded    = $.Deferred(),
         controlsLoaded = $.Deferred();
