@@ -4,7 +4,11 @@ class WaterModel extends ABM.Model
   UP:    ABM.util.degToRad(90)
   CONE:  ABM.util.degToRad(110)
   RIGHT: 0
+
+  ticksPerYear: 730
+
   evapProbability: 10
+  rainProbability: 0.33
 
   setup: ->
     @anim.setRate 30, false
@@ -65,7 +69,7 @@ class WaterModel extends ABM.Model
 
   createRain: ->
     # too many agents will make it really slow
-    if @rain.length < 8000
+    if @rain.length < 8000 && (@anim.ticks % @ticksPerYear) < (@rainProbability * @ticksPerYear)
       @rain.create 5, (a)=>
         p = null
         while not @isPatchFree(p)

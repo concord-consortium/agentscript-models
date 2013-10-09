@@ -78,6 +78,11 @@ span.layer-option {
   margin-left: 15px;
 }
 
+#buttons-row2 {
+  margin-top: 15px;
+  margin-left: 15px;
+}
+
 #playback {
   display: inline-block;
 }
@@ -114,4 +119,44 @@ span.layer-option {
 #exported-data {
   width: 600px;
   height: 300px;
+}
+
+.button-label-left {
+  display: inline-block;
+  margin-right: 10px;
+  position: relative;
+  top: -3px;
+  font-size: 1em;
+  font-weight: bold;
+  min-width: 120px;
+}
+
+.button-label-top {
+  margin-bottom: -5px;
+  position: relative;
+  font-weight: bold;
+  width: 385px;
+  height: 1em;
+  font-size: 0.7em;
+}
+
+.horizontal-slider {
+  width: 250px;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.button-label-top .center {
+  position: absolute;
+  left: 248px;
+}
+
+.button-label-top .left {
+  position: absolute;
+  left: 135px;
+}
+
+.button-label-top .right {
+  position: absolute;
+  right: 0px;
 }

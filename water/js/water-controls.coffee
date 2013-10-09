@@ -79,6 +79,17 @@ window.WaterControls =
           if exportDataField.val()? and exportDataField.val().length > 0
             state = JSON.parse(exportDataField.val())
             ImportExport.import(ABM.model, state)
+      rainSlider = $("#rain-slider")
+      if rainSlider?
+        rainSlider.slider
+          orientation: 'horizontal'
+          min: 0
+          max: 1
+          step: 0.05
+          value: 0.35
+          slide: (evt, ui)->
+            ABM.model.rainProbability = ui.value
+        ABM.model.rainProbability = 0.35
     else
       console.log("delaying...")
       setTimeout =>
