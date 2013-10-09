@@ -15,10 +15,10 @@
 
     <link href="css/land-management.css" rel="stylesheet" type="text/css" />
 
-    <script src="js/controls.coffee" type="text/coffeescript"></script>
     <script src="js/erosion-engine.coffee" type="text/coffeescript"></script>
     <script src="js/land-generator.coffee" type="text/coffeescript"></script>
     <script src="js/land-management-model.coffee" type="text/coffeescript"></script>
+    <script src="js/controls.coffee" type="text/coffeescript"></script>
 
     <script src="http://shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
     <script type="text/javascript">new Shutterbug('body', '', null, null);</script>
@@ -60,6 +60,10 @@
         </div>
       </div>
 
+      <div id="date">
+        Date: <span id="date-string"></span>
+      </div>
+
     </div>
     <div id="model">
       <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
@@ -68,9 +72,10 @@
     <span class="model-top" id="zone-1">Zone 1</span>
     <span class="model-top" id="zone-2">Zone 2</span>
     <script>
-    var modelLoaded = $.Deferred();
+    var modelLoaded    = $.Deferred(),
+        controlsLoaded = $.Deferred();
 
-    $.when(modelLoaded).done(function() {
+    $.when(modelLoaded, controlsLoaded).done(function() {
         model = new LandManagementModel("layers", 3, -124, 124, -40, 40, false);
         initControls();
       });

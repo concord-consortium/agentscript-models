@@ -10,12 +10,13 @@ $ ->
   $percipitationSlider.slider  min: 0, max: 500, step: 1, value: 166
 
 window.initControls = ->
+  $('#date-string').text(model.dateString)
 
 reset = ->
   model.stop()
   $(".icon-pause").hide()
   $(".icon-play").show()
-  model.setup()
+  model.reset()
 
 $('#play-pause-button').click ->
   if model.anim.animStop
@@ -43,3 +44,9 @@ $('input.property').click ->
   checked  = $this.is(':checked')
   model[property] = checked
   true
+
+$(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
+  $('#date-string').text(model.dateString)
+
+
+controlsLoaded.resolve()

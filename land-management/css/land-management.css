@@ -74,6 +74,16 @@ label.title {
   left: 569px;
 }
 
+#date {
+  position: absolute;
+  top: 0;
+  left: 648px;
+  width: 106px;
+  padding: 8px;
+  margin: 7px;
+  border: solid rgb(128, 128, 128) 2px;
+}
+
 #zone-1 {
   top: 227px;
   left: 170px;
