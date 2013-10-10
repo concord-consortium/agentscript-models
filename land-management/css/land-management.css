@@ -58,27 +58,27 @@ label.title {
 #terrain {
   position: absolute;
   top: 0px;
-  left: 150px;
+  left: 142px;
 }
 
 #percipitation {
   position: absolute;
   top: 0;
-  left: 300px;
+  left: 320px;
   width: 240px;
 }
 
 #show-erosion {
   position: absolute;
   top: 24px;
-  left: 569px;
+  left: 575px;
 }
 
 #date {
   position: absolute;
   top: 0;
-  left: 648px;
-  width: 106px;
+  left: 659px;
+  width: 62px;
   padding: 8px;
   margin: 7px;
   border: solid rgb(128, 128, 128) 2px;
@@ -92,6 +92,37 @@ label.title {
 #zone-2 {
   top: 227px;
   left: 541px;
+}
+
+#slope-sliders {
+  position: absolute;
+  top: 70px;
+  left: 79px;
+  width: 273px;
+}
+
+#slope-sliders .title {
+  padding-left: 30px;
+}
+
+#zone-1-slider, #zone-2-slider {
+  width:80px;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+.disabled {
+  color: gray;
+}
+
+span.slider-units {
+  font-size: 90%;
 }
 
 .ui-slider {

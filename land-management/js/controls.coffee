@@ -1,5 +1,15 @@
 $percipitationSlider = $ "#percipitation-slider"
+$zone1Slider = $ "#zone-1-slider"
+$zone2Slider = $ "#zone-2-slider"
+$slopeSlidersDiv = $ "#slope-sliders"
 erosionGraph = null
+
+
+
+enableZoneSliders = (enable) ->
+  $zone1Slider.slider if enable then "enable" else "disable"
+  $zone2Slider.slider if enable then "enable" else "disable"
+  if enable then $slopeSlidersDiv.removeClass "disabled" else $slopeSlidersDiv.addClass "disabled"
 
 $ ->
   $("button").button()
@@ -7,8 +17,14 @@ $ ->
   $(".icon-pause").hide()
   $(".chosen-select").chosen
     disable_search:true
-    width: 110
+    width: 158
   $percipitationSlider.slider  min: 0, max: 500, step: 1, value: 166
+  $zone1Slider.slider  min: -5, max: 5, step: 1, value: 0
+  $zone2Slider.slider  min: -5, max: 5, step: 1, value: 0
+
+  enableZoneSliders false
+
+
 
 window.initControls = ->
   $('#date-string').text(model.dateString)
@@ -35,11 +51,23 @@ $('#reset-button').click reset
 
 
 $("#terrain-options").change (evt, ui) ->
-  model.setLandType ui.selected
+  selection = ui.selected
+  model.setLandType selection
   reset()
+
+  enableZoneSliders(selection is "Sliders")
+
 
 $percipitationSlider.on 'slide', (event, ui) ->
   model.setPercipitation ui.value
+
+$zone1Slider.on 'slide', (event, ui) ->
+  model.zone1Slope = ui.value
+  reset()
+
+$zone2Slider.on 'slide', (event, ui) ->
+  model.zone2Slope = ui.value
+  reset()
 
 $('input.property').click ->
   $this    = $(this)

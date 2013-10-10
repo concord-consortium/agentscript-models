@@ -47,6 +47,7 @@
           <option value="Rolling">Rolling</option>
           <option value="Hilly">Hilly</option>
           <option value="Terraced">Terraced</option>
+          <option value="Sliders">Use Slope-Slider Values</option>
         </select>
       </div>
 
@@ -64,7 +65,18 @@
       </div>
 
       <div id="date">
-        Date: <span id="date-string"></span>
+        <span id="date-string"></span>
+      </div>
+
+      <div id="slope-sliders">
+        <div class="left">
+          <label for="zone-1-slider" class="title">Zone 1 Slope:</label>
+          <span class="slider-units">-5<div id="zone-1-slider"></div>5</span>
+        </div>
+        <div class="right">
+          <label for="zone-2-slider" class="title">Zone 2 Slope:</label>
+          <span class="slider-units">-5<div id="zone-2-slider"></div>5</span>
+        </div>
       </div>
 
     </div>
