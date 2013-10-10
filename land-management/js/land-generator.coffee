@@ -14,6 +14,9 @@ class LandGenerator
   type = "Plain"
   amplitude = -4
 
+  zone1Slope: 0
+  zone2Slope: 0
+
   setupLand: ->
 
     @skyPatches = []
@@ -47,14 +50,19 @@ class LandGenerator
       else                     amplitude = 0
 
   landShapeFunction: (x) ->
-    if type isnt "Terraced"
-      amplitude * Math.sin( u.degToRad(x - 10) )
-    else
+    if type is "Terraced"
+      modelHeight = @patches.maxY - @patches.minY
       if x < 0
         step = Math.floor (x+1) / (@patches.minX/5)
-        height = @patches.maxY - @patches.minY
-        @patches.minY + height * (0.6 - (0.1*step))
+        @patches.minY + modelHeight * (0.6 - (0.1*step))
       else
         -25 * Math.sin( u.degToRad(x - 20) ) - 1
+    else if type is "Sliders"
+      slope = if x < 0 then @zone1Slope else @zone2Slope
+      slope /= 10
+      val = x * slope - 12
+      Math.min @patches.maxY, Math.max @patches.minY, val
+    else
+      amplitude * Math.sin( u.degToRad(x - 10) )
 
 window.LandGenerator = LandGenerator
