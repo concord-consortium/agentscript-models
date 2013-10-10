@@ -90,6 +90,10 @@ window.WaterControls =
           slide: (evt, ui)->
             ABM.model.rainProbability = ui.value
         ABM.model.rainProbability = 0.35
+      templateOptions = $('#template-options')
+      if templateOptions?
+        templateOptions.change (evt)->
+          ABM.model.setTemplate templateOptions.val()
     else
       console.log("delaying...")
       setTimeout =>

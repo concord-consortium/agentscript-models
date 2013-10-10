@@ -8,6 +8,7 @@
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
     <script src="../lib/agentscript/agentscript.js"></script>
     <script src="../lib/agentscript/coffee-script.js"></script>
+    <script src="../lib/import-export.coffee" type="text/coffeescript"></script>
 
     <link href="css/water.css" rel="stylesheet" type="text/css" />
     <script src="js/water-model.coffee" type="text/coffeescript"></script>
@@ -45,6 +46,18 @@
         </div>
         <div id="view-button-set">
           <button id="follow-water-button" class="follow-agent">Follow Water Droplet</button>
+          <label for="template-options">Template:</label>
+          <select id="template-options">
+            <option value="">None</option>
+            <option value="state/WaterModel-2PumpTypes-NoFile.json">WaterModel-2PumpTypes-NoFile</option>
+            <option value="state/WaterModel-5-23-11-compareLayers.json">WaterModel-5-23-11-compareLayers</option>
+            <option value="state/WaterModel-5-23-11-confinedAndUnconfined.json">WaterModel-5-23-11-confinedAndUnconfined</option>
+            <option value="state/WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example.json">WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example</option>
+            <option value="state/WaterModel-5-23-11-goodVbadAquifers-Example-Layers.json">WaterModel-5-23-11-goodVbadAquifers-Example-Layers</option>
+            <option value="state/WaterModel-Gaining-Losing-Stream-StreamA.json">WaterModel-Gaining-Losing-Stream-StreamA</option>
+            <option value="state/WaterModel-Gaining-Losing-Stream-StreamB.json">WaterModel-Gaining-Losing-Stream-StreamB</option>
+            <option value="state/WaterModel-WaterInTheWorld.json">WaterModel-WaterInTheWorld</option>
+          </select>
         </div>
       </div>
       <div id="buttons-row2">

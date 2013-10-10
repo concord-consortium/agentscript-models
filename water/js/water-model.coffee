@@ -5,6 +5,9 @@ class WaterModel extends ABM.Model
   CONE:  ABM.util.degToRad(110)
   RIGHT: 0
 
+  template: null
+  templateData: { url: null, data: null }
+
   ticksPerYear: 730
 
   evapProbability: 10
@@ -15,9 +18,21 @@ class WaterModel extends ABM.Model
     @setFastPatches()
 
     # init all the patches as sky color
-    for p in @patches
-      p.color = [205, 237, 252]
-      p.type = "sky"
+    # unless we have a template to load
+    if @template? and @template isnt ""
+      loadData = (data)=>
+        ImportExport.import(@, data)
+      if @templateData[@template]?
+        loadData(@templateData[@template])
+      else
+        # load in the defined template json
+        $.getJSON(@template, (data)=>
+          @templateData[@template] = data
+          loadData(data)
+        ).fail =>
+          @_clear()
+    else
+     @_clear()
 
     @setCacheAgentsHere()
 
@@ -28,6 +43,11 @@ class WaterModel extends ABM.Model
 
     @draw()
     @refreshPatches = false
+
+  _clear: ->
+    for p in @patches
+      p.color = [205, 237, 252]
+      p.type = "sky"
 
   reset: ->
     super
@@ -217,5 +237,9 @@ class WaterModel extends ABM.Model
 
   removeSpotlight: ->
     @setSpotlight null
+
+  setTemplate: (str)->
+    @template = str
+    @reset()
 
 window.WaterModel = WaterModel
