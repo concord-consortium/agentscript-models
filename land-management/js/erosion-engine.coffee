@@ -52,16 +52,17 @@ class ErosionEngine
     for p in @surfaceLand
       p.skyCount = 0
       p.skyCount++ for n in p.n when n?.type is SKY
+      p.skyCount += 3 if p.y is @patches.maxY
 
     @surfaceLand.sort (a,b) ->
       return if a.skyCount <= b.skyCount then 1 else -1
 
     # Take the top 25% of most exposed soil patches and erode them
-    for i in [0...@surfaceLand.length/4] by 1
+    for i in [0...@surfaceLand.length/2] by 1
       p = @surfaceLand[i]
 
       localSlope = @getLocalSlope p.x, p.y
-      slopeContribution = 0.35 * (localSlope/2)
+      slopeContribution = 0.35 * Math.abs(localSlope/2)
       vegetiationContribution = 0.65
       probabilityOfErosion = erosionProbability * (precipitation/400) * (slopeContribution + vegetiationContribution)
 
