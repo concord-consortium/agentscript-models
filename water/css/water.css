@@ -37,6 +37,10 @@
   line-height: 1;
 }
 
+label {
+  font-weight: bold;
+}
+
 li.header {
   font-weight: bold;
   font-size: 0.8em;
