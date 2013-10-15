@@ -171,7 +171,7 @@ class FrackingControls
     @stopModel() unless @startModel()
 
   stopModel: ->
-    if ABM.model.anim.animStop
+    if ABM.model.anim.stopped
       return false
     else
       ABM.model.stop()
@@ -180,7 +180,7 @@ class FrackingControls
       return true
 
   startModel: ->
-    if ABM.model.anim.animStop
+    if ABM.model.anim.stopped
       ABM.model.start()
       $(".icon-pause").show()
       $(".icon-play").hide()

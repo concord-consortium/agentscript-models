@@ -38,7 +38,7 @@ reset = ->
   erosionGraph.reset() if erosionGraph?
 
 $('#play-pause-button').click ->
-  if model.anim.animStop
+  if model.anim.stopped
     model.start()
     $(".icon-pause").show()
     $(".icon-play").hide()

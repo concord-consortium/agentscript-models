@@ -15,8 +15,8 @@ class OceanClimateModel extends ClimateModel
 
     @agentBreeds "vapor"
 
-    @vapor.setDefaultShape "circle"
-    @vapor.setDefaultColor [0, 0, 255]
+    @vapor.setDefault "shape", "circle"
+    @vapor.setDefault "color", [0, 0, 255]
 
     # globals
     @temperature = 5

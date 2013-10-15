@@ -22,10 +22,7 @@ class ImportExport
           @_applyValues a, props[breed], obj
           a.setXY a.x, a.y
 
-    oldRefreshPatches = model.refreshPatches
-    model.refreshPatches = true
-    model.draw()
-    model.refreshPatches = oldRefreshPatches
+    model.draw(true)
     return true
 
   # returns an object representing the model state, which can be passed to import,
@@ -59,8 +56,8 @@ class ImportExport
   @_applyValues: (obj, properties, values, setBreed=null)->
     for prop,i in properties
       if prop == "breed"
-        if setBreed? and obj.changeBreed?
-          obj.changeBreed setBreed
+        if setBreed? and setBreed.setBreed?
+          setBreed.setBreed obj
         continue
 
       obj[prop] = values[i] if values[i]?

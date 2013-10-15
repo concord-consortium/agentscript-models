@@ -232,7 +232,7 @@ window.WaterControls =
   stopDraw: (alsoStopModel=true)->
     $("#fill-button").click() if $("#fill-button")[0]?.checked
     $("#erase-button").click() if $("#erase-button")[0]?.checked
-    @startStopModel() if alsoStopModel and not ABM.model.anim.animStop
+    @startStopModel() if alsoStopModel and not ABM.model.anim.stopped
     $("#mouse-catcher").hide()
     $("#mouse-catcher").unbind('mouseup')
     $("#mouse-catcher").unbind('mousedown')
@@ -240,7 +240,7 @@ window.WaterControls =
     $("#mouse-catcher").unbind('mouseleave')
 
   startStopModel: ->
-    if ABM.model.anim.animStop
+    if ABM.model.anim.stopped
       ABM.model.start()
       $(".icon-pause").show()
       $(".icon-play").hide()

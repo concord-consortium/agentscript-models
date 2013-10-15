@@ -2,8 +2,8 @@
 <html>
   <head>
     <title>AgentScript Model</title>
-    <script src="../lib/agentscript/agentscript.js"></script>
-    <script src="../lib/agentscript/coffee-script.js"></script>
+    <script src="../lib/agentscript/lib/agentscript.js"></script>
+    <script src="../lib/agentscript/tools/coffee-script.js"></script>
     <link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
     <link href="css/layout.css" rel="stylesheet" type="text/css" />
@@ -118,7 +118,7 @@
     </script>
     <script>
       $('#play-pause-button').click(function() {
-        if (model.anim.animStop) {
+        if (model.anim.stopped) {
           model.start();
           $(".icon-pause").show();
           $(".icon-play").hide();

@@ -76,16 +76,16 @@ class WaterModel extends ABM.Model
     return true # avoid inadventently returning a large array of things
 
   setupRain: ->
-    @rain.setDefaultSize 2/@world.size  # try to keep water around 2px in size
-    @rain.setDefaultColor [0, 0, 255]
-    @rain.setDefaultShape "circle"
-    @rain.setDefaultHeading @DOWN
+    @rain.setDefault "size", 2/@world.size  # try to keep water around 2px in size
+    @rain.setDefault "color", [0, 0, 255]
+    @rain.setDefault "shape", "circle"
+    @rain.setDefault "heading", @DOWN
 
   setupEvap: ->
-    @evap.setDefaultSize 2/@world.size  # try to keep water around 2px in size
-    @evap.setDefaultColor [0, 255, 0]
-    @evap.setDefaultShape "circle"
-    @evap.setDefaultHeading @UP
+    @evap.setDefault "size", 2/@world.size  # try to keep water around 2px in size
+    @evap.setDefault "color", [0, 255, 0]
+    @evap.setDefault "shape", "circle"
+    @evap.setDefault "heading", @UP
 
   createRain: ->
     # too many agents will make it really slow
@@ -205,8 +205,8 @@ class WaterModel extends ABM.Model
         while nextP? and nextP.agentsHere().length > 0
           nextP = nextP.n4[3]
 
+        @evap.setBreed a
         a.moveTo nextP if nextP?
-        a.changeBreed(@evap)
 
   moveEvaporation: (a)->
     return unless a?

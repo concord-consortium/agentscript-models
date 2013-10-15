@@ -41,7 +41,7 @@ window.initControls = (args) ->
   setupGraphs()
 
 $('#play-pause-button').click ->
-  if climateModel.anim.animStop
+  if climateModel.anim.stopped
     climateModel.start()
     $(".icon-pause").show()
     $(".icon-play").hide()
@@ -202,7 +202,7 @@ d3.timer (elapsed) ->
     $temperatureOutput.text(temperatureFormatter(temperature))
     $co2Output.text(countFormatter(co2Count))
 
-    if ticksElapsed and not climateModel.animStop
+    if ticksElapsed and not climateModel.anim.stopped
       while ticksElapsed--  # duplicate data if multiple model steps passed
         if not isOceanTemperatureModel
           temperatureGraph.addSamples [temperature-initialTemperature] unless !temperatureGraph?

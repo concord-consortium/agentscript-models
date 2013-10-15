@@ -39,8 +39,10 @@ class FrackingModel extends ABM.Model
     @setFastPatches()
     @patches.usePixels true
     @refreshPatches = false
-    @setTextParams {name: "drawing"}, "10px sans-serif"
-    @setLabelParams {name: "drawing"}, [255,255,255], [0,-20]
+    ABM.util.ctxTextParams ABM.contexts.drawing, "10px sans-serif"
+    @patches.setDefault "labelOffset", [0,-20]
+    @patches.setDefault "labelColor", [255,255,255]
+    @patches.setDefault "labelContext", ABM.contexts.drawing
 
     @setupAgents()
     @setupGlobals()
@@ -59,13 +61,17 @@ class FrackingModel extends ABM.Model
     @agentBreeds "gas waterGas shaleGas pondWater"
 
     for agents in [@gas, @waterGas, @shaleGas]
-      agents.setDefaultShape "circle"
-      agents.setDefaultSize 2
-      agents.setDefaultColor [255, 0, 0]
+      agents.setDefault "shape", "circle"
+      agents.setDefault "size", 2
+      agents.setDefault "color", [255, 0, 0]
+      agents.setDefault "x", null
+      agents.setDefault "y", null
 
-    @pondWater.setDefaultShape "circle"
-    @pondWater.setDefaultSize 3
-    @pondWater.setDefaultColor [38,  90,  90]
+    @shaleGas.setDefault "hidden", true
+
+    @pondWater.setDefault "shape", "circle"
+    @pondWater.setDefault "size", 3
+    @pondWater.setDefault "color", [38,  90,  90]
 
   spawnInitialShaleGas: ->
     for p in @shale
@@ -98,9 +104,7 @@ class FrackingModel extends ABM.Model
 
     if @toMoveToWaterGas.length > 0
       for a in @toMoveToWaterGas
-        well = a.well
-        res = a.changeBreed @waterGas
-        res[0].well = well
+        @waterGas.setBreed a
       @toMoveToWaterGas = []
 
     if @toKill.length > 0
@@ -245,6 +249,7 @@ class FrackingModel extends ABM.Model
       when "cleanWaterWell", "cleanWaterOpen" then [45, 141, 190]
       when "dirtyWaterWell", "dirtyWaterOpen", "dirtyWaterPond" then [38,  90,  90]
       when "cleanPropaneWell", "cleanPropaneOpen", "dirtyPropaneWell", "dirtyPropaneOpen" then [122, 192, 99]
+    @toRedraw ||= []
     @toRedraw.push p if redraw
 
   setupGlobals: ->

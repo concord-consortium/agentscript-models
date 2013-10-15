@@ -2,8 +2,8 @@
 <html>
   <head>
     <title>AgentScript Model:Solar Panel 2.0</title>
-    <script src="../lib/agentscript/agentscript.js"></script>
-    <script src="../lib/agentscript/coffee-script.js"></script>
+    <script src="../lib/agentscript/lib/agentscript.js"></script>
+    <script src="../lib/agentscript/tools/coffee-script.js"></script>
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/themes/base/jquery-ui.css" type="text/css" media="all" />
     <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
@@ -20,8 +20,8 @@
         # allow access to this model from window.SolarPanelModel
         window.SolarPanelModel = this
         @refreshPatches = false
-        @agents.setDefaultShape "arrow"
-        @agents.setDefaultSize 5
+        @agents.setDefault "shape", "arrow"
+        @agents.setDefault "size", 5
         @agentBreeds "photons"
 
         @anim.setRate 100, true
@@ -405,7 +405,7 @@
           }
           percentHitOutput.textContent = percentHitFormatter(percentHit);
           angleOutput.textContent = countFormatter(angle);
-          if (!SolarPanelModel.animStop) {
+          if (!SolarPanelModel.stopped) {
             graph.addSamples([percentHit]);
             updateTickCounter();
           }

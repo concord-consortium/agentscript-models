@@ -52,8 +52,10 @@ class AirPollutionModel extends ABM.Model
     @anim.setRate 50, false
     @setFastPatches()
     @patches.usePixels true
-    @setTextParams {name: "drawing"}, "10px sans-serif"
-    @setLabelParams {name: "drawing"}, [255,255,255], [0,-20]
+    ABM.util.ctxTextParams ABM.contexts.drawing, "10px sans-serif"
+    @patches.setDefault "labelOffset", [0,-20]
+    @patches.setDefault "labelColor", [255,255,255]
+    @patches.setDefault "labelContext", ABM.contexts.drawing
 
     @patches.importColors "img/air-pollution-bg-mask.png"
     @patches.importDrawing "img/air-pollution-bg.png"
@@ -130,11 +132,11 @@ class AirPollutionModel extends ABM.Model
     return
 
   setupWind: ->
-    @wind.setDefaultSize 5
-    @wind.setDefaultColor [0, 0, 255, 0.2]
-    @wind.setDefaultShape "arrow"
-    @wind.setDefaultHidden true
-    @wind.setDefaultHeading 0
+    @wind.setDefault "size", 5
+    @wind.setDefault "color", [0, 0, 255, 0.2]
+    @wind.setDefault "shape", "arrow"
+    @wind.setDefault "hidden", true
+    @wind.setDefault "heading", 0
 
     @wind.create 30, (w)=>
       row = Math.floor((@wind.length-1) / 5)
@@ -143,11 +145,11 @@ class AirPollutionModel extends ABM.Model
       w.moveTo @patches.patchXY(x,y)
 
   setupCars: ->
-    @cars.setDefaultSize 1
-    @cars.setDefaultHeading @LEFT
-    @cars.setDefaultShape "left-car"
-    @cars.setDefaultColor [0,0,0]
-    @cars.setDefaultHidden true
+    @cars.setDefault "size", 1
+    @cars.setDefault "heading", @LEFT
+    @cars.setDefault "shape", "left-car"
+    @cars.setDefault "color", [0,0,0]
+    @cars.setDefault "hidden", true
 
     @cars.create @numCars, (c)=>
       pos = @CAR_SPAWN[@cars.length - 1]
@@ -159,11 +161,11 @@ class AirPollutionModel extends ABM.Model
     @setCars 1
 
   setupFactories: ->
-    @factories.setDefaultSize 1
-    @factories.setDefaultHeading @LEFT
-    @factories.setDefaultShape "factory"
-    @factories.setDefaultColor [0,0,0]
-    @factories.setDefaultHidden true
+    @factories.setDefault "size", 1
+    @factories.setDefault "heading", @LEFT
+    @factories.setDefault "shape", "factory"
+    @factories.setDefault "color", [0,0,0]
+    @factories.setDefault "hidden", true
 
     @factories.create @numFactories, (f)=>
       pos = @FACTORY_SPAWN_POS[@factories.length-1]
@@ -174,17 +176,23 @@ class AirPollutionModel extends ABM.Model
     @setFactories 1
 
   setupPollution: ->
-    @primary.setDefaultSize 3
-    @primary.setDefaultHeading @UP
-    @primary.setDefaultShape "circle"
-    @primary.setDefaultColor [100,100,100]
-    @primary.setDefaultHidden false
+    @primary.setDefault "size", 3
+    @primary.setDefault "heading", @UP
+    @primary.setDefault "shape", "circle"
+    @primary.setDefault "color", [100,100,100]
+    @primary.setDefault "hidden", false
 
-    @secondary.setDefaultSize 3
-    @secondary.setDefaultHeading @UP
-    @secondary.setDefaultShape "circle"
-    @secondary.setDefaultColor [160,130,50]
-    @secondary.setDefaultHidden false
+    @secondary.setDefault "size", 3
+    @secondary.setDefault "heading", @UP
+    @secondary.setDefault "shape", "circle"
+    @secondary.setDefault "color", [160,130,50]
+    @secondary.setDefault "hidden", false
+
+    # set x,y to null so that setBreed won't reset them
+    @primary.setDefault "x", null
+    @primary.setDefault "y", null
+    @secondary.setDefault "x", null
+    @secondary.setDefault "y", null
 
   setupRain: ->
     # Create rain which falls according to wind speed.
@@ -199,11 +207,11 @@ class AirPollutionModel extends ABM.Model
       c.hidden = true
 
   setupSunlight: ->
-    @sunlight.setDefaultSize 2
-    @sunlight.setDefaultHeading Math.PI*7/4
-    @sunlight.setDefaultShape "circle"
-    @sunlight.setDefaultColor [255,255,0]
-    @sunlight.setDefaultHidden false
+    @sunlight.setDefault "size", 2
+    @sunlight.setDefault "heading", Math.PI*7/4
+    @sunlight.setDefault "shape", "circle"
+    @sunlight.setDefault "color", [255,255,0]
+    @sunlight.setDefault "hidden", false
 
   setWindSpeed: (speed)->
     @windSpeed = speed
@@ -219,21 +227,21 @@ class AirPollutionModel extends ABM.Model
       @inversionStrength = 0
     else
       @inversionStrength = speed*4.5 / 100
-    @draw() if @anim.animStop
+    @draw() if @anim.stopped
 
   setCars: (n)->
     for i in [0...(@cars.length)]
       c = @cars[i]
       c.hidden = (i >= n)
 
-    @draw() if @anim.animStop
+    @draw() if @anim.stopped
 
   setFactories: (n)->
     for i in [0...(@factories.length)]
       f = @factories[i]
       f.hidden = (i >= n)
 
-    @draw() if @anim.animStop
+    @draw() if @anim.stopped
 
   moveWind: ->
     speed = @_intSpeed(15)
@@ -374,8 +382,7 @@ class AirPollutionModel extends ABM.Model
           p.sprout 1, @secondary, (_a)->
             _a.baseHeading = Math.PI/2
         else                              # else simply convert to secondary
-          newA = a.changeBreed(@secondary)[0]
-          newA.baseHeading = a.baseHeading
+          @secondary.setBreed a
         converted = true
     return converted
 

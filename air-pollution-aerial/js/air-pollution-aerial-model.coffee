@@ -20,13 +20,13 @@ class AirPollutionAerial extends ABM.Model
 
     @agentBreeds "factories smoke"
 
-    @factories.setDefaultShape "circle"
-    @factories.setDefaultColor [20,100,90]
-    @factories.setDefaultSize 3
+    @factories.setDefault "shape", "circle"
+    @factories.setDefault "color", [20,100,90]
+    @factories.setDefault "size", 3
 
-    @smoke.setDefaultShape "circle"
-    @smoke.setDefaultColor [82,98,114]
-    @smoke.setDefaultSize 0.4
+    @smoke.setDefault "shape", "circle"
+    @smoke.setDefault "color", [82,98,114]
+    @smoke.setDefault "size", 0.4
 
     @aLimits = {minX: 105, maxX: 120, minY: 135, maxY: 150}
     @bLimits = {minX: 79, maxX: 101, minY: 76, maxY: 94}

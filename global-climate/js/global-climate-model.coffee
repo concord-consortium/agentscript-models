@@ -46,14 +46,17 @@ class ClimateModel extends ABM.Model
       ctx.drawImage(factoryImg, 0, 0)
 
     # set default agent shapes
-    @agents.setDefaultSize @agentSize
-    @agents.setDefaultShape "arrow"
-    @sunrays.setDefaultColor [255,255,0]
-    @heat.setDefaultShape "circle"
-    @IR.setDefaultColor [200, 32, 200]
-    @factories.setDefaultShape "factory"
-    @factories.setDefaultColor [0,0,0]
-    @factories.setDefaultSize 1
+    @agents.setDefault "size", @agentSize
+    @agents.setDefault "shape", "arrow"
+    @sunrays.setDefault "color", [255,255,0]
+    @heat.setDefault "shape", "circle"
+    @IR.setDefault "color", [200, 32, 200]
+    @factories.setDefault "shape", "factory"
+    @factories.setDefault "color", [0,0,0]
+    @factories.setDefault "size", 1
+
+    @agents.setDefault "x", null
+    @agents.setDefault "y", null
 
     @spacePatches =        (p for p in @patches when p.y == @patches.maxY)
     @skyTopPatches =       (p for p in @patches when p.y <  @patches.maxY && p.y > @skyTop)
@@ -123,17 +126,15 @@ class ClimateModel extends ABM.Model
     heading = a.heading % Math.PI*2
     heading > 0 && heading < Math.PI
 
-  transformToIR: (_a) ->
-    a = _a.changeBreed(@IR)[0]
-    @setSpotlight a if _a is @spotlightAgent
+  transformToIR: (a) ->
+    @IR.setBreed a
     a.heading = -@sunlightHeading
     a.hidden = unless @hidingRays or (@hiding90 and Math.random() > 0.1) then false else true
     # a.heading = u.randomFloat2(2.6, 0.5)
     # a.heading = u.randomCentered(Math.PI/4) + Math.PI/2
 
-  transformToHeat: (_a) ->
-    a = _a.changeBreed(@heat)[0]
-    @setSpotlight a if _a is @spotlightAgent
+  transformToHeat: (a) ->
+    @heat.setBreed a
     a.y = @earthTop-1
     a.heading = u.randomFloat2(-0.5, -Math.PI+0.5)
     a.shape = "circle"
