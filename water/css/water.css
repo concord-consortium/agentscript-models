@@ -63,19 +63,19 @@ span.layer-option {
 }
 
 .layer-option.soil {
-  background-color: rgb(255,255,0);
+  background-color: rgb(232,189,174);
 }
 .layer-option.rock1 {
-  background-color: rgb(255,0,0);
+  background-color: rgb(196,162,111);
 }
 .layer-option.rock2 {
-  background-color: rgb(117,117,176);
+  background-color: rgb(123,80,56);
 }
 .layer-option.rock3 {
-  background-color: rgb(0,255,0);
+  background-color: rgb(113,115,118);
 }
 .layer-option.rock4 {
-  background-color: rgb(0,0,0);
+  background-color: rgb(33,42,47);
 }
 
 #buttons {

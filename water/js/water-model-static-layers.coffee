@@ -3,8 +3,8 @@ class WaterModelStaticLayers extends WaterModel
     super
 
     # FIXME: For some reason, importing the same .png for both calls no longer works
-    @patches.importColors "img/static-layers.png"
-    @patches.importDrawing "img/static-layers-800.png"
+    @patches.importColors "state/WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example.png"
+    @patches.importDrawing "state/WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example.png"
 
     setTimeout =>
       @refreshPatches = true
@@ -15,15 +15,15 @@ class WaterModelStaticLayers extends WaterModel
       for p in @patches
         if ABM.util.colorsEqual p.color, [205, 237, 252]
           p.type = "sky"
-        else if ABM.util.colorsEqual p.color, [255, 255, 0]
+        else if ABM.util.colorsEqual p.color, [232,189,174]
           p.type = "soil"
-        else if ABM.util.colorsEqual p.color, [255, 0, 0]
+        else if ABM.util.colorsEqual p.color, [196,162,111]
           p.type = "rock1"
-        else if ABM.util.colorsEqual p.color, [117,117,176]
+        else if ABM.util.colorsEqual p.color, [123,80,56]
           p.type = "rock2"
-        else if ABM.util.colorsEqual p.color, [0, 255, 0]
+        else if ABM.util.colorsEqual p.color, [113,115,118]
           p.type = "rock3"
-        else if ABM.util.colorsEqual p.color, [0, 0, 0]
+        else if ABM.util.colorsEqual p.color, [33,42,47]
           p.type = "rock4"
         else
           # FIXME: Should probably interpolate the type from the gradient color...

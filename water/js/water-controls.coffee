@@ -1,6 +1,6 @@
 window.WaterControls =
   drawStyle: "draw"  # draw or fill
-  drawColor: [255,0,0]
+  drawColor: [196,162,111]
   patchType: "rock1"
   setup: ->
     if ABM.model?
@@ -102,19 +102,19 @@ window.WaterControls =
 
   setDrawColor: (colors = [])->
     if $.inArray("rock1", colors) > -1
-      @drawColor = [255,0,0]
+      @drawColor = [196,162,111]
       @patchType = "rock1"
     else if $.inArray("rock2", colors) > -1
-      @drawColor = [117,117,176]
+      @drawColor = [123,80,56]
       @patchType = "rock2"
     else if $.inArray("rock3", colors) > -1
-      @drawColor = [0,255,0]
+      @drawColor = [113,115,118]
       @patchType = "rock3"
     else if $.inArray("rock4", colors) > -1
-      @drawColor = [0,0,0]
+      @drawColor = [33,42,47]
       @patchType = "rock4"
     else if $.inArray("soil", colors) > -1
-      @drawColor = [255,255,0]
+      @drawColor = [232,189,174]
       @patchType = "soil"
     else
       console.log "Invalid layer option!", colors
