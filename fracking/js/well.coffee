@@ -58,6 +58,30 @@ class GasWell extends Well
     @model.setPatchColor p
     @exploding.push p
 
+  drill: (drillDirection, drillSpeed)->
+    return if @explodingInProgress or
+      @fillingInProgress or @filled or
+      @frackingInProgress or @fracked
+    super
+
+  drillHorizontal: ->
+    super
+    if @goneHorizontal
+      # set up "exploding" patches every 10
+      if Math.abs(@x - @head.x) % 10 == 0
+        for y in [(@depth-4)..(@depth-2)]
+          pw = @model.patches.patchXY @x, y
+          @addExploding pw
+        for y in [(@depth+4)..(@depth+2)]
+          pw = @model.patches.patchXY @x, y
+          @addExploding pw
+        @exploded = false
+        $(document).trigger GasWell.CAN_EXPLODE
+
+      # Also expose the color of the 5 patches to top/bottom
+      for y in [(@depth - 7)..(@depth + 7)]
+        @model.setPatchColor @model.patches.patchXY @x, y
+
   processSet: (set, done, n4processor = null, pProcessor = null)->
     for p in set
       pProcessor(p) if pProcessor?

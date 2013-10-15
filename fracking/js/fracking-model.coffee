@@ -350,25 +350,7 @@ class FrackingModel extends ABM.Model
     # drill at the specified patch
     well = @findNearbyWell(p)
     if well?
-      return if well.explodingInProgress or
-        well.fillingInProgress or well.filled or
-        well.frackingInProgress or well.fracked or
-        well.cappingInProgress or well.capped
-
-      # if we're up in the land area, go verticall
-      # if p.y > @landDepth and p.y <= @airDepth
-      if @drillDirection is "down" and not well.goneHorizontal
-        # drill one deeper
-        for i in [0...@drillSpeed]
-          @drillVertical(well)
-      else if @drillDirection isnt "down"
-        if not well.toTheRight?
-          well.toTheRight = (@drillDirection is "right")
-
-        if (@drillDirection is "right" and well.toTheRight) or (@drillDirection is "left" and not well.toTheRight)
-          # drill horizontally
-          for i in [0...@drillSpeed]
-            @drillHorizontal(well)
+      well.drill @drillDirection, @drillSpeed
     else if @drillDirection is "down" and p.type is "land" and p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 38)
       return if @wells.length >= @wellLimit
       for w in @wells
@@ -379,86 +361,8 @@ class FrackingModel extends ABM.Model
       @wells.push well
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
-        @drillVertical(well)
+        well.drillVertical()
     @redraw()
-
-  drillVertical: (well)->
-    y = well.depth - 1
-    return if y < (@patches.minY - 5)
-    return if well.goneHorizontal
-
-    lookahead = @patches.patchXY(well.x, y-5)
-    return if lookahead? and @u.contains(["wellWall","open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type)
-
-    #draw the well
-    #for x in [(well.x - 1)..(well.x + 1)]
-    pw = @patches.patchXY well.x, y
-    well.addPatch pw
-
-    # and the well walls
-    for x in [(well.x - 1), (well.x + 1)]
-      pw = @patches.patchXY x, y
-      well.addWall pw
-
-    # Also expose the color of the 5 patches to either side
-    for x in [(well.x - 7)..(well.x + 7)]
-      @setPatchColor @patches.patchXY x, y
-
-    well.depth = y
-
-  drillHorizontal: (well)->
-    if not well.goneHorizontal
-      pivotX = if well.toTheRight then well.x + 2 else well.x - 2
-      pivot = @patches.patchXY pivotX, well.depth
-
-      for x in [(well.x - 7)..(well.x + 7)]
-        for y in [(well.depth - 1)..(well.depth - 8)]
-          p = @patches.patchXY x, y
-          if (well.toTheRight and x <= pivot.x) or (not well.toTheRight and x >= pivot.x)
-            d = @u.distance(pivot.x, pivot.y, p.x, p.y)
-            if d > 2.25 and d < 3.25
-              well.addWall p
-            else if d <= 2.25
-              well.addPatch p
-          @setPatchColor p
-      well.depth = well.depth - 2
-      well.x = well.x + (if well.toTheRight then 2 else -2)
-
-      well.goneHorizontal = true
-    else
-      x = well.x + (if well.toTheRight then 1 else -1)
-      return if x > (@patches.maxX - 1) or x < (@patches.minX + 1)
-
-      lx = well.x + (if well.toTheRight then 5 else -5)
-      lookahead = @patches.patchXY(lx, well.depth)
-      return if lookahead? and @u.contains(["wellWall","open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type)
-
-      #draw the well
-      #for y in [(well.depth - 1)..(well.depth + 1)]
-      pw = @patches.patchXY x, well.depth
-      well.addPatch pw
-
-      # and the well walls
-      for y in [(well.depth - 1), (well.depth + 1)]
-        pw = @patches.patchXY x, y
-        well.addWall pw
-
-      # set up "exploding" patches every 10
-      if Math.abs(x - well.head.x) % 10 == 0
-        for y in [(well.depth-4)..(well.depth-2)]
-          pw = @patches.patchXY x, y
-          well.addExploding pw
-        for y in [(well.depth+4)..(well.depth+2)]
-          pw = @patches.patchXY x, y
-          well.addExploding pw
-        well.exploded = false
-        $(document).trigger GasWell.CAN_EXPLODE
-
-      # Also expose the color of the 5 patches to top/bottom
-      for y in [(well.depth - 7)..(well.depth + 7)]
-        @setPatchColor @patches.patchXY x, y
-
-      well.x = x
 
   explode: ->
     for well in @wells

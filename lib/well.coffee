@@ -8,8 +8,6 @@ class Well
   head: null
   patches: null
   walls: null
-  open: null
-  openShale: null
 
   # state management
   goneHorizontal: false
@@ -73,6 +71,85 @@ class Well
     p.type = "wellWall"
     p.well = @
     @walls.push p
+
+  drill: (drillDirection, drillSpeed)->
+    return if @cappingInProgress or @capped
+
+    if drillDirection is "down" and not @goneHorizontal
+      # drill one deeper
+      for i in [0...drillSpeed]
+        @drillVertical()
+    else if drillDirection isnt "down"
+      if not @toTheRight?
+        @toTheRight = (drillDirection is "right")
+
+      if (drillDirection is "right" and @toTheRight) or (drillDirection is "left" and not @toTheRight)
+        # drill horizontally
+        for i in [0...drillSpeed]
+          @drillHorizontal()
+
+  drillVertical: ->
+    y = @depth - 1
+    return if y < (@model.patches.minY - 5)
+    return if @goneHorizontal
+
+    lookahead = @model.patches.patchXY(@x, y-5)
+    return if lookahead? and ABM.util.contains(["wellWall","open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type)
+
+    #draw the well
+    #for x in [(@x - 1)..(@x + 1)]
+    pw = @model.patches.patchXY @x, y
+    @addPatch pw
+
+    # and the well walls
+    for x in [(@x - 1), (@x + 1)]
+      pw = @model.patches.patchXY x, y
+      @addWall pw
+
+    # Also expose the color of the 5 patches to either side
+    for x in [(@x - 7)..(@x + 7)]
+      @model.setPatchColor @model.patches.patchXY x, y
+
+    @depth = y
+
+  drillHorizontal: ->
+    if not @goneHorizontal
+      pivotX = if @toTheRight then @x + 2 else @x - 2
+      pivot = @model.patches.patchXY pivotX, @depth
+
+      for x in [(@x - 7)..(@x + 7)]
+        for y in [(@depth - 1)..(@depth - 8)]
+          p = @model.patches.patchXY x, y
+          if (@toTheRight and x <= pivot.x) or (not @toTheRight and x >= pivot.x)
+            d = ABM.util.distance(pivot.x, pivot.y, p.x, p.y)
+            if d > 2.25 and d < 3.25
+              @addWall p
+            else if d <= 2.25
+              @addPatch p
+          @model.setPatchColor p
+      @depth = @depth - 2
+      @x = @x + (if @toTheRight then 2 else -2)
+
+      @goneHorizontal = true
+    else
+      x = @x + (if @toTheRight then 1 else -1)
+      return if x > (@model.patches.maxX - 1) or x < (@model.patches.minX + 1)
+
+      lx = @x + (if @toTheRight then 5 else -5)
+      lookahead = @model.patches.patchXY(lx, @depth)
+      return if lookahead? and ABM.util.contains(["wellWall","open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type)
+
+      #draw the well
+      #for y in [(@depth - 1)..(@depth + 1)]
+      pw = @model.patches.patchXY x, @depth
+      @addPatch pw
+
+      # and the well walls
+      for y in [(@depth - 1), (@depth + 1)]
+        pw = @model.patches.patchXY x, y
+        @addWall pw
+
+      @x = x
 
   drawUI: (img, x, y)->
     ctx = @model.contexts.drawing
