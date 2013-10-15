@@ -31,15 +31,15 @@ class FrackingControls
       $("#playback").buttonset()
 
   setupTriggers: ->
-    $(document).on Well.CAN_EXPLODE, =>
+    $(document).on GasWell.CAN_EXPLODE, =>
       @updateControls()
-    $(document).on Well.EXPLODED, =>
+    $(document).on GasWell.EXPLODED, =>
       @updateControls()
-    $(document).on Well.FILLED, =>
+    $(document).on GasWell.FILLED, =>
       @updateControls()
-    $(document).on Well.FRACKED, =>
+    $(document).on GasWell.FRACKED, =>
       @updateControls()
-    $(document).on Well.CAPPED, =>
+    $(document).on GasWell.CAPPED, =>
       @updateControls()
       @startModel()
     @updateControls()

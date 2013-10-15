@@ -125,7 +125,7 @@ class FrackingModel extends ABM.Model
       well.spawnNewGas()
       well.leakWastePondWater()
       if well.tickAge() % @ticksPerYear is 0
-        $(document).trigger Well.YEAR_ELAPSED, well
+        $(document).trigger GasWell.YEAR_ELAPSED, well
 
     if @anim.ticks % @ticksPerYear is 0
       $(document).trigger FrackingModel.YEAR_ELAPSED
@@ -375,7 +375,7 @@ class FrackingModel extends ABM.Model
         return if (0 < Math.abs(p.x - w.head.x) < 30)
       leaks = (@leaks and @u.randomInt(@leakProbability) == 0)
       pondLeaks = (@leaks and @u.randomInt(@pondLeakProbability) == 0)
-      well = new Well @, p.x, @airDepth+1, leaks, pondLeaks
+      well = new GasWell @, p.x, @airDepth+1, leaks, pondLeaks
       @wells.push well
       # start a new vertical well as long as we're not too close to the wall
       for y in [@airDepth..(p.y)]
@@ -452,7 +452,7 @@ class FrackingModel extends ABM.Model
           pw = @patches.patchXY x, y
           well.addExploding pw
         well.exploded = false
-        $(document).trigger Well.CAN_EXPLODE
+        $(document).trigger GasWell.CAN_EXPLODE
 
       # Also expose the color of the 5 patches to top/bottom
       for y in [(well.depth - 7)..(well.depth + 7)]

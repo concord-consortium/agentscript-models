@@ -1,13 +1,4 @@
-class Well
-  id: 0
-  x: 0
-  depth: 0
-  tickOpened: 0
-  killed: 0
-  totalKilled: 0
-  head: null
-  patches: null
-  walls: null
+class GasWell extends Well
   open: null
   openShale: null
   filling: null
@@ -20,29 +11,22 @@ class Well
   pondLeaks: false
 
   # state management
-  goneHorizontal: false
-  toTheRight: null
   explodingInProgress: false
   exploded: false
   fillingInProgress: false
   filled: false
   frackingInProgress: false
   fracked: false
-  cappingInProgress: false
-  capped: false
 
   # fill types
   @PROPANE: 'Propane'
   @WATER:   'Water'
 
   # some event types
-  @CREATED: "wellCreated"
   @CAN_EXPLODE: "canExplode"
   @EXPLODED: 'exploded'
   @FILLED: 'filled'
   @FRACKED: 'fracked'
-  @CAPPED: 'capped'
-  @YEAR_ELAPSED: "wellYearElapsed"
 
   # some graphical images
   @WELL_IMG: ABM.util.importImage 'img/well-head.png'
@@ -50,10 +34,6 @@ class Well
 
   constructor: (@model, @x, @depth, @leaks=false, @pondLeaks=false)->
     # set these here so all Well instances don't share the same arrays
-    @id = @model.wells.length + 1
-    @head = {x: 0, y: 0}
-    @patches = []
-    @walls = []
     @open = []
     @openShale = []
     @filling = []
@@ -62,49 +42,10 @@ class Well
     @pumping = []
     @pond = []
 
-    @head.x = @x
-    @head.y = @depth
-
-    p = @model.patches.patchXY(@head.x, @head.y + 1)
-    p.label = "" + @id
     console.log "*" if @leaks
     console.log "+" if @pondLeaks
-    @model.contexts.drawing.labelColor = switch @id
-      when 1 then [200,0,0]
-      when 2 then [50,255,20]
-      when 3 then [0,0,255]
-      else [255,255,255]
-    p.drawLabel(@model.contexts.drawing)
 
-    @drawUI Well.WELL_IMG, @head.x + 4, @head.y + 7
-
-    @model.draw()
-
-    $(document).trigger Well.CREATED, @
-
-  length: ->
-    Math.abs(@x - @head.x) + Math.abs(@depth - @head.y)
-
-  age: ->
-    age = Math.ceil(@tickAge() / @model.ticksPerYear)
-    return if age is 0 then 1 else age
-
-  ageFloat: ->
-    @tickAge() / @model.ticksPerYear
-
-  tickAge: ->
-    @model.anim.ticks - @tickOpened
-
-  # add a center patch to the well
-  addPatch: (p)->
-    p.type = "well"
-    p.well = @
-    @patches.push p
-
-  addWall: (p)->
-    p.type = "wellWall"
-    p.well = @
-    @walls.push p
+    super
 
   addOpen: (p)->
     @open.push p
@@ -132,7 +73,7 @@ class Well
     if @exploding.length <= 0
       @exploded = true if @explodingInProgress
       @explodingInProgress = false
-      $(document).trigger Well.EXPLODED
+      $(document).trigger @constructor.EXPLODED
       return
     @explodingInProgress = true
     currentExploding = ABM.util.clone @exploding
@@ -158,7 +99,7 @@ class Well
     if @filling.length <= 0
       @filled = true if @fillingInProgress
       @fillingInProgress = false
-      $(document).trigger Well.FILLED
+      $(document).trigger @constructor.FILLED
       setTimeout =>
         @cycleWaterColors()
       , 500
@@ -178,11 +119,11 @@ class Well
     , 50
 
   floodWater: ->
-    @fillType = Well.WATER
+    @fillType = @constructor.WATER
     @flood()
 
   floodPropane: ->
-    @fillType = Well.PROPANE
+    @fillType = @constructor.PROPANE
     @flood()
 
   flood: ->
@@ -191,7 +132,7 @@ class Well
       p.type = "clean" + @fillType + "Well"
       @model.setPatchColor p
 
-    @createWastePond() if @fillType is Well.WATER
+    @createWastePond() if @fillType is @constructor.WATER
 
     @fillingInProgress = true
     @model.redraw()
@@ -204,14 +145,14 @@ class Well
     if @fracking.length <= 0
       @fracked = true if @frackingInProgress
       @frackingInProgress = false
-      $(document).trigger Well.FRACKED
+      $(document).trigger @constructor.FRACKED
       return
     @frackingInProgress = true
     currentFracking = ABM.util.clone @fracking
     @fracking = []
     fractibilityModifier = switch @fillType
-      when Well.WATER then 1.05
-      when Well.PROPANE then 1.1
+      when @constructor.WATER then 1.05
+      when @constructor.PROPANE then 1.1
       else 1
     setTimeout =>
       @processSet currentFracking, =>
@@ -255,7 +196,7 @@ class Well
       @filled = false
       @capped = true if @cappingInProgress
       @cappingInProgress = false
-      $(document).trigger Well.CAPPED
+      $(document).trigger @constructor.CAPPED
       @tickOpened = @model.anim.ticks
       return
     currentPumping = @pumping.slice(0,100)
@@ -280,7 +221,7 @@ class Well
     , 50
 
   cycleWaterColors: ->
-    if @fillType is Well.WATER
+    if @fillType is @constructor.WATER
       colors = [
         [ 67, 160, 160],
         [ 64, 152, 152],
@@ -343,7 +284,7 @@ class Well
         g.hidden = false
 
   createWastePond: ->
-    @drawUI Well.POND_IMG, @head.x + 17, @head.y
+    @drawUI @constructor.POND_IMG, @head.x + 17, @head.y
 
     for y in [(@head.y-7)...(@head.y)]
       for x in [(@head.x+6)...(@head.x+16)]
@@ -360,13 +301,4 @@ class Well
         a.well = @
         a.moveTo @model.patches.patchXY(@head.x + ABM.util.randomInt(12) + 6, @head.y - 8)
 
-  drawUI: (img, x, y)->
-    ctx = @model.contexts.drawing
-    ctx.save()
-    ctx.translate x, y
-    ctx.scale 0.5, 0.5
-    ctx.rotate ABM.util.degToRad(180)
-    ctx.drawImage img, 0, 0
-    ctx.restore()
-
-window.Well = Well
+window.GasWell = GasWell
