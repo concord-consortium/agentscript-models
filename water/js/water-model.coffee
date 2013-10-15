@@ -44,6 +44,8 @@ class WaterModel extends ABM.Model
     @draw()
     @refreshPatches = false
 
+    @spotlightRadius = 12
+
   _clear: ->
     for p in @patches
       p.color = [205, 237, 252]
