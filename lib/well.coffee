@@ -90,7 +90,7 @@ class Well
 
   drillVertical: ->
     y = @depth - 1
-    return if y < (@model.patches.minY - 5)
+    return if y < (@model.patches.minY + 5)
     return if @goneHorizontal
 
     lookahead = @model.patches.patchXY(@x, y-5)
