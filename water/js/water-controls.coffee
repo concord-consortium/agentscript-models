@@ -95,10 +95,9 @@ window.WaterControls =
         templateOptions.change (evt)->
           ABM.model.setTemplate templateOptions.val()
       $("#drill-down").button().click =>
+        @stopDraw()
         if $("#drill-down")[0]?.checked
           @drill()
-        else
-          @stopDraw()
 
     else
       console.log("delaying...")

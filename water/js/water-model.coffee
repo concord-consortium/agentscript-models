@@ -16,11 +16,14 @@ class WaterModel extends ABM.Model
   wells: null
   wellLimit: 5
   drillSpeed: 5
+  killed: 0
 
   _toRedraw: null
+  _toKill: null
 
   setup: ->
     @_toRedraw = []
+    @_toKill = []
     @wells = []
 
     @anim.setRate 30, false
@@ -48,10 +51,11 @@ class WaterModel extends ABM.Model
 
     @setCacheAgentsHere()
 
-    @agentBreeds "rain evap"
+    @agentBreeds "rain wellWater evap"
 
     @setupRain()
     @setupEvap()
+    @setupWellWater()
 
     @draw()
     @refreshPatches = false
@@ -95,7 +99,19 @@ class WaterModel extends ABM.Model
     for e in @evap
       @moveEvaporation(e)
 
+    for w in @wellWater
+      @moveWellWater(w)
+
+    @suckUpWellWater()
     @evaporateWater()
+
+    for a in @_toKill
+      a.die()
+      if a.well
+        @killed++
+        a.well.killed++
+        a.well.totalKilled++
+    @_toKill = []
 
     return true # avoid inadventently returning a large array of things
 
@@ -110,6 +126,12 @@ class WaterModel extends ABM.Model
     @evap.setDefaultColor [0, 255, 0]
     @evap.setDefaultShape "circle"
     @evap.setDefaultHeading @UP
+
+  setupWellWater: ->
+    @wellWater.setDefaultSize 2/@world.size  # try to keep water around 2px in size
+    @wellWater.setDefaultColor [0, 0, 255]
+    @wellWater.setDefaultShape "circle"
+    @wellWater.setDefaultHeading @UP
 
   createRain: ->
     # too many agents will make it really slow
@@ -166,7 +188,7 @@ class WaterModel extends ABM.Model
       when "rock1" then (if p.isOnSurface then  64 else   8)
       when "rock2" then (if p.isOnSurface then 128 else  16)
       when "rock3" then (if p.isOnSurface then 256 else  32)
-      when "rock4" then 1000000
+      when "rock4","well","wellWall" then 1000000
       else 1
 
   random: (n)->
@@ -292,6 +314,25 @@ class WaterModel extends ABM.Model
       a.heading = @UP + (@UP - a.heading)
 
     a.forward 1
+
+  moveWellWater: (w)->
+    w.heading = @UP
+    w.forward 5
+
+    if w.p.type is "sky"
+      @_toKill.push w
+
+  suckUpWellWater: ->
+    for w in @wells
+      for x,i in [(w.x-3),(w.x+3)]
+        for y in [(w.depth)..(w.depth+5)] by 1
+          p = @patches.patchXY x, y
+          destX = if i == 0 then (w.x-1) else (w.x+1)
+          agents = p.agentsHere()
+          for a in agents
+            if a.breed.name is "rain"
+              a.setXY destX, y
+              a.changeBreed @wellWater
 
   addRainSpotlight: ->
     # try to add spotlight to a raindrop at very top
