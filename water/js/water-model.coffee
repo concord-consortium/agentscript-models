@@ -13,9 +13,21 @@ class WaterModel extends ABM.Model
   evapProbability: 10
   rainProbability: 0.33
 
+  wells: null
+  wellLimit: 5
+  drillSpeed: 5
+
+  _toRedraw: null
+
   setup: ->
+    @_toRedraw = []
+    @wells = []
+
     @anim.setRate 30, false
     @setFastPatches()
+
+    @setTextParams {name: "drawing"}, "10px sans-serif"
+    @setLabelParams {name: "drawing"}, [255,255,255], [0,-20]
 
     # init all the patches as sky color
     # unless we have a template to load
@@ -50,6 +62,16 @@ class WaterModel extends ABM.Model
     for p in @patches
       p.color = [205, 237, 252]
       p.type = "sky"
+
+  redraw: ->
+    redrawSet = ABM.util.clone @_toRedraw
+    @_toRedraw = []
+    setTimeout =>
+      @patches.drawScaledPixels @contexts.patches, redrawSet
+    , 1
+
+  patchChanged: (p, redraw=true)->
+    @_toRedraw.push p if redraw
 
   reset: ->
     super
@@ -149,6 +171,53 @@ class WaterModel extends ABM.Model
 
   random: (n)->
     return Math.floor(Math.random()*n)
+
+  findNearbyWell: (p)->
+    if p.type is "well" or p.type is "wellWall"
+      return p.well
+    else
+      # look within an N patch radius of us for a well or wellWall patch
+      near = @patches.patchRect p, 5, 5, true
+      for pn in near
+        if pn.type is "well" or pn.type is "wellWall"
+          return pn.well
+    return null
+
+  drill: (p)->
+    # drill at the specified patch
+    well = @findNearbyWell(p)
+    if well?
+      well.drill "down", @drillSpeed
+      @redraw()
+    else if p.x > (@patches.minX + 3) and p.x < (@patches.maxX - 5)
+      return if @wells.length >= @wellLimit
+      for w in @wells
+        return if (0 < Math.abs(p.x - w.head.x) < 10)
+      wellHeadY = null
+      # debugger
+      if p.type isnt "sky"
+        # search up to 5 patches above this for a patch that is sky
+        i = 0; possPatch = p
+        while possPatch.type isnt "sky" and i < 6
+          possPatch = possPatch.n4[3]
+          i++
+        if possPatch.type is "sky"
+          wellHeadY = possPatch.y
+      else
+        # search up to 5 patches below this for a patch that isn't sky
+        i = 0; possPatch = p
+        while possPatch.type is "sky" and i < 6
+          possPatch = possPatch.n4[0]
+          i++
+        if possPatch.type isnt "sky"
+          wellHeadY = possPatch.n4[3].y
+      if wellHeadY?
+        well = new Well @, p.x, wellHeadY
+        @wells.push well
+        # start a new vertical well as long as we're not too close to the wall
+        for y in [(wellHeadY-1)..(p.y)]
+          well.drillVertical()
+        @redraw()
 
   moveFallingWater: (a)->
     ps = []

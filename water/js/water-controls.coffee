@@ -94,6 +94,12 @@ window.WaterControls =
       if templateOptions?
         templateOptions.change (evt)->
           ABM.model.setTemplate templateOptions.val()
+      $("#drill-down").button().click =>
+        if $("#drill-down")[0]?.checked
+          @drill()
+        else
+          @stopDraw()
+
     else
       console.log("delaying...")
       setTimeout =>
@@ -232,12 +238,29 @@ window.WaterControls =
   stopDraw: (alsoStopModel=true)->
     $("#fill-button").click() if $("#fill-button")[0]?.checked
     $("#erase-button").click() if $("#erase-button")[0]?.checked
+    $("#drill-down").click() if $("#drill-down")[0]?.checked
     @startStopModel() if alsoStopModel and not ABM.model.anim.animStop
     $("#mouse-catcher").hide()
     $("#mouse-catcher").unbind('mouseup')
     $("#mouse-catcher").unbind('mousedown')
     $("#mouse-catcher").unbind('mousemove')
     $("#mouse-catcher").unbind('mouseleave')
+    clearInterval @timerId if @timerId?
+    @timerId = null
+
+  timerId: null
+  drill: ->
+    target = $("#mouse-catcher")
+    target.show()
+    target.bind 'mousedown', (evt)=>
+      return if @timerId?
+      @timerId = setInterval =>
+        p = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
+        ABM.model.drill p
+      , 100
+    .bind 'mouseup mouseleave', =>
+      clearInterval @timerId if @timerId?
+      @timerId = null
 
   startStopModel: ->
     if ABM.model.anim.animStop
