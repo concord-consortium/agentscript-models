@@ -65,11 +65,13 @@ class Well
   addPatch: (p)->
     p.type = "well"
     p.well = @
+    p.color = [141, 141, 141]
     @patches.push p
 
   addWall: (p)->
     p.type = "wellWall"
     p.well = @
+    p.color = [87, 87, 87]
     @walls.push p
 
   drill: (drillDirection, drillSpeed)->
