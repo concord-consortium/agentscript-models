@@ -105,8 +105,19 @@ label.title {
 #zone-planting {
   position: absolute;
   top: 70px;
-  left: 375px;
+  left: 577px;
   width: 338px;
+}
+
+#climate {
+  position: absolute;
+  top: 70px;
+  left: 275px;
+  width: 280px;
+}
+
+#climate .left {
+  padding-top: 20px;
 }
 
 .section {

@@ -14,8 +14,10 @@ class ErosionEngine
 
   u = ABM.util
 
-  erosionProbability = 30
+  monthlyPrecipitation = [22, 26, 43, 73, 108, 115, 89, 93, 95, 58, 36, 27]
   precipitation = 166
+
+  erosionProbability = 30
   maxSlope = 2 # necessary?
   showErosion: true
 
@@ -44,8 +46,14 @@ class ErosionEngine
 
         if lastDepth >= MAX_INTERESTING_SOIL_DEPTH then break
 
-  setPercipitation: (p) ->
+  useMonthlyPrecipitation: true
+
+  setPrecipitation: (p) ->
     precipitation = p
+
+  updatePrecipitation: ->
+    if @useMonthlyPrecipitation
+      precipitation = monthlyPrecipitation[@month]
   
   erode: ->
     # Find and sort the surface patches most exposed to the sky

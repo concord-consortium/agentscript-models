@@ -1,4 +1,4 @@
-$percipitationSlider = $ "#percipitation-slider"
+$precipitationSlider = $ "#precipitation-slider"
 $zone1Slider = $ "#zone-1-slider"
 $zone2Slider = $ "#zone-2-slider"
 $slopeSlidersDiv = $ "#slope-sliders"
@@ -18,11 +18,12 @@ $ ->
   $(".chosen-select").chosen
     disable_search:true
     width: 158
-  $percipitationSlider.slider  min: 0, max: 500, step: 1, value: 166
+  $precipitationSlider.slider  min: 0, max: 500, step: 1, value: 166
   $zone1Slider.slider  min: -5, max: 5, step: 1, value: 0
   $zone2Slider.slider  min: -5, max: 5, step: 1, value: 0
 
   enableZoneSliders false
+  $precipitationSlider.slider("disable")
 
 
 
@@ -67,8 +68,20 @@ $("#zone2-planting-options").change (evt, ui) ->
   model.setZoneManagement 1, selection
   reset()
 
-$percipitationSlider.on 'slide', (event, ui) ->
-  model.setPercipitation ui.value
+$precipitationSlider.on 'slide', (event, ui) ->
+  model.setPrecipitation ui.value
+
+$('#useMonthlyPrecipitation').click ->
+  checked  = $(this).is(':checked')
+  model.useMonthlyPrecipitation = !checked
+  if checked
+    $precipitationSlider.slider("enable")
+    $("#climate .right").removeClass("disabled")
+    model.setPrecipitation $precipitationSlider.slider("value")
+  else
+    $precipitationSlider.slider("disable")
+    $("#climate .right").addClass("disabled")
+  true
 
 $zone1Slider.on 'slide', (event, ui) ->
   model.zone1Slope = ui.value

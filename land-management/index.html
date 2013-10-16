@@ -49,11 +49,6 @@
         </button>
       </div>
 
-      <div id="percipitation">
-        <label for="percipitation-slider" class="title">Average percipitation:</label>
-        <span class="slider-units">0 <div id="percipitation-slider"></div> 500</span>
-      </div>
-
       <div id="show-erosion">
         <div class="checkbox">
           <input type="checkbox" value="None" id="showErosion" name="check" class="property" checked/>
@@ -110,6 +105,21 @@
             <option value="wheat">Wheat</option>
             <option value="trees">Forest</option>
           </select>
+        </div>
+      </div>
+
+      <div id="climate" class="section">
+        <div class="section-title">Climate</div>
+        <div class="left">
+          <div class="checkbox">
+            <input type="checkbox" value="None" id="useMonthlyPrecipitation" name="check"/>
+            <label for="useMonthlyPrecipitation"></label>
+            <span class="multiline">Use slider value</span>
+          </div>
+        </div>
+        <div class="right disabled">
+          <label for="precipitation-slider" class="title">Average precipitation:</label>
+          <span class="slider-units">0 <div id="precipitation-slider"></div> 500</span>
         </div>
       </div>
 

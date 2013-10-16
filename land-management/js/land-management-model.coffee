@@ -34,6 +34,7 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
 
     if (@anim.ticks % 20) == 0
       @updateDate()
+      @updatePrecipitation()
       @notifyListeners()
 
   dateString: 'Jan 2013'
