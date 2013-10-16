@@ -239,6 +239,10 @@ span.slider-units {
   top: -26px;
 }
 
+#sprites {
+  display: none;
+}
+
 div.graph {
    background-color: #ddf2ff;
    border-radius: 0.25em;
