@@ -6,14 +6,17 @@ mixOf = (base, mixins...) ->
   Mixed
 
 
-class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine
+class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine, PlantEngine
 
   setup: ->
     @setFastPatches()
     @anim.setRate 100, true
 
+    @yearTick = 0
+
     @setCacheAgentsHere()
     @setupLand()
+    @setupPlants()
     @draw()
 
   reset: ->
@@ -26,6 +29,8 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine
   step: ->
     @erode()
     @setSoilDepths()
+    @manageZones()
+    @runPlants()
 
     if (@anim.ticks % 20) == 0
       @updateDate()
@@ -35,11 +40,11 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine
   initialYear: 2013
   year: 2013
   month: 0
-  ticksPerMonth: 100
+  monthLength: 100
   monthStrings: "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ")
 
   updateDate: ->
-    monthsPassed = Math.floor @anim.ticks/@ticksPerMonth
+    monthsPassed = Math.floor @anim.ticks/@monthLength
     @year = @initialYear + Math.floor monthsPassed/12
     @month = monthsPassed % 12
 

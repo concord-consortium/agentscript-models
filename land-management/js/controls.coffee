@@ -57,6 +57,15 @@ $("#terrain-options").change (evt, ui) ->
 
   enableZoneSliders(selection is "Sliders")
 
+$("#zone1-planting-options").change (evt, ui) ->
+  selection = ui.selected
+  model.setZoneManagement 0, selection
+  reset()
+
+$("#zone2-planting-options").change (evt, ui) ->
+  selection = ui.selected
+  model.setZoneManagement 1, selection
+  reset()
 
 $percipitationSlider.on 'slide', (event, ui) ->
   model.setPercipitation ui.value
