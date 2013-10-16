@@ -199,7 +199,7 @@ class WaterModel extends ABM.Model
       return p.well
     else
       # look within an N patch radius of us for a well or wellWall patch
-      near = @patches.patchRect p, 5, 5, true
+      near = @patches.patchRect p, 5, 10, true
       for pn in near
         if pn.type is "well" or pn.type is "wellWall"
           return pn.well
@@ -218,17 +218,17 @@ class WaterModel extends ABM.Model
       wellHeadY = null
       # debugger
       if p.type isnt "sky"
-        # search up to 5 patches above this for a patch that is sky
+        # search up to 10 patches above this for a patch that is sky
         i = 0; possPatch = p
-        while possPatch.type isnt "sky" and i < 6
+        while possPatch.type isnt "sky" and i < 11
           possPatch = possPatch.n4[3]
           i++
         if possPatch.type is "sky"
           wellHeadY = possPatch.y
       else
-        # search up to 5 patches below this for a patch that isn't sky
+        # search up to 10 patches below this for a patch that isn't sky
         i = 0; possPatch = p
-        while possPatch.type is "sky" and i < 6
+        while possPatch.type is "sky" and i < 11
           possPatch = possPatch.n4[0]
           i++
         if possPatch.type isnt "sky"
