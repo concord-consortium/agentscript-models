@@ -55,12 +55,6 @@ label.title {
   color: white;
 }
 
-#terrain {
-  position: absolute;
-  top: 0px;
-  left: 142px;
-}
-
 #percipitation {
   position: absolute;
   top: 0;
@@ -84,6 +78,17 @@ label.title {
   border: solid rgb(128, 128, 128) 2px;
 }
 
+#initial-landscape {
+  position: absolute;
+  top: 70px;
+  left: 0px;
+  width: 253px;
+}
+
+#terrain {
+  margin-left: 47px;
+}
+
 #zone-1 {
   top: 227px;
   left: 170px;
@@ -95,14 +100,29 @@ label.title {
 }
 
 #slope-sliders {
-  position: absolute;
-  top: 70px;
-  left: 79px;
-  width: 273px;
 }
 
-#slope-sliders .title {
+#zone-planting {
+  position: absolute;
+  top: 70px;
+  left: 375px;
+  width: 338px;
+}
+
+.section {
+  border: 1px solid rgb(128, 128, 128);
+  padding: 5px;
+}
+
+.title {
   padding-left: 30px;
+}
+
+.section-title {
+  background-color: rgb(250,250,210);
+  padding: 3px;
+  text-align: center;
+  font-weight: bold;
 }
 
 #zone-1-slider, #zone-2-slider {

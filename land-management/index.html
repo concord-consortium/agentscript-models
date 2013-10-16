@@ -39,18 +39,6 @@
         </button>
       </div>
 
-      <div id="terrain">
-        <label for="terrain-options" class="title">Terrain</label>
-        <select id="terrain-options" class="chosen-select">
-          <option value="Nearly Flat">Nearly Flat</option>
-          <option value="Plain" selected>Plain</option>
-          <option value="Rolling">Rolling</option>
-          <option value="Hilly">Hilly</option>
-          <option value="Terraced">Terraced</option>
-          <option value="Sliders">Use Slope-Slider Values</option>
-        </select>
-      </div>
-
       <div id="percipitation">
         <label for="percipitation-slider" class="title">Average percipitation:</label>
         <span class="slider-units">0 <div id="percipitation-slider"></div> 500</span>
@@ -68,14 +56,46 @@
         <span id="date-string"></span>
       </div>
 
-      <div id="slope-sliders">
+      <div id="initial-landscape" class="section">
+        <div class="section-title">Initial Landscape</div>
+        <div id="terrain">
+          <label for="terrain-options" class="title">Terrain</label>
+          <select id="terrain-options" class="chosen-select">
+            <option value="Nearly Flat">Nearly Flat</option>
+            <option value="Plain" selected>Plain</option>
+            <option value="Rolling">Rolling</option>
+            <option value="Hilly">Hilly</option>
+            <option value="Terraced">Terraced</option>
+            <option value="Sliders">Use Slope-Slider Values</option>
+          </select>
+        </div>
+        <div id="slope-sliders">
+          <div class="left">
+            <label for="zone-1-slider" class="title">Zone 1 Slope:</label>
+            <span class="slider-units">-5<div id="zone-1-slider"></div>5</span>
+          </div>
+          <div class="right">
+            <label for="zone-2-slider" class="title">Zone 2 Slope:</label>
+            <span class="slider-units">-5<div id="zone-2-slider"></div>5</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="zone-planting" class="section">
+        <div class="section-title">Management Plan</div>
         <div class="left">
-          <label for="zone-1-slider" class="title">Zone 1 Slope:</label>
-          <span class="slider-units">-5<div id="zone-1-slider"></div>5</span>
+          <label for="zone1-planting-options" class="title">Zone 1</label>
+          <select id="zone1-planting-options" class="chosen-select">
+            <option value="bare" selected>Bare soil</option>
+            <option value="trees">Forrest</option>
+          </select>
         </div>
         <div class="right">
-          <label for="zone-2-slider" class="title">Zone 2 Slope:</label>
-          <span class="slider-units">-5<div id="zone-2-slider"></div>5</span>
+          <label for="zone2-planting-options" class="title">Zone 2</label>
+          <select id="zone2-planting-options" class="chosen-select">
+            <option value="bare" selected>Bare soil</option>
+            <option value="trees">Forrest</option>
+          </select>
         </div>
       </div>
 
