@@ -63,7 +63,10 @@ class ErosionEngine
 
       localSlope = @getLocalSlope p.x, p.y
       slopeContribution = 0.35 * Math.abs(localSlope/2)
-      vegetiationContribution = 0.65
+      vegetation = @getLocalVegetation p.x, p.y
+      totalVegetationSize = 0; totalVegetationSize += a.size for a in vegetation
+      vegetationStoppingPower = Math.min totalVegetationSize/6, 0.99
+      vegetiationContribution = 0.65 * (1 - vegetationStoppingPower)
       probabilityOfErosion = erosionProbability * (precipitation/400) * (slopeContribution + vegetiationContribution)
 
       if (u.randomInt(100) > probabilityOfErosion) then continue
@@ -106,15 +109,19 @@ class ErosionEngine
       # origin zone (it's color), but where is it *currently* eroding from.
       if p.x < 0 then @zone1ErosionCount++ else @zone2ErosionCount++
 
-
-  getLocalSlope: (x, y) ->
+  getBoxAroundPoint: (x, y, xStep, yStep) ->
     xStep = 3
     yStep = 5
 
     leftEdge  = Math.max x-xStep, @patches.minX
     rightEdge = Math.min x+xStep, @patches.maxX
-    bottom    = Math.max y-yStep, @patches.minY
     top       = Math.min y+yStep, @patches.maxY
+    bottom    = Math.max y-yStep, @patches.minY
+    [leftEdge, rightEdge, top, bottom]
+
+
+  getLocalSlope: (x, y) ->
+    [leftEdge, rightEdge, top, bottom] = @getBoxAroundPoint x, y, 3, 5
 
     leftHeight  = bottom
     rightHeight = bottom
@@ -126,6 +133,18 @@ class ErosionEngine
       rightHeight++
 
     slope = (rightHeight - leftHeight) / (rightEdge - leftEdge)
+
+  getLocalVegetation: (x, y) ->
+    [leftEdge, rightEdge, top, bottom] = @getBoxAroundPoint x, y, 5, 5
+
+    vegetation = []
+
+    for x in [leftEdge..rightEdge]
+      for y in [bottom..top]
+        vegetation.push.apply vegetation, @patches.patch(x,y).agents
+
+    vegetation
+
 
   resetErosionCounts: ->
     @zone1ErosionCount = 0
