@@ -5,35 +5,29 @@ class PlantEngine
 
   NORTH = Math.PI/2
 
-  BARE  = "bare"
-  TREES = "trees"
-
-  managementPlan = [BARE, BARE]
+  managementPlan = ["bare", "bare"]
 
   setupPlants: ->
-    @agentBreeds "trees"
+    @agentBreeds "grass trees wheat"
 
     @trees.setDefaultShape "arrow"
     @trees.setDefaultColor [0,255,0]
 
-    tree1Img = document.getElementById('tree-1-sprite')
-    ABM.shapes.add "tree1", false, (ctx)=>
+    @addImage "tree1", "tree-1-sprite", 77, 140
+    @addImage "tree2", "tree-2-sprite", 57, 160
+    @addImage "tree3", "tree-3-sprite", 78, 160
+    @addImage "grass1", "grass-1-sprite", 78, 160
+    @addImage "grass2", "grass-1-sprite", 78, 160
+    @addImage "wheat1", "wheat-1-sprite", 78, 160
+    @addImage "wheat2", "wheat-1-sprite", 78, 160
+
+  addImage: (name, id, width, height) ->
+    image = document.getElementById(id)
+    ABM.shapes.add name, false, (ctx)=>
       ctx.scale(-0.05, 0.05);
-      ctx.translate(77,140)
+      ctx.translate(width,height)
       ctx.rotate Math.PI
-      ctx.drawImage(tree1Img, 0, 0)
-    tree2Img = document.getElementById('tree-2-sprite')
-    ABM.shapes.add "tree2", false, (ctx)=>
-      ctx.scale(-0.05, 0.05);
-      ctx.translate(57,160)
-      ctx.rotate Math.PI
-      ctx.drawImage(tree2Img, 0, 0)
-    tree3Img = document.getElementById('tree-3-sprite')
-    ABM.shapes.add "tree3", false, (ctx)=>
-      ctx.scale(-0.05, 0.05);
-      ctx.translate(78,160)
-      ctx.rotate Math.PI
-      ctx.drawImage(tree3Img, 0, 0)
+      ctx.drawImage(image, 0, 0)
   
   ###
     Defines the planting system of the two zones. Zone is defined
@@ -43,7 +37,7 @@ class PlantEngine
     managementPlan[zone] = type
 
   manageZones: ->
-    if managementPlan.join() is "#{BARE},#{BARE}" then return
+    if managementPlan.join() is "bare,bare" then return
 
     @yearTick = @anim.ticks % (12 * @monthLength)
 
@@ -55,7 +49,7 @@ class PlantEngine
 
     for zone in [0, 1]
       plantType = managementPlan[zone]
-      continue if plantType is BARE
+      continue if plantType is "bare"
       continue if @anim.ticks > (12 * @monthLength) and not @plantData[plantType].annual
 
       quantity  = @plantData[plantType].quantity
@@ -76,15 +70,28 @@ class PlantEngine
       a.type = type
       a.shape = u.oneOf data.shapes
       a.isSeed = true
+      a.dying = false
       a.germinationDate = u.randomInt2 data.minGermination, data.maxGermination
 
   runPlants: ->
+    killList = []
+
     for a in @agents
       if a.isSeed
         if @yearTick is a.germinationDate
           a.isSeed = false
       else
-        a.size += @plantData[a.type].growthRate unless a.size > @plantData[a.type].maxSize
+        if @month < 10
+          a.size += @plantData[a.type].growthRate unless a.size > @plantData[a.type].maxSize
+        else if @plantData[a.type].annual
+          if not a.dying 
+            if u.randomInt(50) is 1 then a.dying = true
+          if a.dying
+            a.size -= @plantData[a.type].growthRate unless a.size <= 0
+          if @yearTick is (12 * @monthLength) - 1
+            killList.push a
+
+    a.die() for a in killList
 
 
   plantData:
@@ -92,10 +99,28 @@ class PlantEngine
       quantity: 15
       inRows: false
       annual: false
-      minGermination: 1
-      maxGermination: 300
-      growthRate: 0.005
-      maxSize: 3
+      minGermination: 40
+      maxGermination: 500
+      growthRate: 0.004
+      maxSize: 3.2
       shapes: ["tree1", "tree2", "tree3"]
+    grass:
+      quantity: 25
+      inRows: false
+      annual: false
+      minGermination: 1
+      maxGermination: 150
+      growthRate: 0.01
+      maxSize: 1.2
+      shapes: ["grass1", "grass2"]
+    wheat:
+      quantity: 20
+      inRows: true
+      annual: true
+      minGermination: 10
+      maxGermination: 70
+      growthRate: 0.01
+      maxSize: 1.5
+      shapes: ["wheat1", "wheat2"]
 
 window.PlantEngine = PlantEngine
