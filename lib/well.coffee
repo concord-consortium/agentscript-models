@@ -110,7 +110,7 @@ class Well
 
     # Also expose the color of the 5 patches to either side
     for x in [(@x - 7)..(@x + 7)]
-      @model.setPatchColor @model.patches.patchXY x, y
+      @model.patchChanged @model.patches.patchXY x, y
 
     @depth = y
 
@@ -128,7 +128,7 @@ class Well
               @addWall p
             else if d <= 2.25
               @addPatch p
-          @model.setPatchColor p
+          @model.patchChanged p
       @depth = @depth - 2
       @x = @x + (if @toTheRight then 2 else -2)
 

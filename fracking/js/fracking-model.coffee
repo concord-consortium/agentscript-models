@@ -240,7 +240,7 @@ class FrackingModel extends ABM.Model
       else
         console.log "bad patch type: " + a.p.type
 
-  setPatchColor: (p, redraw=true)->
+  patchChanged: (p, redraw=true)->
     return unless p?
     p.color = switch p.type
       when "air"   then [128, 173, 255]
@@ -306,37 +306,37 @@ class FrackingModel extends ABM.Model
       shaleLowerDepth = (@baseDepth + @height * 0.9 * -Math.sin(@u.degToRad(shaleLowerModifier * p.x + 45)) / 50 + (p.x / 10))
       if p.y > @airDepth
         p.type = "air"
-        @setPatchColor(p, false)
+        @patchChanged(p, false)
       else if p.y > @landDepth and p.y <= @airDepth
         p.type = "land"
-        @setPatchColor(p, false)
+        @patchChanged(p, false)
       else if @landDepth >= p.y > waterLowerDepth
         p.type = "water"
-        @setPatchColor(p, false) if @showEarthPatches
+        @patchChanged(p, false) if @showEarthPatches
       else if waterLowerDepth >= p.y > rock1LowerDepth
         p.type = "rock"
         p.rockType = "rock1"
-        @setPatchColor(p, false) if @showEarthPatches
+        @patchChanged(p, false) if @showEarthPatches
       else if rock1LowerDepth >= p.y > rock2LowerDepth
         p.type = "rock"
         p.rockType = "rock2"
-        @setPatchColor(p, false) if @showEarthPatches
+        @patchChanged(p, false) if @showEarthPatches
       else if rock2LowerDepth >= p.y > rock3LowerDepth
         p.type = "rock"
         p.rockType = "rock3"
-        @setPatchColor(p, false) if @showEarthPatches
+        @patchChanged(p, false) if @showEarthPatches
       else if rock3LowerDepth >= p.y > shaleUpperDepth
         p.type = "rock"
         p.rockType = "rock4"
-        @setPatchColor(p, false) if @showEarthPatches
+        @patchChanged(p, false) if @showEarthPatches
       else if shaleUpperDepth >= p.y > shaleLowerDepth
         @shale.push p
         p.type = "shale"
-        @setPatchColor(p, false) if @showEarthPatches
+        @patchChanged(p, false) if @showEarthPatches
       else if p.y <= shaleLowerDepth
         p.type = "rock"
         p.rockType = "rock5"
-        @setPatchColor(p, false) if @showEarthPatches
+        @patchChanged(p, false) if @showEarthPatches
 
       if p.y <= @landDepth and not @showEarthPatches
         p.color = @hiddenPatchColor
