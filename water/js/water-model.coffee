@@ -15,7 +15,7 @@ class WaterModel extends ABM.Model
 
   wells: null
   wellLimit: 5
-  drillSpeed: 5
+  drillSpeed: 2
   killed: 0
 
   _toRedraw: null
