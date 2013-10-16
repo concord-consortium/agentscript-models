@@ -165,3 +165,8 @@ span.layer-option {
   position: absolute;
   right: 0px;
 }
+
+#drill-down-icon {
+  width: 23px;
+  height: 23px;
+}
