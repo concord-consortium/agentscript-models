@@ -20,6 +20,8 @@ class Well
   @CAPPED: 'capped'
   @YEAR_ELAPSED: "wellYearElapsed"
 
+  @LOOKAHEAD_TYPES: []
+
   # some graphical images
   @WELL_IMG: ABM.util.importImage 'img/well-head.png'
 
@@ -96,7 +98,7 @@ class Well
     return if @goneHorizontal
 
     lookahead = @model.patches.patchXY(@x, y-5)
-    return if lookahead? and (lookahead.isWell or ABM.util.contains(["open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type))
+    return if lookahead? and (lookahead.isWell or ABM.util.contains(@constructor.LOOKAHEAD_TYPES, lookahead.type))
 
     #draw the well
     #for x in [(@x - 1)..(@x + 1)]
@@ -139,7 +141,7 @@ class Well
 
       lx = @x + (if @toTheRight then 5 else -5)
       lookahead = @model.patches.patchXY(lx, @depth)
-      return if lookahead? and (lookahead.isWell or ABM.util.contains(["open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type))
+      return if lookahead? and (lookahead.isWell or ABM.util.contains(@constructor.LOOKAHEAD_TYPES, lookahead.type))
 
       #draw the well
       #for y in [(@depth - 1)..(@depth + 1)]

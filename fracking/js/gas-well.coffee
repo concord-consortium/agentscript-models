@@ -18,6 +18,8 @@ class GasWell extends Well
   frackingInProgress: false
   fracked: false
 
+  @LOOKAHEAD_TYPES: ["open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"]
+
   # fill types
   @PROPANE: 'Propane'
   @WATER:   'Water'
