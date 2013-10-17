@@ -166,13 +166,17 @@ window.WaterControls =
           @fillBelow cEnd.x, cEnd.y, points
         else
           points.push cEnd
+      wellsToRevalidate = []
       for c in points
         p = ABM.model.patches.patchXY c.x, c.y
         if p?
           p.type = @patchType
+          if p.isWell
+            wellsToRevalidate.push p.well
           ABM.model.patchChanged p # handles resetting the patch color
         else
           console.log("Failed to find patch for: (" + c.x + ", " + c.y + ")")
+      @revalidateWells wellsToRevalidate
       ABM.model.refreshPatches = true
       ABM.model.draw()
       ABM.model.refreshPatches = false
@@ -204,6 +208,7 @@ window.WaterControls =
       originalPatchType = originalPatch.type
       return if originalPatchType is "sky"
       patches = [originalPatch]
+      wellsToRevalidate = []
       fillTypes = {}
       findFillType = (p)->
         x = p.x
@@ -220,10 +225,14 @@ window.WaterControls =
         continue if patch.type isnt originalPatchType
         fType = findFillType(patch)
         patch.type = fType
+        if patch.isWell
+          # add it to the list to revalidate
+          wellsToRevalidate.push patch.well if wellsToRevalidate.indexOf(patch.well) == -1
         ABM.model.patchChanged patch # handles resetting the patch color
         for n in patch.n4
           if n? and n.type is originalPatchType
             patches.push n
+      @revalidateWells wellsToRevalidate
       ABM.model.refreshPatches = true
       ABM.model.draw()
       ABM.model.refreshPatches = false
@@ -240,6 +249,10 @@ window.WaterControls =
     $("#mouse-catcher").unbind('mouseleave')
     clearInterval @timerId if @timerId?
     @timerId = null
+
+  revalidateWells: (wellsToRevalidate)->
+    for well in wellsToRevalidate
+      well.remove() unless well.isValid()
 
   timerId: null
   drill: ->
