@@ -153,7 +153,10 @@ class GasWell extends Well
   flood: ->
     return if @capped or @filled or @fracked or not @exploded
     for p in @patches
-      p.type = "clean" + @fillType + "Well"
+      if @fillType is @constructor.WATER
+        p.color = [45, 141, 190]
+      else
+        p.color = [122, 192, 99]
       @model.patchChanged p
 
     @createWastePond() if @fillType is @constructor.WATER
@@ -235,7 +238,7 @@ class GasWell extends Well
       @processSet currentPumping, =>
         @empty()
       , null, (p)=>
-        p.type = if p.type.match(/.*Well$/) then "well" else "open"
+        p.type = "open" unless p.isWell
         @model.patchChanged p
 
       if pondFilling.length > 0
@@ -266,7 +269,10 @@ class GasWell extends Well
     if colors.length <= 0
       setTimeout =>
         for p in @patches
-          p.type = "dirty" + @fillType + "Well"
+          if @fillType is @constructor.WATER
+            p.color = [38,  90,  90]
+          else
+            p.color = [122, 192, 99]
 
         @fracking = ABM.util.clone @open
         @frack()

@@ -188,20 +188,20 @@ class WaterModel extends ABM.Model
       when "rock1" then (if p.isOnSurface then  64 else   8)
       when "rock2" then (if p.isOnSurface then 128 else  16)
       when "rock3" then (if p.isOnSurface then 256 else  32)
-      when "rock4","well","wellWall" then 1000000
+      when "rock4" then 1000000
       else 1
 
   random: (n)->
     return Math.floor(Math.random()*n)
 
   findNearbyWell: (p)->
-    if p.type is "well" or p.type is "wellWall"
+    if p.isWell
       return p.well
     else
-      # look within an N patch radius of us for a well or wellWall patch
+      # look within an N patch radius of us for a well patch
       near = @patches.patchRect p, 5, 10, true
       for pn in near
-        if pn.type is "well" or pn.type is "wellWall"
+        if pn.isWell
           return pn.well
     return null
 

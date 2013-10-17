@@ -63,14 +63,14 @@ class Well
 
   # add a center patch to the well
   addPatch: (p)->
-    p.type = "well"
     p.well = @
+    p.isWell = true
     p.color = [141, 141, 141]
     @patches.push p
 
   addWall: (p)->
-    p.type = "wellWall"
     p.well = @
+    p.isWell = true
     p.color = [87, 87, 87]
     @walls.push p
 
@@ -96,7 +96,7 @@ class Well
     return if @goneHorizontal
 
     lookahead = @model.patches.patchXY(@x, y-5)
-    return if lookahead? and ABM.util.contains(["wellWall","open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type)
+    return if lookahead? and (lookahead.isWell or ABM.util.contains(["open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type))
 
     #draw the well
     #for x in [(@x - 1)..(@x + 1)]
@@ -139,7 +139,7 @@ class Well
 
       lx = @x + (if @toTheRight then 5 else -5)
       lookahead = @model.patches.patchXY(lx, @depth)
-      return if lookahead? and ABM.util.contains(["wellWall","open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type)
+      return if lookahead? and (lookahead.isWell or ABM.util.contains(["open","cleanWaterOpen","cleanPropaneOpen","dirtyWaterOpen","dirtyPropaneOpen"], lookahead.type))
 
       #draw the well
       #for y in [(@depth - 1)..(@depth + 1)]

@@ -84,16 +84,15 @@ class FrackingModel extends ABM.Model
     # move gas turtles to the surface, if possible
     for a in @gas
       continue unless a.p?
-      switch a.p.type
-        when "well", "wellWall"
-          a.trapped = false
-          a.well = a.p.well
-          a.hidden = not a.well.capped
-          a.moveable = a.well.capped
-        when "open"
-          a.well = a.p.well
-          a.hidden = not a.well.capped
-          a.moveable = a.well.capped
+      if a.p.isWell
+        a.trapped = false
+        a.well = a.p.well
+        a.hidden = not a.well.capped
+        a.moveable = a.well.capped
+      else if a.p.type is "open"
+        a.well = a.p.well
+        a.hidden = not a.well.capped
+        a.moveable = a.well.capped
       @moveAgentTowardPipeCenter(a)
 
     for a in @shaleGas
@@ -143,58 +142,59 @@ class FrackingModel extends ABM.Model
     return unless a.moveable
 
     return if a.trapped
-    switch a.p.type
-      when "air"
+    if a.p.isWell
+      # kill if we're close to the top
+      if @landDepth < a.y < @airDepth
         @toKill.push a
         return
-      when "well", "wellWall"
-        # kill if we're close to the top
-        if @landDepth < a.y < @airDepth
+      # otherwise move up well
+      dist = @u.randomInt(@gasSpeed)+3
+      if -0.5 < (a.x - a.well.head.x) < 0.5
+        if a.well.leaks and @u.randomInt(@leakRate) == 0 and (pWater = @patches.patchXY(a.x + (if @u.randomInt(2) is 0 then 3 else -3), a.y))?.type is "water"
+          # Leak into the water
+          a.moveTo pWater
+          @toMoveToWaterGas.push a
+          @leakedMethane += @leakedMethaneScale
+        else
+          # move vertically toward the well head
+          a.heading = @u.degToRad(90)
+          a.forward dist
+      else
+        # move horizontally
+        dx = a.x - a.well.head.x
+        a.heading = if dx > 0 then @u.degToRad(180) else 0
+        if Math.abs(dx) > dist then a.forward(dist) else a.forward(Math.abs(dx))
+    else
+      switch a.p.type
+        when "air"
           @toKill.push a
           return
-        # otherwise move up well
-        dist = @u.randomInt(@gasSpeed)+3
-        if -0.5 < (a.x - a.well.head.x) < 0.5
-          if a.well.leaks and @u.randomInt(@leakRate) == 0 and (pWater = @patches.patchXY(a.x + (if @u.randomInt(2) is 0 then 3 else -3), a.y))?.type is "water"
-            # Leak into the water
-            a.moveTo pWater
-            @toMoveToWaterGas.push a
-            @leakedMethane += @leakedMethaneScale
-          else
-            # move vertically toward the well head
+        when "shale", "rock", "open"
+          if a.y > a.well.depth and -0.5 < (a.x - a.well.head.x) < 0.5
+            # somehow we're right under the well head, but not on a well patch...
+            # move vertically toward the well head anyway
             a.heading = @u.degToRad(90)
-            a.forward dist
-        else
-          # move horizontally
-          dx = a.x - a.well.head.x
-          a.heading = if dx > 0 then @u.degToRad(180) else 0
-          if Math.abs(dx) > dist then a.forward(dist) else a.forward(Math.abs(dx))
-      when "shale", "rock", "open"
-        if a.y > a.well.depth and -0.5 < (a.x - a.well.head.x) < 0.5
-          # somehow we're right under the well head, but not on a well patch...
-          # move vertically toward the well head anyway
-          a.heading = @u.degToRad(90)
-        else if a.y > a.well.depth and Math.abs(a.x - a.well.head.x) <= 2
-          # move horizontally to the center of the vertical shaft
-          a.heading = if a.x > a.well.head.x then @u.degToRad(180) else 0
-        else
-          # if the well bends right, and we're left of the vertical shaft,
-          # aim for the center of the bend. Vice versa, as well.
-          if not a.well.toTheRight and a.x > a.well.head.x
-            a.face @patches.patchXY a.well.head.x, a.well.depth+1
-          else if a.well.toTheRight and a.x < a.well.head.x
-            a.face @patches.patchXY a.well.head.x, a.well.depth+1
-          # if we're past the end of the horizontal pipe, aim for the end of the pipe
-          else if a.well.toTheRight and a.x > a.well.x
-            a.face @patches.patchXY a.well.x-2, a.well.depth
-          else if not a.well.toTheRight and a.x < a.well.x
-            a.face @patches.patchXY a.well.x+2, a.well.depth
+          else if a.y > a.well.depth and Math.abs(a.x - a.well.head.x) <= 2
+            # move horizontally to the center of the vertical shaft
+            a.heading = if a.x > a.well.head.x then @u.degToRad(180) else 0
           else
-            # move vertically toward the horizontal pipe center
-            a.heading = if a.y < a.well.depth then @u.degToRad(90) else @u.degToRad(270)
-        a.forward 1
-      else
-        console.log("Hit layer: " + a.p.type)
+            # if the well bends right, and we're left of the vertical shaft,
+            # aim for the center of the bend. Vice versa, as well.
+            if not a.well.toTheRight and a.x > a.well.head.x
+              a.face @patches.patchXY a.well.head.x, a.well.depth+1
+            else if a.well.toTheRight and a.x < a.well.head.x
+              a.face @patches.patchXY a.well.head.x, a.well.depth+1
+            # if we're past the end of the horizontal pipe, aim for the end of the pipe
+            else if a.well.toTheRight and a.x > a.well.x
+              a.face @patches.patchXY a.well.x-2, a.well.depth
+            else if not a.well.toTheRight and a.x < a.well.x
+              a.face @patches.patchXY a.well.x+2, a.well.depth
+            else
+              # move vertically toward the horizontal pipe center
+              a.heading = if a.y < a.well.depth then @u.degToRad(90) else @u.degToRad(270)
+          a.forward 1
+        else
+          console.log("Hit layer: " + a.p.type)
 
   moveShaleGas: (a) ->
     if a.p.type is "open"
@@ -242,24 +242,23 @@ class FrackingModel extends ABM.Model
 
   patchChanged: (p, redraw=true)->
     return unless p?
-    p.color = switch p.type
-      when "air"   then [128, 173, 255]
-      when "land"  then [ 29, 159, 120]
-      when "water" then [ 52,  93, 169]
-      when "shale" then [237, 237,  49]
-      when "rock"
-        if p.rockType is "rock1" then [157, 110,  72]
-        else if p.rockType is "rock2" then [157, 132,  72]
-        else if p.rockType is "rock3" then [90, 57,  40]
-        else if p.rockType is "rock4" then [157, 110,  64]
-        else [81, 61,  54]
-      when "well"  then [141, 141, 141]
-      when "wellWall" then [87, 87, 87]
-      when "exploding" then [215, 50, 41]
-      when "open"      then [0, 0, 0]
-      when "cleanWaterWell", "cleanWaterOpen" then [45, 141, 190]
-      when "dirtyWaterWell", "dirtyWaterOpen", "dirtyWaterPond" then [38,  90,  90]
-      when "cleanPropaneWell", "cleanPropaneOpen", "dirtyPropaneWell", "dirtyPropaneOpen" then [122, 192, 99]
+    unless p.isWell
+      p.color = switch p.type
+        when "air"   then [128, 173, 255]
+        when "land"  then [ 29, 159, 120]
+        when "water" then [ 52,  93, 169]
+        when "shale" then [237, 237,  49]
+        when "rock"
+          if p.rockType is "rock1" then [157, 110,  72]
+          else if p.rockType is "rock2" then [157, 132,  72]
+          else if p.rockType is "rock3" then [90, 57,  40]
+          else if p.rockType is "rock4" then [157, 110,  64]
+          else [81, 61,  54]
+        when "exploding" then [215, 50, 41]
+        when "open"      then [0, 0, 0]
+        when "cleanWaterWell", "cleanWaterOpen" then [45, 141, 190]
+        when "dirtyWaterWell", "dirtyWaterOpen", "dirtyWaterPond" then [38,  90,  90]
+        when "cleanPropaneWell", "cleanPropaneOpen", "dirtyPropaneWell", "dirtyPropaneOpen" then [122, 192, 99]
     @toRedraw.push p if redraw
 
   setupGlobals: ->
@@ -381,13 +380,13 @@ class FrackingModel extends ABM.Model
       well.pumpOut()
 
   findNearbyWell: (p)->
-    if p.type is "well" or p.type is "wellWall"
+    if p.isWell
       return p.well
     else
       # look within an N patch radius of us for a well or wellWall patch
       near = @patches.patchRect p, 5, 5, true
       for pn in near
-        if pn.type is "well" or pn.type is "wellWall"
+        if pn.isWell
           return pn.well
 
 window.FrackingModel = FrackingModel
