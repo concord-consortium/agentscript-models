@@ -107,6 +107,7 @@ class GasWell extends Well
       @processSet currentExploding, =>
         @explode()
       , (p)=>
+        return if p.isWell
         switch p.type
           when "shale"
             if ABM.util.randomInt(100) < @model.shaleFractibility
@@ -115,6 +116,7 @@ class GasWell extends Well
             if ABM.util.randomInt(100) < @model.rockFractibility
               @addExploding p
       , (p)=>
+        return if p.isWell
         p.type = "open"
         @addOpen p
         @model.patchChanged p
@@ -135,6 +137,7 @@ class GasWell extends Well
       @processSet currentFilling, =>
         @fill()
       , (p)=>
+        return if p.isWell
         switch p.type
           when "open"
             if p.well? and p.well is @
@@ -186,6 +189,7 @@ class GasWell extends Well
       @processSet currentFracking, =>
         @frack()
       , (p)=>
+          return if p.isWell
           switch p.type
             when "shale"
               if ABM.util.randomInt(100) < (@model.shaleFractibility * fractibilityModifier)
@@ -239,7 +243,10 @@ class GasWell extends Well
       @processSet currentPumping, =>
         @empty()
       , null, (p)=>
-        p.type = "open" unless p.isWell
+        if p.isWell
+          p.color = [141, 141, 141]
+        else
+          p.type = "open"
         @model.patchChanged p
 
       if pondFilling.length > 0
