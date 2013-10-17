@@ -39,6 +39,7 @@ class Well
 
     p = @model.patches.patchXY(@head.x, @head.y + 1)
     p.label = "" + @id
+    @addPatch p
     @model.contexts.drawing.labelColor = switch @id
       when 1 then [200,0,0]
       when 2 then [50,255,20]
