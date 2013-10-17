@@ -354,4 +354,6 @@ class WaterModel extends ABM.Model
     @template = str
     @reset()
 
+Well.WELL_HEAD_TYPES.push "sky" unless ABM.util.contains(Well.WELL_HEAD_TYPES, "sky")
+
 window.WaterModel = WaterModel

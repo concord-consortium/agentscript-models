@@ -391,4 +391,6 @@ class FrackingModel extends ABM.Model
 
 window.FrackingModel = FrackingModel
 
+GasWell.WELL_HEAD_TYPES.push "air" unless ABM.util.contains(GasWell.WELL_HEAD_TYPES, "air")
+
 $(document).trigger 'fracking-model-loaded'

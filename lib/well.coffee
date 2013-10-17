@@ -21,6 +21,7 @@ class Well
   @YEAR_ELAPSED: "wellYearElapsed"
 
   @LOOKAHEAD_TYPES: []
+  @WELL_HEAD_TYPES: []
 
   # some graphical images
   # NOTE: relative urls are relative to the model html location!
@@ -155,6 +156,14 @@ class Well
         @addWall pw
 
       @x = x
+
+  # a check to see if the well is still properly situated.
+  # Basically, it just makes sure that the well head patch is on a valid type,
+  # and that the patch immediately below the well head isn't one of those types
+  isValid: ->
+    head = @model.patches.patchXY @head.x, @head.y
+    patchBelow = head.n4[0]
+    return ABM.util.contains(@constructor.WELL_HEAD_TYPES, head.type) and not ABM.util.contains(@constructor.WELL_HEAD_TYPES, patchBelow.type)
 
   drawUI: (img, x, y)->
     ctx = @model.contexts.drawing
