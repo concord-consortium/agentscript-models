@@ -159,6 +159,17 @@ class Well
 
       @x = x
 
+  remove: ->
+    for p in @patches.concat(@walls)
+      p.isWell = null
+      p.well = null
+      @model.patchChanged p
+    @patches = []
+    @walls = []
+    ABM.util.removeItem @model.wells, @
+    @eraseUI()
+    @model.redraw()
+
   # a check to see if the well is still properly situated.
   # Basically, it just makes sure that the well head patch is on a valid type,
   # and that the patch immediately below the well head isn't one of those types
@@ -166,6 +177,14 @@ class Well
     head = @model.patches.patchXY @head.x, @head.y
     patchBelow = head.n4[0]
     return ABM.util.contains(@constructor.WELL_HEAD_TYPES, head.type) and not ABM.util.contains(@constructor.WELL_HEAD_TYPES, patchBelow.type)
+
+  eraseUI: ->
+    ctx = @model.contexts.drawing
+    ctx.save()
+    ctx.globalCompositeOperation = "destination-out"
+    ctx.translate @head.x, @head.y
+    ctx.fillRect -7, -1, 14, 30
+    ctx.restore()
 
   drawUI: (img, x, y)->
     ctx = @model.contexts.drawing

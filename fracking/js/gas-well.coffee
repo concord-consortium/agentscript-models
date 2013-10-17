@@ -339,4 +339,32 @@ class GasWell extends Well
         a.well = @
         a.moveTo @model.patches.patchXY(@head.x + ABM.util.randomInt(12) + 6, @head.y - 8)
 
+  eraseUI: ->
+    super
+    ctx = @model.contexts.drawing
+    ctx.save()
+    ctx.globalCompositeOperation = "destination-out"
+    ctx.translate @head.x, @head.y
+    ctx.fillRect 0, -17, 30, 20
+    ctx.restore()
+
+
+  remove: ->
+    if @explodingInProgress or @fillingInProgress or @frackingInProgress or @cappingInProgress
+      setTimeout =>
+        @remove()
+      , 100
+    else
+      for p in @open.concat(@openShale, @filling, @exploding, @fracking, @pumping)
+        p.isWell = null
+        p.well = null
+        @model.patchChanged p
+      for p in @pond
+        p.isWell = null
+        p.well = null
+        p.type = "land"
+        @model.patchChanged p
+      @open = @openShale = @filling = @exploding = @fracking = @pumping = @pond = []
+      super
+
 window.GasWell = GasWell
