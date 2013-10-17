@@ -1,6 +1,5 @@
 window.WaterControls =
   drawStyle: "draw"  # draw or fill
-  drawColor: [196,162,111]
   patchType: "rock1"
   setup: ->
     if ABM.model?
@@ -51,10 +50,10 @@ window.WaterControls =
       $("#draw-button-set").buttonset()
       $("#draw-button-type-options").hide().menu
         select: (evt, ui)=>
-          window.drawColor = ui.item
+          window.drawType = ui.item
           layerOption = ui.item.find(".layer-option")
           $("label[for='fill-button'] .ui-button-text").html(layerOption.clone())
-          @setDrawColor layerOption.prop('className').split(/\s+/)
+          @setDrawType layerOption.prop('className').split(/\s+/)
           # automatically put us into fill mode when we select a layer type
           @stopDraw() and $("#fill-button").click() unless $("#fill-button")[0].checked
       $('#follow-water-button').button(
@@ -105,21 +104,16 @@ window.WaterControls =
         @setup()
       , 500
 
-  setDrawColor: (colors = [])->
+  setDrawType: (colors = [])->
     if $.inArray("rock1", colors) > -1
-      @drawColor = [196,162,111]
       @patchType = "rock1"
     else if $.inArray("rock2", colors) > -1
-      @drawColor = [123,80,56]
       @patchType = "rock2"
     else if $.inArray("rock3", colors) > -1
-      @drawColor = [113,115,118]
       @patchType = "rock3"
     else if $.inArray("rock4", colors) > -1
-      @drawColor = [33,42,47]
       @patchType = "rock4"
     else if $.inArray("soil", colors) > -1
-      @drawColor = [232,189,174]
       @patchType = "soil"
     else
       console.log "Invalid layer option!", colors
@@ -175,8 +169,8 @@ window.WaterControls =
       for c in points
         p = ABM.model.patches.patchXY c.x, c.y
         if p?
-          p.color = @drawColor
           p.type = @patchType
+          ABM.model.patchChanged p # handles resetting the patch color
         else
           console.log("Failed to find patch for: (" + c.x + ", " + c.y + ")")
       ABM.model.refreshPatches = true
@@ -217,16 +211,16 @@ window.WaterControls =
         for y in [(p.y)..(ABM.model.patches.maxY)]
           nextP = ABM.model.patches.patchXY(x,y)
           if nextP? and p.type isnt nextP.type
-            fillTypes[x] = {type: nextP.type, color: nextP.color}
+            fillTypes[x] = nextP.type
             return fillTypes[x]
-        fillTypes[x] = {type: "sky", color: [205, 237, 252]}
+        fillTypes[x] = "sky"
         return fillTypes[x]
       while patches.length > 0
         patch = patches.shift()
         continue if patch.type isnt originalPatchType
         fType = findFillType(patch)
-        patch.type = fType.type
-        patch.color = fType.color
+        patch.type = fType
+        ABM.model.patchChanged patch # handles resetting the patch color
         for n in patch.n4
           if n? and n.type is originalPatchType
             patches.push n

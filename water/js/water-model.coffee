@@ -75,6 +75,14 @@ class WaterModel extends ABM.Model
     , 1
 
   patchChanged: (p, redraw=true)->
+    unless p.isWell
+      p.color = switch p.type
+        when "sky"   then [205, 237, 252]
+        when "soil"  then [232, 189, 174]
+        when "rock1" then [196, 162, 111]
+        when "rock2" then [123,  80,  56]
+        when "rock3" then [113, 115, 118]
+        when "rock4" then [ 33,  42,  47]
     @_toRedraw.push p if redraw
 
   reset: ->
