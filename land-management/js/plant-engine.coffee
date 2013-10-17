@@ -13,18 +13,17 @@ class PlantEngine
     @trees.setDefaultShape "arrow"
     @trees.setDefaultColor [0,255,0]
 
-    @addImage "tree1", "tree-1-sprite", 77, 140
-    @addImage "tree2", "tree-2-sprite", 57, 160
-    @addImage "tree3", "tree-3-sprite", 78, 160
-    @addImage "grass1", "grass-1-sprite", 78, 160
-    @addImage "grass2", "grass-1-sprite", 78, 160
-    @addImage "wheat1", "wheat-1-sprite", 78, 160
-    @addImage "wheat2", "wheat-1-sprite", 78, 160
+    @addImage "tree1", "tree-1-sprite", 39, 70
+    @addImage "tree2", "tree-2-sprite", 29, 80
+    @addImage "tree3", "tree-3-sprite", 39, 80
+    @addImage "grass1", "grass-1-sprite", 39, 80
+    @addImage "grass2", "grass-1-sprite", 39, 80
+    @addImage "wheat1", "wheat-1-sprite", 39, 80
 
-  addImage: (name, id, width, height) ->
+  addImage: (name, id, width, height, scale) ->
     image = document.getElementById(id)
     ABM.shapes.add name, false, (ctx)=>
-      ctx.scale(-0.05, 0.05);
+      ctx.scale(-0.1, 0.1);
       ctx.translate(width,height)
       ctx.rotate Math.PI
       ctx.drawImage(image, 0, 0)
@@ -121,6 +120,6 @@ class PlantEngine
       maxGermination: 70
       growthRate: 0.01
       maxSize: 1.5
-      shapes: ["wheat1", "wheat2"]
+      shapes: ["wheat1"]
 
 window.PlantEngine = PlantEngine
