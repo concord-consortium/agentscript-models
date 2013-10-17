@@ -31,7 +31,6 @@ class GasWell extends Well
   @FRACKED: 'fracked'
 
   # some graphical images
-  @WELL_IMG: ABM.util.importImage 'img/well-head.png'
   @POND_IMG: ABM.util.importImage 'img/well-pond.png'
 
   constructor: (@model, @x, @depth, @leaks=false, @pondLeaks=false)->

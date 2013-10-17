@@ -23,6 +23,7 @@ class Well
   @LOOKAHEAD_TYPES: []
 
   # some graphical images
+  # NOTE: relative urls are relative to the model html location!
   @WELL_IMG: ABM.util.importImage 'img/well-head.png'
 
   constructor: (@model, @x, @depth)->
