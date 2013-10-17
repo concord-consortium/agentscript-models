@@ -78,7 +78,7 @@
         var patches = APP.patches;
         for (i = 0, ii = patches.length; i < ii; i++) {
           p = patches[i];
-          APP.setPatchColor(p);
+          APP.patchChanged(p);
         }
         APP.refreshPatches = false
       });

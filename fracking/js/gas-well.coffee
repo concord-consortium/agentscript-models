@@ -55,7 +55,7 @@ class GasWell extends Well
     @openShale.push p if p.type is "shale"
     p.type = "exploding"
     p.well = @
-    @model.setPatchColor p
+    @model.patchChanged p
     @exploding.push p
 
   drill: (drillDirection, drillSpeed)->
@@ -80,7 +80,7 @@ class GasWell extends Well
 
       # Also expose the color of the 5 patches to top/bottom
       for y in [(@depth - 7)..(@depth + 7)]
-        @model.setPatchColor @model.patches.patchXY @x, y
+        @model.patchChanged @model.patches.patchXY @x, y
 
   processSet: (set, done, n4processor = null, pProcessor = null)->
     for p in set
@@ -116,7 +116,7 @@ class GasWell extends Well
       , (p)=>
         p.type = "open"
         @addOpen p
-        @model.setPatchColor p
+        @model.patchChanged p
     , 50
 
   fill: ->
@@ -138,7 +138,7 @@ class GasWell extends Well
           when "open"
             if p.well? and p.well is @
               p.type = "clean" + @fillType + "Open"
-              @model.setPatchColor p
+              @model.patchChanged p
               @filling.push p
     , 50
 
@@ -154,7 +154,7 @@ class GasWell extends Well
     return if @capped or @filled or @fracked or not @exploded
     for p in @patches
       p.type = "clean" + @fillType + "Well"
-      @model.setPatchColor p
+      @model.patchChanged p
 
     @createWastePond() if @fillType is @constructor.WATER
 
@@ -188,7 +188,7 @@ class GasWell extends Well
                 @fracking.push p
                 p.type = "dirty" + @fillType + "Open"
                 @addOpen p
-                @model.setPatchColor p
+                @model.patchChanged p
     , 50
 
   pumpOut: ->
@@ -211,7 +211,7 @@ class GasWell extends Well
       eIdx = (14-rounds)*21
       for p in @pond.slice(0,eIdx)
         p.type = "dirtyWaterPond"
-        @model.setPatchColor p
+        @model.patchChanged p
 
     @empty()
 
@@ -236,12 +236,12 @@ class GasWell extends Well
         @empty()
       , null, (p)=>
         p.type = if p.type.match(/.*Well$/) then "well" else "open"
-        @model.setPatchColor p
+        @model.patchChanged p
 
       if pondFilling.length > 0
         for p in pondFilling
           p.type = "dirtyWaterPond"
-          @model.setPatchColor p
+          @model.patchChanged p
     , 50
 
   cycleWaterColors: ->
@@ -316,7 +316,7 @@ class GasWell extends Well
         if p?
           @pond.push p
           p.type = "air"
-          @model.setPatchColor p
+          @model.patchChanged p
 
   leakWastePondWater: ->
     if @pondLeaks and @capped and @pond.length > 0 and ABM.util.randomInt(50) is 0
