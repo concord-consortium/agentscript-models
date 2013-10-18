@@ -136,7 +136,11 @@ window.WaterControls =
     mouseDown = false
     cStart = null
     drawEvt = (evt)=>
-      return unless mouseDown
+      if evt? and evt.preventDefault?
+        evt.preventDefault()
+      else
+        window.event.returnValue = false
+      return false unless mouseDown
       cEnd = ABM.model.patches.patchAtPixel @offsetX(evt, target), @offsetY(evt, target)
       points = []
       if cStart? and (cStart.x != cEnd.x or cStart.y != cEnd.y)
@@ -181,7 +185,9 @@ window.WaterControls =
       ABM.model.draw()
       ABM.model.refreshPatches = false
       cStart = cEnd
+      return false
     target.show()
+    target.css('cursor', 'url("img/cursor_add.cur")')
     target.bind 'mousedown', (evt)->
       mouseDown = true
       drawEvt(evt)
@@ -199,6 +205,7 @@ window.WaterControls =
   erase: ->
     target = $("#mouse-catcher")
     target.show()
+    target.css('cursor', 'url("img/cursor_remove.cur")')
     target.bind 'mousedown', (evt)=>
       # get the patch under the cursor,
       # find all the contiguous patches of the same type,
@@ -243,6 +250,7 @@ window.WaterControls =
     $("#drill-down").click() if $("#drill-down")[0]?.checked
     @startStopModel() if alsoStopModel and not ABM.model.anim.animStop
     $("#mouse-catcher").hide()
+    $("#mouse-catcher").css('cursor', '')
     $("#mouse-catcher").unbind('mouseup')
     $("#mouse-catcher").unbind('mousedown')
     $("#mouse-catcher").unbind('mousemove')
@@ -258,6 +266,7 @@ window.WaterControls =
   drill: ->
     target = $("#mouse-catcher")
     target.show()
+    target.css('cursor', 'url("img/cursor_addwell.cur")')
     target.bind 'mousedown', (evt)=>
       return if @timerId?
       @timerId = setInterval =>
