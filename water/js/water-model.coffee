@@ -362,6 +362,16 @@ class WaterModel extends ABM.Model
     @template = str
     @reset()
 
+  rainCount: (centerPatch, dx, dy, surfaceOnly = true)->
+    pSet = @patches.patchRect centerPatch, dx, dy, true
+    count = 0
+    for p in pSet
+      continue if surfaceOnly and p.type isnt "sky"
+      agents = p.agentsHere()
+      for a in agents
+        count++ if a.breed is @rain
+    return count
+
 Well.WELL_HEAD_TYPES.push "sky" unless ABM.util.contains(Well.WELL_HEAD_TYPES, "sky")
 
 window.WaterModel = WaterModel
