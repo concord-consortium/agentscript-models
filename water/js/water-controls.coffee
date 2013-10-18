@@ -93,10 +93,18 @@ window.WaterControls =
       if templateOptions?
         templateOptions.change (evt)->
           ABM.model.setTemplate templateOptions.val()
-      $("#drill-down").button().click =>
-        @stopDraw()
-        if $("#drill-down")[0]?.checked
-          @drill()
+      drillDownButton = $("#drill-down")
+      if drillDownButton?
+        drillDownButton.button().click =>
+          @stopDraw()
+          if drillDownButton[0]?.checked
+            @drill()
+      removeWellButton = $("#remove-well")
+      if removeWellButton?
+        removeWellButton.button().click =>
+          @stopDraw()
+          if removeWellButton[0]?.checked
+            @removeWell()
 
     else
       console.log("delaying...")
@@ -276,6 +284,18 @@ window.WaterControls =
     .bind 'mouseup mouseleave', =>
       clearInterval @timerId if @timerId?
       @timerId = null
+
+  removeWell: ->
+    target = $("#mouse-catcher")
+    target.show()
+    target.css('cursor', 'url("img/cursor_removewell.cur")')
+    target.bind 'mousedown', (evt)=>
+      # get the patch under the cursor,
+      # check if there's a nearby well. If so, remove it.
+      originalPatch = ABM.model.patches.patchAtPixel @offsetX(evt, target), @offsetY(evt, target)
+      return unless originalPatch?
+      well = ABM.model.findNearbyWell originalPatch
+      well.remove() if well?
 
   startStopModel: ->
     if ABM.model.anim.animStop
