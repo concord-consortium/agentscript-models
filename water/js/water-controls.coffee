@@ -103,6 +103,12 @@ window.WaterControls =
           @stopDraw()
           if removeWellButton[0]?.checked
             @removeWell()
+      addWaterButton = $("#water-button")
+      if addWaterButton?
+        addWaterButton.button().click =>
+          @stopDraw()
+          if addWaterButton[0]?.checked
+            @addWater()
 
       if $('#output-graph')
         @setupGraph()
@@ -288,6 +294,7 @@ window.WaterControls =
     $("#fill-button").click() if $("#fill-button")[0]?.checked
     $("#erase-button").click() if $("#erase-button")[0]?.checked
     $("#drill-down").click() if $("#drill-down")[0]?.checked
+    $("#water-button").click() if $("#water-button")[0]?.checked
     @startStopModel() if alsoStopModel and not ABM.model.anim.animStop
     $("#mouse-catcher").hide()
     $("#mouse-catcher").css('cursor', '')
@@ -328,6 +335,42 @@ window.WaterControls =
       return unless originalPatch?
       well = ABM.model.findNearbyWell originalPatch
       well.remove() if well?
+
+  addWater: ->
+    target = $("#mouse-catcher")
+    lastWaterEvt = null
+    mouseDown = false
+    target.show()
+    target.css('cursor', 'url("img/cursor_addwater.cur")')
+    target.bind 'mousedown', (evt)=>
+      return if @timerId?
+      lastWaterEvt = evt
+      mouseDown = true
+      @_placeWater(evt, target)
+      @timerId = setInterval =>
+        @_placeWater(lastWaterEvt, target)
+      , 10
+    .bind 'mousemove', (evt)=>
+      lastWaterEvt = evt if mouseDown
+      if evt? and evt.preventDefault?
+        evt.preventDefault()
+      else
+        window.event.returnValue = false
+      return false
+    .bind 'mouseup mouseleave', =>
+      mouseDown = false
+      clearInterval @timerId if @timerId?
+      @timerId = null
+
+  _placeWater: (evt, target)->
+    p = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
+    rect = ABM.model.patches.patchRect p, 5, 5, true
+    for pa in ABM.util.shuffle(rect)
+      if pa? and pa.agentsHere().length == 0
+        ABM.model.rain.create 1, (drop)->
+          drop.moveTo pa
+          ABM.model.draw()
+        break
 
   startStopModel: ->
     if ABM.model.anim.animStop
