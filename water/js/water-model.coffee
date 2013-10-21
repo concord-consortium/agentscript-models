@@ -362,7 +362,7 @@ class WaterModel extends ABM.Model
     @template = str
     @reset()
 
-  rainCount: (centerPatch, dx, dy, surfaceOnly = true)->
+  rainCount: (centerPatch, dx, dy, surfaceOnly = true, highlight = false)->
     pSet = @patches.patchRect centerPatch, dx, dy, true
     count = 0
     for p in pSet
@@ -370,6 +370,20 @@ class WaterModel extends ABM.Model
       agents = p.agentsHere()
       for a in agents
         count++ if a.breed is @rain
+
+    if highlight
+      ctx = @contexts.drawing
+      ctx.save()
+      ctx.translate centerPatch.x - dx, centerPatch.y - dy
+      ctx.strokeStyle = '#fbf9c0'
+      ctx.strokeRect 0, 0, (dx*2+1), (dy*2+1)
+      ctx.restore()
+      setTimeout ->
+        ctx.save()
+        ctx.translate centerPatch.x - dx - 1, centerPatch.y - dy - 1
+        ctx.clearRect 0, 0, (dx*2+3), (dy*2+3)
+        ctx.restore()
+      , 250
     return count
 
 Well.WELL_HEAD_TYPES.push "sky" unless ABM.util.contains(Well.WELL_HEAD_TYPES, "sky")
