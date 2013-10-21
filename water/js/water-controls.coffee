@@ -33,8 +33,6 @@ window.WaterControls =
         if `this.checked`
           @drawStyle = "fill"
           @draw()
-        else
-          @stopDraw()
       $("#draw-button-type").button
         text: false
         icons:
@@ -55,7 +53,7 @@ window.WaterControls =
           $("label[for='fill-button'] .ui-button-text").html(layerOption.clone())
           @setDrawType layerOption.prop('className').split(/\s+/)
           # automatically put us into fill mode when we select a layer type
-          @stopDraw() and $("#fill-button").click() unless $("#fill-button")[0].checked
+          $("#fill-button").click() unless $("#fill-button")[0].checked
       $('#follow-water-button').button(
         label: "Follow Water Droplet"
       ).click ->
