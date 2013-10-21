@@ -6,12 +6,15 @@
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="http://lab.concord.org/vendor/d3/d3.js"></script>
+    <script src="../lib/lab.grapher.js"></script>
     <script src="../lib/agentscript/agentscript.js"></script>
     <script src="../lib/agentscript/coffee-script.js"></script>
     <script src="../lib/import-export.coffee" type="text/coffeescript"></script>
     <script src="../lib/well.coffee" type="text/coffeescript"></script>
 
     <link href="css/water.css" rel="stylesheet" type="text/css" />
+    <link href="css/graph.css" rel="stylesheet" type="text/css" />
     <script src="js/water-model.coffee" type="text/coffeescript"></script>
     <script src="js/water-controls.coffee" type="text/coffeescript"></script>
     <script src="http://shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
@@ -76,6 +79,9 @@
       <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
       <div id="layers"></div>
       <div id="mouse-catcher"></div>
+    </div>
+    <div id='output-graphs'>
+      <div id='output-graph' class="graph"></div>
     </div>
     <script>
       $(document).one('controls-ready', function() {

@@ -8,7 +8,8 @@ class WaterModel extends ABM.Model
   template: null
   templateData: { url: null, data: null }
 
-  ticksPerYear: 730
+  ticksPerYear: 732
+  ticksPerMonth: 61
 
   evapProbability: 10
   rainProbability: 0.33
@@ -21,10 +22,15 @@ class WaterModel extends ABM.Model
   _toRedraw: null
   _toKill: null
 
+  @MONTH_ELAPSED: "modelMonthElapsed"
+  @YEAR_ELAPSED:  "modelYearElapsed"
+
   setup: ->
     @_toRedraw = []
     @_toKill = []
     @wells = []
+
+    @ticksPerMonth = @ticksPerYear / 12
 
     @anim.setRate 30, false
     @setFastPatches()
@@ -120,6 +126,12 @@ class WaterModel extends ABM.Model
         a.well.killed++
         a.well.totalKilled++
     @_toKill = []
+
+    if @anim.ticks % @ticksPerMonth is 0
+      $(document).trigger @constructor.MONTH_ELAPSED
+
+    if @anim.ticks % @ticksPerYear is 0
+      $(document).trigger @constructor.YEAR_ELAPSED
 
     return true # avoid inadventently returning a large array of things
 

@@ -106,11 +106,45 @@ window.WaterControls =
           if removeWellButton[0]?.checked
             @removeWell()
 
+      if $('#output-graph')
+        @setupGraph()
+
     else
       console.log("delaying...")
       setTimeout =>
         @setup()
       , 500
+
+  outputGraph: null
+  center: null
+  setupGraph: ->
+    outputOptions =
+      title:  "Water Level"
+      xlabel: "Time (years)"
+      ylabel: "Water Level"
+      xmax:   40
+      xmin:   0
+      ymax:   600
+      ymin:   0
+      xTickCount: 4
+      yTickCount: 5
+      xFormatter: "3.3r"
+      realTime: false
+      fontScaleRelativeToParent: true
+      sampleInterval: 1/12
+
+    @outputGraph = Lab.grapher.Graph '#output-graph', outputOptions
+
+    # start the graph with one line at 0,0
+    @outputGraph.addSamples [0]
+
+    @center = ABM.model.patches.patchXY 0, 0
+
+    $(document).on WaterModel.MONTH_ELAPSED, =>
+      count = ABM.model.rainCount @center, 50, 50, true, true
+
+      @outputGraph.addSamples [count]
+
 
   setDrawType: (colors = [])->
     if $.inArray("rock1", colors) > -1
