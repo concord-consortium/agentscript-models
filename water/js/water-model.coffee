@@ -13,6 +13,7 @@ class WaterModel extends ABM.Model
 
   evapProbability: 10
   rainProbability: 0.33
+  sprayIntensity: 10
 
   wells: null
   wellLimit: 5
@@ -365,7 +366,7 @@ class WaterModel extends ABM.Model
         # rain it down onto the area around the well
         @_toDoAtEnd.push =>
           s = w.changeBreed(@spray)[0]
-          s.speed = ABM.util.randomFloat 5
+          s.speed = ABM.util.randomFloat @sprayIntensity
           s.heading = ABM.util.randomFloat @LEFT
 
   suckUpWellWater: ->
