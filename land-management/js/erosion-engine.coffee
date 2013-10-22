@@ -14,8 +14,20 @@ class ErosionEngine
 
   u = ABM.util
 
-  monthlyPrecipitation = [22, 26, 43, 73, 108, 115, 89, 93, 95, 58, 36, 27]
-  precipitation = 166
+  climateData = {
+    temperate: {
+      precipitation: [22, 26, 43, 73, 108, 115, 89, 93, 95, 58, 36, 27]
+    },
+    tropical: {
+      precipitation: [200, 290, 380, 360, 280, 120, 80, 40, 30, 30, 70, 100]
+    },
+    arid: {
+      precipitation: [11.4, 13.2, 23.5, 8.8, 14.8, 34.1, 133.1, 120.2, 47, 7.8, 7.7, 6.8]
+    }
+  }
+  climate = climateData.temperate
+  precipitation = 0
+  userPrecipitation = 166
 
   erosionProbability = 30
   maxSlope = 2 # necessary?
@@ -45,15 +57,6 @@ class ErosionEngine
         if p.depth is 0 then @surfaceLand.push p
 
         if lastDepth >= MAX_INTERESTING_SOIL_DEPTH then break
-
-  useMonthlyPrecipitation: true
-
-  setPrecipitation: (p) ->
-    precipitation = p
-
-  updatePrecipitation: ->
-    if @useMonthlyPrecipitation
-      precipitation = monthlyPrecipitation[@month]
   
   erode: ->
     # Find and sort the surface patches most exposed to the sky
@@ -153,9 +156,22 @@ class ErosionEngine
 
     vegetation
 
-
   resetErosionCounts: ->
     @zone1ErosionCount = 0
     @zone2ErosionCount = 0
+
+  setClimate: (c) ->
+    climate = if c isnt "user" then climateData[c] else null
+    @updatePrecipitation()
+
+  setUserPrecipitation: (p) ->
+    userPrecipitation = p
+    precipitation = userPrecipitation unless climate?
+
+  updatePrecipitation: ->
+    if climate
+      precipitation = climate.precipitation[@month]
+    else
+      precipitation = userPrecipitation
 
 window.ErosionEngine = ErosionEngine

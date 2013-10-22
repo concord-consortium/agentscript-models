@@ -8,6 +8,13 @@ mixOf = (base, mixins...) ->
 
 class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine, PlantEngine
 
+  dateString: 'Jan 2013'
+  initialYear: 2013
+  year: 2013
+  month: 0
+  monthLength: 100
+  monthStrings: "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ")
+
   setup: ->
     @setFastPatches()
     @anim.setRate 100, true
@@ -27,22 +34,17 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
     @anim.draw()
 
   step: ->
+    if (@anim.ticks % 20) == 1
+      @updateDate()
+      @notifyListeners()
+
+    if (@anim.ticks % @monthLength) == 1
+      @updatePrecipitation()
+
     @erode()
     @setSoilDepths()
     @manageZones()
     @runPlants()
-
-    if (@anim.ticks % 20) == 0
-      @updateDate()
-      @updatePrecipitation()
-      @notifyListeners()
-
-  dateString: 'Jan 2013'
-  initialYear: 2013
-  year: 2013
-  month: 0
-  monthLength: 100
-  monthStrings: "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ")
 
   updateDate: ->
     monthsPassed = Math.floor @anim.ticks/@monthLength
