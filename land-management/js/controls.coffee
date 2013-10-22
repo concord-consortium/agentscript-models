@@ -1,4 +1,5 @@
 $precipitationSlider = $ "#precipitation-slider"
+$precipitationSliderDiv = $ "#user-precipitation"
 $zone1Slider = $ "#zone-1-slider"
 $zone2Slider = $ "#zone-2-slider"
 $slopeSlidersDiv = $ "#slope-sliders"
@@ -69,19 +70,14 @@ $("#zone2-planting-options").change (evt, ui) ->
   reset()
 
 $precipitationSlider.on 'slide', (event, ui) ->
-  model.setPrecipitation ui.value
+  model.setUserPrecipitation ui.value
 
-$('#useMonthlyPrecipitation').click ->
-  checked  = $(this).is(':checked')
-  model.useMonthlyPrecipitation = !checked
-  if checked
-    $precipitationSlider.slider("enable")
-    $("#climate .right").removeClass("disabled")
-    model.setPrecipitation $precipitationSlider.slider("value")
-  else
-    $precipitationSlider.slider("disable")
-    $("#climate .right").addClass("disabled")
-  true
+$("#climate-options").change (evt, ui) ->
+  selection = ui.selected
+  model.setClimate selection
+  enable = selection is "user"
+  $precipitationSlider.slider if enable then "enable" else "disable"
+  if enable then $precipitationSliderDiv.removeClass "disabled" else $slopeSlidersDiv.addClass "disabled"
 
 $zone1Slider.on 'slide', (event, ui) ->
   model.zone1Slope = ui.value

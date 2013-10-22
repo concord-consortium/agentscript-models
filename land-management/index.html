@@ -109,14 +109,15 @@
 
       <div id="climate" class="section">
         <div class="section-title">Climate</div>
-        <div class="left">
-          <div class="checkbox">
-            <input type="checkbox" value="None" id="useMonthlyPrecipitation" name="check"/>
-            <label for="useMonthlyPrecipitation"></label>
-            <span class="multiline">Use slider value</span>
-          </div>
+        <div id = "climate-selection">
+          <select id="climate-options" class="chosen-select">
+            <option value="temperate">Humid Continental</option>
+            <option value="tropical" selected>Tropical Rainforest</option>
+            <option value="arid">Semi-Arid</option>
+            <option value="user">Use Precipitation-Slider Values</option>
+          </select>
         </div>
-        <div class="right disabled">
+        <div id="user-precipitation" class="disabled">
           <label for="precipitation-slider" class="title">Average precipitation:</label>
           <span class="slider-units">0 <div id="precipitation-slider"></div> 500</span>
         </div>

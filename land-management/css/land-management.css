@@ -105,7 +105,7 @@ label.title {
 #zone-planting {
   position: absolute;
   top: 70px;
-  left: 577px;
+  left: 556px;
   width: 338px;
 }
 
@@ -113,11 +113,16 @@ label.title {
   position: absolute;
   top: 70px;
   left: 275px;
-  width: 280px;
+  width: 260px;
 }
 
-#climate .left {
-  padding-top: 20px;
+#climate-selection {
+  margin-left: 33px;
+  margin-top: 10px;
+}
+
+#user-precipitation {
+  text-align: center;
 }
 
 .section {
