@@ -352,6 +352,11 @@ class WaterModel extends ABM.Model
     if w.p.type is "sky"
       if w.well instanceof WaterRemovalWell
         @_toKill.push w
+      else if w.well instanceof IrrigationWell
+        # rain it down onto the area around the well
+        s = w.changeBreed(@spray)[0]
+        s.speed = ABM.util.randomFloat 5
+        s.heading = ABM.util.randomFloat @LEFT
 
   suckUpWellWater: ->
     for w in @wells
@@ -431,5 +436,10 @@ class WaterRemovalWell extends Well
   @WELL_HEAD_TYPES: ["sky"]
   @WELL_IMG: ABM.util.importImage 'img/well-head-removal.png'
 
+class IrrigationWell extends Well
+  @WELL_HEAD_TYPES: ["sky"]
+  @WELL_IMG: ABM.util.importImage 'img/well-head-irrigation.png'
+
 window.WaterRemovalWell = WaterRemovalWell
+window.IrrigationWell = IrrigationWell
 window.WaterModel = WaterModel
