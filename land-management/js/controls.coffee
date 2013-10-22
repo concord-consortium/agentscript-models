@@ -134,4 +134,8 @@ $(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
   erosionGraph.addSamples [0,0,0,0,model.zone1ErosionCount, model.zone2ErosionCount]
   model.resetErosionCounts()
 
+$(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
+  $(".inner-bar").removeClass "current-month"
+  $($(".inner-bar")[model.month]).addClass "current-month"
+
 controlsLoaded.resolve()

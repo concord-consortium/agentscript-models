@@ -30,16 +30,18 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
     super
     @setup()
     @updateDate()
-    @notifyListeners()
+    @notifyListeners(LandManagementModel.STEP_INTERVAL_ELAPSED)
+    @notifyListeners(LandManagementModel.MONTH_INTERVAL_ELAPSED)
     @anim.draw()
 
   step: ->
     if (@anim.ticks % 20) == 1
       @updateDate()
-      @notifyListeners()
+      @notifyListeners(LandManagementModel.STEP_INTERVAL_ELAPSED)
 
     if (@anim.ticks % @monthLength) == 1
       @updatePrecipitation()
+      @notifyListeners(LandManagementModel.MONTH_INTERVAL_ELAPSED)
 
     @erode()
     @setSoilDepths()
@@ -54,9 +56,10 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
     @dateString = @monthStrings[@month] + " " + @year
 
   @STEP_INTERVAL_ELAPSED: 'step-interval-elapsed'
+  @MONTH_INTERVAL_ELAPSED: 'month-interval-elapsed'
 
-  notifyListeners: ->
-    $(document).trigger LandManagementModel.STEP_INTERVAL_ELAPSED
+  notifyListeners: (type) ->
+    $(document).trigger type
 
 
 window.LandManagementModel = LandManagementModel

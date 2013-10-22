@@ -180,6 +180,10 @@ label.title {
   margin-top: 55px;
 }
 
+.inner-bar.current-month {
+  background-color: #45D4E7;
+}
+
 .precipitation-data-title {
   clear: both;
   font-size: 0.9em;
