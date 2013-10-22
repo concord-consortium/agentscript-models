@@ -30,7 +30,7 @@ class Well
 
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays
-    @id = ++@constructor.COUNT
+    @id = ++Well.COUNT
     @head = {x: 0, y: 0}
     @patches = []
     @walls = []
