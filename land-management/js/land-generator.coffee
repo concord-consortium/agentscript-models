@@ -5,7 +5,7 @@ DARK_LAND_COLOR = [105, 49, 19]
 SKY  = "sky"
 LAND = "land"
 
-MAX_INTERESTING_SOIL_DEPTH = 6
+MAX_INTERESTING_SOIL_DEPTH = 2
 
 class LandGenerator
 
