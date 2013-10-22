@@ -59,11 +59,12 @@ class WaterModel extends ABM.Model
 
     @setCacheAgentsHere()
 
-    @agentBreeds "rain wellWater evap"
+    @agentBreeds "rain wellWater evap spray"
 
     @setupRain()
     @setupEvap()
     @setupWellWater()
+    @setupSpray()
 
     @draw()
     @refreshPatches = false
@@ -118,6 +119,9 @@ class WaterModel extends ABM.Model
     for w in @wellWater
       @moveWellWater(w)
 
+    for s in @spray
+      @moveSpray(s)
+
     @suckUpWellWater()
     @evaporateWater()
 
@@ -154,6 +158,10 @@ class WaterModel extends ABM.Model
   setupWellWater: ->
     @_setupWater @wellWater
     @wellWater.setDefaultHeading @UP
+
+  setupSpray: ->
+    @spray.setDefaultHeading @UP
+    @_setupWater @spray
 
   createRain: ->
     # too many agents will make it really slow
@@ -356,6 +364,24 @@ class WaterModel extends ABM.Model
             if a.breed.name is "rain"
               a.setXY destX, y
               a.changeBreed @wellWater
+
+  moveSpray: (s)->
+    # use vector addition to continually add "gravity" until it hits the surface, then change to @rain
+    origin = [s.x, s.y]
+    s.forward s.speed
+    s.heading @DOWN
+    s.forward 1
+    patch = s.p
+    if patch.type isnt "sky"
+      # move it back to the surface and change its type to @rain
+      while patch.type isnt "sky"
+        patch = patch.n4[3]
+
+      r = s.changeBreed(@rain)[0]
+      r.moveTo patch
+    else
+      s.heading = ABM.util.radsToward origin[0], origin[1], s.x, s.y
+      s.speed = ABM.util.distance origin[0], origin[1], s.x, s.y
 
   addRainSpotlight: ->
     # try to add spotlight to a raindrop at very top
