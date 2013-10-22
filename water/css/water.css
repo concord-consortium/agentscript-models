@@ -20,7 +20,7 @@
   display: none;
   position: absolute;
   top: 270px;
-  left: 5px;
+  left: 280px;
 }
 
 #draw-button {
@@ -79,8 +79,7 @@ span.layer-option {
 }
 
 #buttons {
-  display: inline-block;
-  margin-left: 15px;
+  margin-top: 15px;
 }
 
 #buttons-row2 {
