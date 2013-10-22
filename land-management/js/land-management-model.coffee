@@ -48,6 +48,9 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
     @manageZones()
     @runPlants()
 
+    if (@anim.ticks % 50) == 1
+      @settlePlants()
+
   updateDate: ->
     monthsPassed = Math.floor @anim.ticks/@monthLength
     @year = @initialYear + Math.floor monthsPassed/12

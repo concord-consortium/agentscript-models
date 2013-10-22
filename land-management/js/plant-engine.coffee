@@ -77,7 +77,7 @@ class PlantEngine
 
     for a in @agents
       if a.isSeed
-        if @yearTick is a.germinationDate
+        if (a.annual and @yearTick is a.germinationDate) or (!a.annual and @anim.ticks is a.germinationDate)
           a.isSeed = false
       else
         if @month < 10
@@ -92,15 +92,23 @@ class PlantEngine
 
     a.die() for a in killList
 
+  # check if we need plants to settle due to ground eroding beneath them
+  settlePlants: ->
+    zoneWidth = @patches.maxX
+    for a in @agents
+      surfacePatch = @surfaceLand[zoneWidth + a.x]
+      if surfacePatch.y < (a.y - 1)
+        a.setXY a.x, a.y-0.2
+
 
   plantData:
     trees:
-      quantity: 15
+      quantity: 20
       inRows: false
       annual: false
-      minGermination: 40
-      maxGermination: 500
-      growthRate: 0.004
+      minGermination: 100
+      maxGermination: 1600
+      growthRate: 0.003
       maxSize: 3.2
       shapes: ["tree1", "tree2", "tree3"]
     grass:
@@ -116,7 +124,7 @@ class PlantEngine
       quantity: 20
       inRows: true
       annual: true
-      minGermination: 10
+      minGermination: 30
       maxGermination: 70
       growthRate: 0.01
       maxSize: 1.5
