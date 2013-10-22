@@ -90,7 +90,7 @@ $("#climate-options").change (evt, ui) ->
   model.setClimate selection
   enable = selection is "user"
   $precipitationSlider.slider if enable then "enable" else "disable"
-  if enable then $precipitationSliderDiv.removeClass "disabled" else $slopeSlidersDiv.addClass "disabled"
+  if enable then $precipitationSliderDiv.removeClass "disabled" else $precipitationSliderDiv.addClass "disabled"
 
   updatePrecipitationBarchart model.getCurrentClimateData()
 
