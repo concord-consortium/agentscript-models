@@ -135,22 +135,22 @@ class WaterModel extends ABM.Model
 
     return true # avoid inadventently returning a large array of things
 
+  _setupWater: (agents)->
+    agents.setDefaultSize 2/@world.size  # try to keep water around 2px in size
+    agents.setDefaultColor [0, 0, 255]
+    agents.setDefaultShape "circle"
+
   setupRain: ->
-    @rain.setDefaultSize 2/@world.size  # try to keep water around 2px in size
-    @rain.setDefaultColor [0, 0, 255]
-    @rain.setDefaultShape "circle"
+    @_setupWater @rain
     @rain.setDefaultHeading @DOWN
 
   setupEvap: ->
-    @evap.setDefaultSize 2/@world.size  # try to keep water around 2px in size
+    @_setupWater @evap
     @evap.setDefaultColor [0, 255, 0]
-    @evap.setDefaultShape "circle"
     @evap.setDefaultHeading @UP
 
   setupWellWater: ->
-    @wellWater.setDefaultSize 2/@world.size  # try to keep water around 2px in size
-    @wellWater.setDefaultColor [0, 0, 255]
-    @wellWater.setDefaultShape "circle"
+    @_setupWater @wellWater
     @wellWater.setDefaultHeading @UP
 
   createRain: ->
