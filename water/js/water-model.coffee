@@ -18,6 +18,7 @@ class WaterModel extends ABM.Model
   wellLimit: 5
   drillSpeed: 2
   killed: 0
+  newWellType: null
 
   _toRedraw: null
   _toKill: null
@@ -29,6 +30,7 @@ class WaterModel extends ABM.Model
     @_toRedraw = []
     @_toKill = []
     @wells = []
+    @newWellType = WaterRemovalWell
 
     @ticksPerMonth = @ticksPerYear / 12
 
@@ -254,7 +256,7 @@ class WaterModel extends ABM.Model
         if possPatch.type isnt "sky"
           wellHeadY = possPatch.n4[3].y
       if wellHeadY?
-        well = new Well @, p.x, wellHeadY
+        well = new @newWellType @, p.x, wellHeadY
         @wells.push well
         # start a new vertical well as long as we're not too close to the wall
         for y in [(wellHeadY-1)..(p.y)]
@@ -340,7 +342,8 @@ class WaterModel extends ABM.Model
     w.forward 5
 
     if w.p.type is "sky"
-      @_toKill.push w
+      if w.well instanceof WaterRemovalWell
+        @_toKill.push w
 
   suckUpWellWater: ->
     for w in @wells
@@ -398,6 +401,9 @@ class WaterModel extends ABM.Model
       , 250
     return count
 
-Well.WELL_HEAD_TYPES.push "sky" unless ABM.util.contains(Well.WELL_HEAD_TYPES, "sky")
+class WaterRemovalWell extends Well
+  @WELL_HEAD_TYPES: ["sky"]
+  @WELL_IMG: ABM.util.importImage 'img/well-head-removal.png'
 
+window.WaterRemovalWell = WaterRemovalWell
 window.WaterModel = WaterModel
