@@ -91,12 +91,18 @@ window.WaterControls =
       if templateOptions?
         templateOptions.change (evt)->
           ABM.model.setTemplate templateOptions.val()
-      drillDownButton = $("#drill-down")
-      if drillDownButton?
-        drillDownButton.button().click =>
+      irrigationWellButton = $("#irrigation-well-button")
+      if irrigationWellButton?
+        irrigationWellButton.button().click =>
           @stopDraw()
-          if drillDownButton[0]?.checked
-            @drill()
+          if irrigationWellButton[0]?.checked
+            @drill('irrigation')
+      removalWellButton = $("#removal-well-button")
+      if removalWellButton?
+        removalWellButton.button().click =>
+          @stopDraw()
+          if removalWellButton[0]?.checked
+            @drill('removal')
       removeWellButton = $("#remove-well")
       if removeWellButton?
         removeWellButton.button().click =>
@@ -293,7 +299,8 @@ window.WaterControls =
   stopDraw: (alsoStopModel=true)->
     $("#fill-button").click() if $("#fill-button")[0]?.checked
     $("#erase-button").click() if $("#erase-button")[0]?.checked
-    $("#drill-down").click() if $("#drill-down")[0]?.checked
+    $("#irrigation-well-button").click() if $("#irrigation-well-button")[0]?.checked
+    $("#removal-well-button").click() if $("#removal-well-button")[0]?.checked
     $("#water-button").click() if $("#water-button")[0]?.checked
     @startStopModel() if alsoStopModel and not ABM.model.anim.animStop
     $("#mouse-catcher").hide()
@@ -310,12 +317,15 @@ window.WaterControls =
       well.remove() unless well.isValid()
 
   timerId: null
-  drill: ->
+  drill: (type='irrigation')->
     target = $("#mouse-catcher")
     target.show()
-    target.css('cursor', 'url("img/cursor_addwell.cur")')
+    target.css('cursor', 'url("img/cursor_addwell' + type + '.cur")')
     target.bind 'mousedown', (evt)=>
       return if @timerId?
+      ABM.model.newWellType = switch type
+        when "irrigation" then IrrigationWell
+        else WaterRemovalWell
       @timerId = setInterval =>
         p = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
         ABM.model.drill p
