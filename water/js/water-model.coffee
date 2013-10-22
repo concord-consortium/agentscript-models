@@ -389,7 +389,7 @@ class WaterModel extends ABM.Model
     # use vector addition to continually add "gravity" until it hits the surface, then change to @rain
     origin = [s.x, s.y]
     s.forward s.speed
-    s.heading @DOWN
+    s.heading = @DOWN
     s.forward 1
     patch = s.p
     if patch.type isnt "sky"
