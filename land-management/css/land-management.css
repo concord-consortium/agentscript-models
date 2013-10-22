@@ -153,6 +153,40 @@ label.title {
   float: right;
 }
 
+#precipitation-bar-chart {
+  margin-left: auto;
+  margin-right: auto;
+  width: 156px;
+  height: 70px;
+  padding: 2px;
+  background-color: #EEE;
+  border: 1px solid #BBB;
+}
+
+.bar {
+  float: left;
+  width: 11px;
+  height: 70px;
+  margin-left: 1px;
+  margin-right: 1px;
+  text-align: center;
+  color: #666;
+  font-size: 0.8em;
+}
+
+.inner-bar {
+  background-color: #66ADAD;
+  height: 0px;
+  margin-top: 55px;
+}
+
+.precipitation-data-title {
+  clear: both;
+  font-size: 0.9em;
+  color: #444;
+  text-align: center;
+}
+
 .disabled {
   color: gray;
 }

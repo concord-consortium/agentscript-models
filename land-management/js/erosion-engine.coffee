@@ -174,4 +174,10 @@ class ErosionEngine
     else
       precipitation = userPrecipitation
 
+  getCurrentClimateData: ->
+    if climate
+      climate.precipitation
+    else
+      return (userPrecipitation for i in [0...12])
+
 window.ErosionEngine = ErosionEngine

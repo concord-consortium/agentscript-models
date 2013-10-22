@@ -12,6 +12,17 @@ enableZoneSliders = (enable) ->
   $zone2Slider.slider if enable then "enable" else "disable"
   if enable then $slopeSlidersDiv.removeClass "disabled" else $slopeSlidersDiv.addClass "disabled"
 
+updatePrecipitationBarchart = (data) ->
+  $(".inner-bar").each (i) ->
+    $this = $(this)
+    precip = data[i]
+    normalized = precip / 500
+    height = 55 * normalized
+    margin = 55 - height
+    $this.stop true
+    $this.animate height: height, marginTop: margin, alt: height
+    $this.parent().attr({title: precip})
+
 $ ->
   $("button").button()
   $("#playback").buttonset()
@@ -31,6 +42,7 @@ $ ->
 window.initControls = ->
   $('#date-string').text(model.dateString)
   setupGraphs()
+  updatePrecipitationBarchart model.getCurrentClimateData()
 
 reset = ->
   model.stop()
@@ -71,6 +83,7 @@ $("#zone2-planting-options").change (evt, ui) ->
 
 $precipitationSlider.on 'slide', (event, ui) ->
   model.setUserPrecipitation ui.value
+  updatePrecipitationBarchart model.getCurrentClimateData()
 
 $("#climate-options").change (evt, ui) ->
   selection = ui.selected
@@ -78,6 +91,8 @@ $("#climate-options").change (evt, ui) ->
   enable = selection is "user"
   $precipitationSlider.slider if enable then "enable" else "disable"
   if enable then $precipitationSliderDiv.removeClass "disabled" else $slopeSlidersDiv.addClass "disabled"
+
+  updatePrecipitationBarchart model.getCurrentClimateData()
 
 $zone1Slider.on 'slide', (event, ui) ->
   model.zone1Slope = ui.value
