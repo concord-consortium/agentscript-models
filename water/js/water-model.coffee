@@ -22,6 +22,7 @@ class WaterModel extends ABM.Model
 
   _toRedraw: null
   _toKill: null
+  _toDoAtEnd: null
 
   @MONTH_ELAPSED: "modelMonthElapsed"
   @YEAR_ELAPSED:  "modelYearElapsed"
@@ -29,6 +30,7 @@ class WaterModel extends ABM.Model
   setup: ->
     @_toRedraw = []
     @_toKill = []
+    @_toDoAtEnd = []
     @wells = []
     @newWellType = WaterRemovalWell
 
@@ -124,6 +126,10 @@ class WaterModel extends ABM.Model
 
     @suckUpWellWater()
     @evaporateWater()
+
+    for f in @_toDoAtEnd
+      f.apply(this, null)
+    @_toDoAtEnd = []
 
     for a in @_toKill
       a.die()
@@ -327,9 +333,12 @@ class WaterModel extends ABM.Model
         nextP = a.p.n4[3]
         while nextP? and nextP.agentsHere().length > 0
           nextP = nextP.n4[3]
+        @_changeToEvap a, nextP
 
-        a.moveTo nextP if nextP?
-        a.changeBreed(@evap)
+  _changeToEvap: (a, nextP)->
+    @_toDoAtEnd.push ->
+      a = a.changeBreed(@evap)[0]
+      a.moveTo nextP if nextP?
 
   moveEvaporation: (a)->
     return unless a?
@@ -354,9 +363,10 @@ class WaterModel extends ABM.Model
         @_toKill.push w
       else if w.well instanceof IrrigationWell
         # rain it down onto the area around the well
-        s = w.changeBreed(@spray)[0]
-        s.speed = ABM.util.randomFloat 5
-        s.heading = ABM.util.randomFloat @LEFT
+        @_toDoAtEnd.push =>
+          s = w.changeBreed(@spray)[0]
+          s.speed = ABM.util.randomFloat 5
+          s.heading = ABM.util.randomFloat @LEFT
 
   suckUpWellWater: ->
     for w in @wells
@@ -368,7 +378,12 @@ class WaterModel extends ABM.Model
           for a in agents
             if a.breed.name is "rain"
               a.setXY destX, y
-              a.changeBreed @wellWater
+              @_changeToWellWater a, w
+
+  _changeToWellWater: (a, well) ->
+    @_toDoAtEnd.push ->
+      ww = a.changeBreed(@wellWater)[0]
+      ww.well = well
 
   moveSpray: (s)->
     # use vector addition to continually add "gravity" until it hits the surface, then change to @rain
@@ -382,8 +397,9 @@ class WaterModel extends ABM.Model
       while patch.type isnt "sky"
         patch = patch.n4[3]
 
-      r = s.changeBreed(@rain)[0]
-      r.moveTo patch
+      @_toDoAtEnd.push =>
+        r = s.changeBreed(@rain)[0]
+        r.moveTo patch
     else
       s.heading = ABM.util.radsToward origin[0], origin[1], s.x, s.y
       s.speed = ABM.util.distance origin[0], origin[1], s.x, s.y
