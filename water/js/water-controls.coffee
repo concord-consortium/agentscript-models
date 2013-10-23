@@ -64,59 +64,49 @@ window.WaterControls =
         else
           ABM.model.removeSpotlight()
           $span.text "Follow Water Droplet"
-      importButton = $("#import-button")
-      exportButton = $("#export-button")
       exportDataField = $("#exported-data")
-      if importButton? and exportButton? and exportDataField?
-        exportButton.button().click ->
-          state = ImportExport.export(ABM.model)
-          stateStr = JSON.stringify(state, null, 2)
-          exportDataField.val(stateStr)
-        importButton.button().click ->
-          if exportDataField.val()? and exportDataField.val().length > 0
-            state = JSON.parse(exportDataField.val())
-            ImportExport.import(ABM.model, state)
-      rainSlider = $("#rain-slider")
-      if rainSlider?
-        rainSlider.slider
-          orientation: 'horizontal'
-          min: 0
-          max: 1
-          step: 0.05
-          value: 0.35
-          slide: (evt, ui)->
-            ABM.model.rainProbability = ui.value
+      $("#export-button").button().click ->
+        state = ImportExport.export(ABM.model)
+        stateStr = JSON.stringify(state, null, 2)
+        exportDataField.val(stateStr)
+      $("#import-button").button().click ->
+        if exportDataField.val()? and exportDataField.val().length > 0
+          state = JSON.parse(exportDataField.val())
+          ImportExport.import(ABM.model, state)
+      $("#rain-slider").slider
+        orientation: 'horizontal'
+        min: 0
+        max: 1
+        step: 0.05
+        value: 0.35
+        slide: (evt, ui)->
+          ABM.model.rainProbability = ui.value
         ABM.model.rainProbability = 0.35
       templateOptions = $('#template-options')
-      if templateOptions?
-        templateOptions.change (evt)->
-          ABM.model.setTemplate templateOptions.val()
+      templateOptions.change (evt)->
+        ABM.model.setTemplate templateOptions.val()
       irrigationWellButton = $("#irrigation-well-button")
-      if irrigationWellButton?
-        irrigationWellButton.button().click =>
-          @stopDraw()
-          if irrigationWellButton[0]?.checked
-            @drill('irrigation')
+      irrigationWellButton.button().click =>
+        @stopDraw()
+        if irrigationWellButton[0]?.checked
+          @drill('irrigation')
       removalWellButton = $("#removal-well-button")
-      if removalWellButton?
-        removalWellButton.button().click =>
-          @stopDraw()
-          if removalWellButton[0]?.checked
-            @drill('removal')
+      removalWellButton.button().click =>
+        @stopDraw()
+        if removalWellButton[0]?.checked
+          @drill('removal')
       removeWellButton = $("#remove-well")
-      if removeWellButton?
-        removeWellButton.button().click =>
-          @stopDraw()
-          if removeWellButton[0]?.checked
-            @removeWell()
+      removeWellButton.button().click =>
+        @stopDraw()
+        if removeWellButton[0]?.checked
+          @removeWell()
       addWaterButton = $("#water-button")
-      if addWaterButton?
-        addWaterButton.button().click =>
-          @stopDraw()
-          if addWaterButton[0]?.checked
-            @addWater()
+      addWaterButton.button().click =>
+        @stopDraw()
+        if addWaterButton[0]?.checked
+          @addWater()
 
-      if $('#output-graph')
+      if $('#output-graph').length > 0
         @setupGraph()
 
     else
