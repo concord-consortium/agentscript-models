@@ -78,8 +78,9 @@ class ErosionEngine
       localSlope = @getLocalSlope p.x, p.y
       slopeContribution = 0.35 * Math.abs(localSlope/2)
       vegetation = @getLocalVegetation p.x, p.y
-      totalVegetationSize = 0; totalVegetationSize += a.size for a in vegetation
-      vegetationStoppingPower = Math.min totalVegetationSize/6, 0.99
+      totalVegetationSize = 0
+      totalVegetationSize += (if a.isBody then a.size/3 else if a.isRoot then a.size*2/3 else a.size) for a in vegetation
+      vegetationStoppingPower = Math.min totalVegetationSize/5, 0.99
       vegetiationContribution = 0.65 * (1 - vegetationStoppingPower)
       localErosionProbability = erosionProbability / p.stability
       probabilityOfErosion = localErosionProbability * (precipitation/400) * (slopeContribution + vegetiationContribution)
