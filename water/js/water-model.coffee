@@ -172,7 +172,7 @@ class WaterModel extends ABM.Model
 
   createRain: ->
     # too many agents will make it really slow
-    if @rain.length < 8000 && (@anim.ticks % @ticksPerYear) < (@rainProbability * @ticksPerYear)
+    if (@anim.ticks % @ticksPerYear) < (@rainProbability * @ticksPerYear)
       @rain.create 5, (a)=>
         p = null
         while not @isPatchFree(p)
