@@ -9,6 +9,7 @@
     <script src="../lib/agentscript/agentscript.js"></script>
     <script src="../lib/agentscript/coffee-script.js"></script>
     <script src="../lib/import-export.coffee" type="text/coffeescript"></script>
+    <script src="../lib/well.coffee" type="text/coffeescript"></script>
 
     <link href="css/water.css" rel="stylesheet" type="text/css" />
     <script src="js/water-model.coffee" type="text/coffeescript"></script>
@@ -48,6 +49,20 @@
           <button id="follow-water-button" class="follow-agent">Follow Water Droplet</button>
         </div>
       </div>
+      <div id="buttons-row2">
+        <label for="template-options">Template:</label>
+        <select id="template-options">
+          <option value="">None</option>
+          <option value="state/WaterModel-2PumpTypes-NoFile.json">WaterModel-2PumpTypes-NoFile</option>
+          <option value="state/WaterModel-5-23-11-compareLayers.json">WaterModel-5-23-11-compareLayers</option>
+          <option value="state/WaterModel-5-23-11-confinedAndUnconfined.json">WaterModel-5-23-11-confinedAndUnconfined</option>
+          <option value="state/WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example.json">WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example</option>
+          <option value="state/WaterModel-5-23-11-goodVbadAquifers-Example-Layers.json">WaterModel-5-23-11-goodVbadAquifers-Example-Layers</option>
+          <option value="state/WaterModel-Gaining-Losing-Stream-StreamA.json">WaterModel-Gaining-Losing-Stream-StreamA</option>
+          <option value="state/WaterModel-Gaining-Losing-Stream-StreamB.json">WaterModel-Gaining-Losing-Stream-StreamB</option>
+          <option value="state/WaterModel-WaterInTheWorld.json">WaterModel-WaterInTheWorld</option>
+        </select>
+      </div>
     </div>
     <div id="model">
       <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
@@ -55,8 +70,8 @@
       <div id="mouse-catcher"></div>
     </div>
     <div id="export">
-      <button id="export-button">Save State</button>
-      <button id="import-button">Load State</button>
+      <button id="export-button">Save</button>
+      <button id="import-button">Load</button>
       <br/>
       <textarea id="exported-data"></textarea>
     </div>
