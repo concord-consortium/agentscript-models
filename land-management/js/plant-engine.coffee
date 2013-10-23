@@ -158,7 +158,7 @@ class PlantEngine
       annual: true
       minGermination: 60
       maxGermination: 180
-      minDeath: 80
+      minDeath: 100
       maxDeath: 30
       growthRate: 0.01
       maxSize: 1.5
