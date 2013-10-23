@@ -150,7 +150,7 @@ class WaterModel extends ABM.Model
 
   _setupWater: (agents)->
     agents.setDefaultSize 2/@world.size  # try to keep water around 2px in size
-    agents.setDefaultColor [0, 0, 255]
+    agents.setDefaultColor [0, 0, 255, 0.4]
     agents.setDefaultShape "circle"
 
   setupRain: ->
