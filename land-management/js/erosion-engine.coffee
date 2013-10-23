@@ -1,6 +1,7 @@
 SKY_COLOR = [131, 216, 240]
 LIGHT_LAND_COLOR = [135, 79, 49]
 DARK_LAND_COLOR = [105, 49, 19]
+TERRACE_COLOR = [60, 60, 60]
 
 MAGENTA = [255, 0, 255]
 ORANGE = [255, 127, 0]
@@ -51,6 +52,8 @@ class ErosionEngine
         p.depth = ++lastDepth
         p.color = if @showErosion and p.eroded
           if p.zone is 1 then ORANGE else MAGENTA
+        else if p.isTerrace
+          TERRACE_COLOR
         else
           ( c-(p.depth*5) for c in LIGHT_LAND_COLOR )   # get darker as you go down
 
@@ -78,9 +81,10 @@ class ErosionEngine
       totalVegetationSize = 0; totalVegetationSize += a.size for a in vegetation
       vegetationStoppingPower = Math.min totalVegetationSize/6, 0.99
       vegetiationContribution = 0.65 * (1 - vegetationStoppingPower)
-      probabilityOfErosion = erosionProbability * (precipitation/400) * (slopeContribution + vegetiationContribution)
+      localErosionProbability = erosionProbability / p.stability
+      probabilityOfErosion = localErosionProbability * (precipitation/400) * (slopeContribution + vegetiationContribution)
 
-      if (u.randomInt(100) > probabilityOfErosion) then continue
+      if (u.randomFloat(100) > probabilityOfErosion) then continue
 
       # pick a random direction first, then check
       # bottom corners, then sides for a patch of sky
@@ -115,6 +119,8 @@ class ErosionEngine
       target.direction = direction
       target.eroded = true
       target.zone = p.zone
+      target.stability = p.stability
+      target.isTerrace = p.isTerrace
 
       # count erosion in zones -- note this is not the same as the target's
       # origin zone (it's color), but where is it *currently* eroding from.

@@ -1,6 +1,7 @@
 SKY_COLOR = [131, 216, 240]
 LIGHT_LAND_COLOR = [135, 79, 49]
 DARK_LAND_COLOR = [105, 49, 19]
+TERRACE_COLOR = [60, 60, 60]
 
 SKY  = "sky"
 LAND = "land"
@@ -35,7 +36,14 @@ class LandGenerator
         p.depth = MAX_INTERESTING_SOIL_DEPTH
         p.eroded = false
         p.erosionDirection = 0
+        p.stability = 1
         @landPatches.push p
+
+        if type is "Terraced" and p.x < 0 and p.x % Math.floor(@patches.minX/5) is 0 and 
+         p.y > @landShapeFunction (p.x-1)
+          p.isTerrace = true
+          p.color = TERRACE_COLOR
+          p.stability = 100
 
     @setSoilDepths()
 
