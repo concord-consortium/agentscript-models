@@ -105,6 +105,11 @@ window.WaterControls =
         @stopDraw()
         if addWaterButton[0]?.checked
           @addWater()
+      removeWaterButton = $("#remove-water-button")
+      removeWaterButton.button().click =>
+        @stopDraw()
+        if removeWaterButton[0]?.checked
+          @removeWater()
 
       if $('#output-graph').length > 0
         @setupGraph()
@@ -362,6 +367,32 @@ window.WaterControls =
       clearInterval @timerId if @timerId?
       @timerId = null
 
+  removeWater: ->
+    target = $("#mouse-catcher")
+    lastWaterEvt = null
+    mouseDown = false
+    target.show()
+    target.css('cursor', 'url("img/cursor_removewater.cur")')
+    target.bind 'mousedown', (evt)=>
+      return if @timerId?
+      lastWaterEvt = evt
+      mouseDown = true
+      @_removeWater(evt, target)
+      @timerId = setInterval =>
+        @_removeWater(lastWaterEvt, target)
+      , 10
+    .bind 'mousemove', (evt)=>
+      lastWaterEvt = evt if mouseDown
+      if evt? and evt.preventDefault?
+        evt.preventDefault()
+      else
+        window.event.returnValue = false
+      return false
+    .bind 'mouseup mouseleave', =>
+      mouseDown = false
+      clearInterval @timerId if @timerId?
+      @timerId = null
+
   _placeWater: (evt, target)->
     p = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
     rect = ABM.model.patches.patchRect p, 5, 5, true
@@ -370,6 +401,17 @@ window.WaterControls =
         ABM.model.rain.create 1, (drop)->
           drop.moveTo pa
           ABM.model.draw()
+        break
+
+  _removeWater: (evt, target)->
+    p = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
+    rect = ABM.model.patches.patchRect p, 5, 5, true
+    for pa in ABM.util.shuffle(rect)
+      if pa? and (agents = pa.agentsHere()).length != 0
+        for a in agents
+          if a.breed is ABM.model.rain
+            a.die()
+        ABM.model.draw()
         break
 
   startStopModel: ->
