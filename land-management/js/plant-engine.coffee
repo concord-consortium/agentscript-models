@@ -83,15 +83,39 @@ class PlantEngine
       a.isSeed = true
       a.dying = false
       a.germinationDate = u.randomInt2 data.minGermination, data.maxGermination
-      a.deathDate = u.randomInt2 data.maxDeath, data.minDeath
+      v = data.periodVariation
+      a.growthPeriods = (p + (p*u.randomFloat2(-v, v)) for p in data.growthPeriods)
+      a.growthRates = data.growthRates
+      a.period = 0
+      a.periodAge = 0
 
   runPlants: ->
     killList = []
 
     for a in @agents
       if a.isSeed
-        if (@plantData[a.type].annual and @yearTick is a.germinationDate) or (!@plantData[a.type].annual and @anim.ticks is a.germinationDate)
+        if @yearTick is a.germinationDate
           a.isSeed = false
+      else
+        a.periodAge++
+        if a.periodAge > a.growthPeriods[a.period]
+          a.period++
+          a.periodAge = 0
+          if a.period is (a.growthPeriods.length-1) and not @plantData[a.type].annual
+            #reseed
+            xModifier = if a.x < 0 then -1 else 1
+            patch = @surfaceLand[@patches.maxX + (u.randomInt(@patches.maxX) * xModifier)]
+            @plantSeed a.type, patch
+
+        if a.period is a.growthPeriods.length
+          killList.push a
+          continue
+
+        growthRate = a.growthRates[a.period]
+        a.size += growthRate
+
+
+      ###
       else if a.isZombieRoot
       else
         if @month < 10
@@ -121,6 +145,7 @@ class PlantEngine
                 a.isZombieRoot = true
                 a.dying = false
               else killList.push a
+      ###
 
     a.die() for a in killList
 
@@ -139,17 +164,20 @@ class PlantEngine
       inRows: false
       annual: false
       minGermination: 100
-      maxGermination: 1600
-      growthRate: 0.003
-      maxSize: 3.2
+      maxGermination: 1200
+      growthPeriods: [100, 1800, 4800, 1300, 1200]
+      growthRates: [0.0014, 0.0018, 0.0001, -0.001, -0.001]
+      periodVariation: 0.22
       shapes: ["tree1", "tree2", "tree3"]
     grass:
-      quantity: 25
+      quantity: 35
       inRows: false
       annual: false
       minGermination: 1
-      maxGermination: 150
-      growthRate: 0.01
+      maxGermination: 800
+      growthPeriods: [120, 210, 1400, 150, 100]
+      growthRates: [0.002, 0.004, 0.0001, -0.005, -0.002]
+      periodVariation: 0.15
       maxSize: 1.2
       shapes: ["grass1", "grass2"]
     wheat:
@@ -157,10 +185,10 @@ class PlantEngine
       inRows: true
       annual: true
       minGermination: 60
-      maxGermination: 180
-      minDeath: 100
-      maxDeath: 30
-      growthRate: 0.01
+      maxGermination: 90
+      growthPeriods: [120, 210, 350, 100, 100]
+      growthRates: [0.003, 0.005, 0.0001, -0.002, -0.005]
+      periodVariation: 0.04
       maxSize: 1.5
       shapes: ["wheat1"]
 
