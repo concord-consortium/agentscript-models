@@ -2,6 +2,12 @@ window.WaterControls =
   drawStyle: "draw"  # draw or fill
   patchType: "rock1"
   removeType: "layer"
+  countOptions:
+    x: 0
+    y: 0
+    dx: 50
+    dy: 50
+    debug: true
   setup: ->
     if ABM.model?
       $(".icon-pause").hide()
@@ -173,10 +179,10 @@ window.WaterControls =
     # start the graph with one line at 0,0
     @outputGraph.addSamples [0]
 
-    @center = ABM.model.patches.patchXY 0, 0
+    @center = ABM.model.patches.patchXY @countOptions.x, @countOptions.y
 
     $(document).on WaterModel.MONTH_ELAPSED, =>
-      count = ABM.model.rainCount @center, 50, 50, true, true
+      count = ABM.model.rainCount @center, @countOptions.dx, @countOptions.dy, true, @countOptions.debug
 
       @outputGraph.addSamples [count]
 
