@@ -23,17 +23,13 @@
   left: 280px;
 }
 
-#draw-button {
-  display: none;
-}
-
-#draw-button-type-options {
+#draw-button-type-options, #remove-button-type-options {
   position: absolute;
   width: 150px;
   z-index: 5;
 }
 
-#draw-button-type-options .ui-corner-all {
+#draw-button-type-options .ui-corner-all, #remove-button-type-options .ui-corner-all {
   line-height: 1;
 }
 
@@ -62,6 +58,14 @@ span.layer-option {
   padding-top: 2px;
 }
 
+span.remove-option {
+  display: inline-block;
+  width: 1.5em;
+  height: 1em;
+  padding: 1px;
+  padding-top: 3px;
+}
+
 .layer-option.soil {
   background-color: rgb(232,189,174);
 }
@@ -76,6 +80,10 @@ span.layer-option {
 }
 .layer-option.rock4 {
   background-color: rgb(33,42,47);
+}
+
+.remove-option img {
+  margin-top: -3px;
 }
 
 #buttons {
@@ -95,7 +103,7 @@ span.layer-option {
   display: inline-block;
 }
 
-#edit-button-set, #view-button-set {
+#edit-button-set, #view-button-set, #remove-button-set {
   display: inline-block;
   margin-left: 15px;
 }
@@ -165,7 +173,7 @@ span.layer-option {
   right: 0px;
 }
 
-#irrigation-well-button-icon, #removal-well-button-icon, #remove-well-icon, #add-water-icon, #remove-water-icon {
+#irrigation-well-button-icon, #removal-well-button-icon, #remove-well-icon, #add-water-icon, #remove-water-icon, #remove-icon {
   width: 23px;
   height: 23px;
 }

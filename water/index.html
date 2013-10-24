@@ -37,7 +37,6 @@
       <div id="buttons">
         <div id="draw-button-set">
           <input type="checkbox" id="fill-button" /><label for="fill-button"><span class="layer-option rock1"></span></label>
-          <!-- <input type="checkbox" id="draw-button" /><label for="draw-button">Draw</label> -->
           <button id="draw-button-type">Select a layer type</button>
         </div>
         <ul id="draw-button-type-options">
@@ -48,13 +47,22 @@
           <li><a href="#"><span class="layer-option rock3"></span></a></li>
           <li><a href="#"><span class="layer-option rock4"></span><span class="label">No flow</span></a></li>
         </ul>
+
+        <div id="remove-button-set">
+          <input type="checkbox" id="remove-button" /><label for="remove-button"><span class="remove-option layer"><img id="remove-icon" src="img/tool_remove.svg" /></span></label>
+          <button id="remove-button-type">Select a layer type</button>
+        </div>
+        <ul id="remove-button-type-options">
+          <li class="header">Remove</li>
+          <li><a href="#"><span class="remove-option layer"><img id="remove-icon" src="img/tool_remove.svg" /></span><span class="label">Layer</span></a></li>
+          <li><a href="#"><span class="remove-option water"><img id="remove-water-icon" src="img/tool_removewater.svg" /></span><span class="label">Water</span></a></li>
+          <li><a href="#"><span class="remove-option well"><img id="remove-well-icon" src="img/tool_removewell.svg" /></span><span class="label">Well</span></a></li>
+        </ul>
+
         <div id="edit-button-set">
           <input type="checkbox" id="water-button" /><label for="water-button"><img id="add-water-icon" src="img/tool_addwater.svg" /></label>
-          <input type="checkbox" id="remove-water-button" /><label for="remove-water-button"><img id="remove-water-icon" src="img/tool_removewater.svg" /></label>
-          <input type="checkbox" id="erase-button" /><label for="erase-button"><i class="icon-eraser"></i></label>
           <input type="checkbox" id="irrigation-well-button" /><label for="irrigation-well-button"><img id="irrigation-well-button-icon" src="img/tool_addwellirrigation.svg" /></label>
           <input type="checkbox" id="removal-well-button" /><label for="removal-well-button"><img id="removal-well-button-icon" src="img/tool_addwellremoval.svg" /></label>
-          <input type="checkbox" id="remove-well" /><label for="remove-well"><img id="remove-well-icon" src="img/tool_removewell.svg" /></label>
         </div>
       </div>
       <div id="buttons-row2">

@@ -1,6 +1,7 @@
 window.WaterControls =
   drawStyle: "draw"  # draw or fill
   patchType: "rock1"
+  removeType: "layer"
   setup: ->
     if ABM.model?
       $(".icon-pause").hide()
@@ -48,12 +49,41 @@ window.WaterControls =
       $("#draw-button-set").buttonset()
       $("#draw-button-type-options").hide().menu
         select: (evt, ui)=>
-          window.drawType = ui.item
           layerOption = ui.item.find(".layer-option")
           $("label[for='fill-button'] .ui-button-text").html(layerOption.clone())
           @setDrawType layerOption.prop('className').split(/\s+/)
           # automatically put us into fill mode when we select a layer type
           $("#fill-button").click() unless $("#fill-button")[0].checked
+      $("#remove-button").button()
+      .click =>
+        @stopDraw()
+        if `this.checked`
+          switch @removeType
+            when "layer" then @erase()
+            when "water" then @removeWater()
+            when "well" then @removeWell()
+            else console.log("Invalid remove type: " + @removeType)
+      $("#remove-button-type").button
+        text: false
+        icons:
+          primary: "ui-icon-triangle-1-s"
+      .click ->
+        menu = $("#remove-button-type-options").show().position
+          my: "left top"
+          at: "left bottom"
+          of: this
+        $(document).one 'click', ->
+          menu.hide()
+        return false
+      $("#remove-button-set").buttonset()
+      $("#remove-button-type-options").hide().menu
+        select: (evt, ui)=>
+          layerOption = ui.item.find(".remove-option")
+          $("label[for='remove-button'] .ui-button-text").html(layerOption.clone())
+          @setRemoveType layerOption.prop('className').split(/\s+/)
+          # automatically put us into fill mode when we select a layer type
+          @stopDraw()
+          $("#remove-button").click()
       $('#follow-water-button').button(
         label: "Follow Water Droplet"
       ).click ->
@@ -164,6 +194,16 @@ window.WaterControls =
       @patchType = "soil"
     else
       console.log "Invalid layer option!", colors
+
+  setRemoveType: (types = [])->
+    if $.inArray("layer", types) > -1
+      @removeType = "layer"
+    else if $.inArray("water", types) > -1
+      @removeType = "water"
+    else if $.inArray("well", types) > -1
+      @removeType = "well"
+    else
+      console.log "Invalid remove option!", types
 
   startType: null
   fillBelow: (x,y,points)->
@@ -293,6 +333,7 @@ window.WaterControls =
 
   stopDraw: (alsoStopModel=true)->
     $("#fill-button").click() if $("#fill-button")[0]?.checked
+    $("#remove-button").click() if $("#remove-button")[0]?.checked
     $("#erase-button").click() if $("#erase-button")[0]?.checked
     $("#irrigation-well-button").click() if $("#irrigation-well-button")[0]?.checked
     $("#removal-well-button").click() if $("#removal-well-button")[0]?.checked
