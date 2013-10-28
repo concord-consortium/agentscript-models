@@ -24,9 +24,41 @@ class WaterModel extends ABM.Model
   _toRedraw: null
   _toKill: null
   _toDoAtEnd: null
+  _tileControl: null
+
+  _soilTileLoaded: false
+  _rock1TileLoaded: false
+  _rock2TileLoaded: false
+  _rock3TileLoaded: false
+  _rock4TileLoaded: false
+
+  _setupComplete: false
 
   @MONTH_ELAPSED: "modelMonthElapsed"
   @YEAR_ELAPSED:  "modelYearElapsed"
+
+  constructor: ->
+    super
+    @_tileControl = new TileControl @
+    @_tileControl.addTile "soil", $('#tile-soil')[0], =>
+      @_soilTileLoaded = true
+      @_notifyIfLoaded()
+    @_tileControl.addTile "rock1", $('#tile-rock1')[0], =>
+      @_rock1TileLoaded = true
+      @_notifyIfLoaded()
+    @_tileControl.addTile "rock2", $('#tile-rock2')[0], =>
+      @_rock2TileLoaded = true
+      @_notifyIfLoaded()
+    @_tileControl.addTile "rock3", $('#tile-rock3')[0], =>
+      @_rock3TileLoaded = true
+      @_notifyIfLoaded()
+    @_tileControl.addTile "rock4", $('#tile-rock4')[0], =>
+      @_rock4TileLoaded = true
+      @_notifyIfLoaded()
+
+  _notifyIfLoaded: ->
+    if @_soilTileLoaded and @_rock1TileLoaded and @_rock2TileLoaded and @_rock3TileLoaded and @_rock4TileLoaded and @_setupComplete
+      $(document).trigger('model-ready')
 
   setup: ->
     @_toRedraw = []
@@ -74,6 +106,9 @@ class WaterModel extends ABM.Model
 
     @spotlightRadius = 12
 
+    @_setupComplete = true
+    @_notifyIfLoaded()
+
   _clear: ->
     for p in @patches
       p.color = [205, 237, 252]
@@ -88,13 +123,7 @@ class WaterModel extends ABM.Model
 
   patchChanged: (p, redraw=true)->
     unless p.isWell
-      p.color = switch p.type
-        when "sky"   then [205, 237, 252]
-        when "soil"  then [232, 189, 174]
-        when "rock1" then [196, 162, 111]
-        when "rock2" then [123,  80,  56]
-        when "rock3" then [113, 115, 118]
-        when "rock4" then [ 33,  42,  47]
+      p.color = @_tileControl.lookupColor p
     @_toRedraw.push p if redraw
 
   reset: ->
@@ -456,6 +485,54 @@ class WaterRemovalWell extends Well
 class IrrigationWell extends Well
   @WELL_HEAD_TYPES: ["sky"]
   @WELL_IMG: ABM.util.importImage 'img/well-head-irrigation.png'
+
+class TileControl
+  tileData: null
+  model: null
+
+  constructor: (@model)->
+    @tileData = {}
+
+  addTile: (type, imgUrl, callback)->
+    setTimeout =>
+      ABM.util.importImage imgUrl, (img)=>
+        ctx = ABM.util.imageToCtx(img)
+        data = ABM.util.ctxToImageData(ctx).data
+        @tileData[type] = { data: data, width: img.width, height: img.height }
+        console.log "Setting tile data (" + type + "): ", data
+
+        setTimeout ->
+          callback.call()
+        , 1
+    , 1
+
+  lookupColor: (p)->
+    if p? and p.type? and (data = @tileData[p.type])?
+      # figure out the x and y points in the tile that we need
+      tx = (p.x - @model.patches.minX) % data.width
+      ty = (p.y - @model.patches.minY) % data.height
+
+      pIdx = (tx + (ty * data.width)) * 4
+      retColor = [data.data[pIdx], data.data[pIdx+1], data.data[pIdx+2], data.data[pIdx+3]]
+      return retColor
+    else
+      return switch p.type
+        when "sky"   then [205, 237, 252]
+        when "soil"  then [232, 189, 174]
+        when "rock1" then [196, 162, 111]
+        when "rock2" then [123,  80,  56]
+        when "rock3" then [113, 115, 118]
+        when "rock4" then [ 33,  42,  47]
+
+  _getCanvas: (type)->
+    if (canvas = $('#canvas-tile-'+type)[0])?
+      return canvas
+
+    return $('<canvas>').attr(
+      id: 'canvas-tile-'+type
+    ).css(
+      display: 'none'
+    ).appendTo('body')[0]
 
 window.WaterRemovalWell = WaterRemovalWell
 window.IrrigationWell = IrrigationWell

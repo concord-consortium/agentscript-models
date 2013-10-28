@@ -1,4 +1,5 @@
 window.WaterControls =
+  modelReady: false
   drawStyle: "draw"  # draw or fill
   patchType: "rock1"
   removeType: "layer"
@@ -12,7 +13,10 @@ window.WaterControls =
     if ABM.model?
       $(".icon-pause").hide()
       $(".icon-play").show()
-      $("#controls").show()
+      if @modelReady
+        $("#controls").show()
+      else
+        $("#controls").hide()
       # $("#draw-button").button()
       # .click =>
       #   $("#fill-button").click() if $("#fill-button")[0].checked
@@ -482,4 +486,7 @@ window.WaterControls =
   offsetY: (evt, target)->
     return if evt.offsetY? then evt.offsetY else (evt.pageY - target.offset().top)
 
+$(document).one 'model-ready', ->
+  WaterControls.modelReady = true
+  $("#controls").show()
 $(document).trigger('controls-ready')
