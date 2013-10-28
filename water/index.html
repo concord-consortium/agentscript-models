@@ -94,13 +94,6 @@
     <div id='output-graphs'>
       <div id='output-graph' class="graph"></div>
     </div>
-    <div id='tiles' style="position: absolute; top: -400px; left: -400px;">
-      <img id="tile-soil" src="img/tile_soil_01.svg" /><br/>
-      <img id="tile-rock1" src="img/tile_sand_01.svg" /><br/>
-      <img id="tile-rock2" src="img/tile_clay_01.svg" /><br/>
-      <img id="tile-rock3" src="img/tile_gravel_01.svg" /><br/>
-      <img id="tile-rock4" src="img/tile_bedrock_01.svg" /><br/>
-    </div>
     <script>
       $(document).one('controls-ready', function() {
         APP=new WaterModel("layers", 1, -400, 399, -130, 129, false);

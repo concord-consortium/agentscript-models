@@ -40,19 +40,19 @@ class WaterModel extends ABM.Model
   constructor: ->
     super
     @_tileControl = new TileControl @
-    @_tileControl.addTile "soil", $('#tile-soil')[0], =>
+    @_tileControl.addTile "soil", 'img/tile_soil_01.png', =>
       @_soilTileLoaded = true
       @_notifyIfLoaded()
-    @_tileControl.addTile "rock1", $('#tile-rock1')[0], =>
+    @_tileControl.addTile "rock1", 'img/tile_sand_01.png', =>
       @_rock1TileLoaded = true
       @_notifyIfLoaded()
-    @_tileControl.addTile "rock2", $('#tile-rock2')[0], =>
+    @_tileControl.addTile "rock2", 'img/tile_clay_01.png', =>
       @_rock2TileLoaded = true
       @_notifyIfLoaded()
-    @_tileControl.addTile "rock3", $('#tile-rock3')[0], =>
+    @_tileControl.addTile "rock3", 'img/tile_gravel_01.png', =>
       @_rock3TileLoaded = true
       @_notifyIfLoaded()
-    @_tileControl.addTile "rock4", $('#tile-rock4')[0], =>
+    @_tileControl.addTile "rock4", 'img/tile_bedrock_01.png', =>
       @_rock4TileLoaded = true
       @_notifyIfLoaded()
 
