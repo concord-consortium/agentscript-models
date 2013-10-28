@@ -67,19 +67,19 @@ span.remove-option {
 }
 
 .layer-option.soil {
-  background-color: rgb(232,189,174);
+  background-image: url('../img/tile_soil_01.png');
 }
 .layer-option.rock1 {
-  background-color: rgb(196,162,111);
+  background-image: url('../img/tile_sand_01.png');
 }
 .layer-option.rock2 {
-  background-color: rgb(123,80,56);
+  background-image: url('../img/tile_clay_01.png');
 }
 .layer-option.rock3 {
-  background-color: rgb(113,115,118);
+  background-image: url('../img/tile_gravel_01.png');
 }
 .layer-option.rock4 {
-  background-color: rgb(33,42,47);
+  background-image: url('../img/tile_bedrock_01.png');
 }
 
 .remove-option img {
