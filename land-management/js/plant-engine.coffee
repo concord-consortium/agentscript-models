@@ -104,10 +104,10 @@ class PlantEngine
               killList.push a
               continue
           else if poorWater and not @plantData[a.type].annual
-            if u.randomFloat(1) < 0.2
+            if u.randomFloat(1) < 0.15
               killList.push a
             else
-              a.germinationDate += 10
+              a.germinationDate += 40
             continue
           a.isSeed = false
       else
