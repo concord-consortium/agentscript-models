@@ -101,53 +101,42 @@ class PlantEngine
         if a.periodAge > a.growthPeriods[a.period]
           a.period++
           a.periodAge = 0
-          if a.period is (a.growthPeriods.length-1) and not @plantData[a.type].annual
-            #reseed
-            xModifier = if a.x < 0 then -1 else 1
-            patch = @surfaceLand[@patches.maxX + (u.randomInt(@patches.maxX) * xModifier)]
-            @plantSeed a.type, patch
 
-        if a.period is a.growthPeriods.length
-          killList.push a
-          continue
+          switch a.period
+            when 3
+              @splitRoots a unless a.isRoot
+            when 4
+              if not @plantData[a.type].annual and not a.isRoot
+                #reseed
+                xModifier = if a.x < 0 then -1 else 1
+                patch = @surfaceLand[@patches.maxX + (u.randomInt(@patches.maxX) * xModifier)]
+                @plantSeed a.type, patch
+            when 5
+              if not a.isRoot or u.randomFloat(1) < 0.7
+                killList.push a
+                continue
+              else a.period = 0
 
         growthRate = a.growthRates[a.period]
         a.size += growthRate
 
-
-      ###
-      else if a.isZombieRoot
-      else
-        if @month < 10
-          a.size += @plantData[a.type].growthRate unless a.size > @plantData[a.type].maxSize
-        else if @plantData[a.type].annual
-          if not a.dying 
-            if u.randomInt(50) is 1
-              a.p.sprout 1, @[a.type], (_a)->
-                _a.size = a.size
-                _a.type = a.type
-                _a.shape = a.shape + "-root"
-                _a.isSeed = false
-                _a.dying = true
-                _a.isRoot = true
-                _a.deathDate = a.deathDate
-              a.dying = true
-              a.isBody = true
-              a.shape = a.shape + "-body"
-          if a.dying
-            shrinkRate = if not a.isRoot then @plantData[a.type].growthRate else @plantData[a.type].growthRate/3
-            a.size -= shrinkRate unless a.size <= 0
-          if @yearTick is (12 * @monthLength) - a.deathDate
-            if not a.isRoot
-              killList.push a
-            else
-              if u.randomFloat(1) < 0.25
-                a.isZombieRoot = true
-                a.dying = false
-              else killList.push a
-      ###
+        if a.size <= 0 then killList.push a
 
     a.die() for a in killList
+
+  splitRoots: (plant) ->
+    plant.p.sprout 1, @[plant.type], (root) =>
+      root.size = plant.size
+      root.type = plant.type
+      root.shape = plant.shape + "-root"
+      root.isSeed = false
+      root.isRoot = true
+      root.growthPeriods = plant.growthPeriods
+      root.growthRates = @plantData[plant.type].rootGrowthRates
+      root.period = plant.period
+      root.periodAge = 0
+    plant.isBody = true
+    plant.shape = plant.shape + "-body"
 
   # check if we need plants to settle due to ground eroding beneath them
   settlePlants: ->
@@ -167,6 +156,7 @@ class PlantEngine
       maxGermination: 1200
       growthPeriods: [100, 1800, 4800, 1300, 1200]
       growthRates: [0.0014, 0.0018, 0.0001, -0.001, -0.001]
+      rootGrowthRates: [0, 0, 0, -0.0005, -0.0005]
       periodVariation: 0.22
       shapes: ["tree1", "tree2", "tree3"]
     grass:
@@ -177,6 +167,7 @@ class PlantEngine
       maxGermination: 800
       growthPeriods: [120, 210, 1400, 150, 100]
       growthRates: [0.002, 0.004, 0.0001, -0.005, -0.002]
+      rootGrowthRates: [0, 0, 0, -0.001, -0.001]
       periodVariation: 0.15
       maxSize: 1.2
       shapes: ["grass1", "grass2"]
@@ -188,6 +179,7 @@ class PlantEngine
       maxGermination: 90
       growthPeriods: [120, 210, 350, 100, 100]
       growthRates: [0.003, 0.005, 0.0001, -0.002, -0.005]
+      rootGrowthRates: [0, 0, 0, -0.001, -0.001]
       periodVariation: 0.04
       maxSize: 1.5
       shapes: ["wheat1"]
