@@ -83,6 +83,8 @@ class ImportExport
           existingPatch = model.patches.patchXY(x, y)
           if existingPatch?
             @_applyValues existingPatch, properties, values
+            if model.patchChanged
+              model.patchChanged existingPatch
           else
             console.log "No patch at (" + x + ", " + y + ")"
 
