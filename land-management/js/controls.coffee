@@ -84,6 +84,7 @@ $("#zone2-planting-options").change (evt, ui) ->
 $precipitationSlider.on 'slide', (event, ui) ->
   model.setUserPrecipitation ui.value
   updatePrecipitationBarchart model.getCurrentClimateData()
+  $("#precipitation-value").text model.precipitation
 
 $("#climate-options").change (evt, ui) ->
   selection = ui.selected
@@ -93,6 +94,7 @@ $("#climate-options").change (evt, ui) ->
   if enable then $precipitationSliderDiv.removeClass "disabled" else $precipitationSliderDiv.addClass "disabled"
 
   updatePrecipitationBarchart model.getCurrentClimateData()
+  $("#precipitation-value").text model.precipitation
 
 $zone1Slider.on 'slide', (event, ui) ->
   model.zone1Slope = ui.value
@@ -137,5 +139,6 @@ $(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
 $(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
   $(".inner-bar").removeClass "current-month"
   $($(".inner-bar")[model.month]).addClass "current-month"
+  $("#precipitation-value").text model.precipitation
 
 controlsLoaded.resolve()

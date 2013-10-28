@@ -153,6 +153,11 @@ label.title {
   float: right;
 }
 
+#climate .title {
+  padding-top: 7px;
+  padding-bottom: 4px;
+}
+
 #precipitation-bar-chart {
   margin-left: auto;
   margin-right: auto;
