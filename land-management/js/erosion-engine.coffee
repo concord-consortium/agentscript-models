@@ -27,8 +27,9 @@ class ErosionEngine
     }
   }
   climate = climateData.temperate
-  precipitation = 0
   userPrecipitation = 166
+
+  precipitation: 0
 
   erosionProbability = 30
   maxSlope = 2 # necessary?
@@ -83,7 +84,7 @@ class ErosionEngine
       vegetationStoppingPower = Math.min totalVegetationSize/5, 0.99
       vegetiationContribution = 0.65 * (1 - vegetationStoppingPower)
       localErosionProbability = erosionProbability / p.stability
-      probabilityOfErosion = localErosionProbability * (precipitation/400) * (slopeContribution + vegetiationContribution)
+      probabilityOfErosion = localErosionProbability * (@precipitation/400) * (slopeContribution + vegetiationContribution)
 
       if (u.randomFloat(100) > probabilityOfErosion) then continue
 
@@ -173,13 +174,13 @@ class ErosionEngine
 
   setUserPrecipitation: (p) ->
     userPrecipitation = p
-    precipitation = userPrecipitation unless climate?
+    @precipitation = userPrecipitation unless climate?
 
   updatePrecipitation: ->
     if climate
-      precipitation = climate.precipitation[@month]
+      @precipitation = climate.precipitation[@month]
     else
-      precipitation = userPrecipitation
+      @precipitation = userPrecipitation
 
   getCurrentClimateData: ->
     if climate

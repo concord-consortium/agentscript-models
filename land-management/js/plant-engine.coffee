@@ -93,8 +93,22 @@ class PlantEngine
     killList = []
 
     for a in @agents
+      poorWater = @precipitation < @plantData[a.type].minimumPrecipitation or
+                  @precipitation > @plantData[a.type].maximumPrecipitation
       if a.isSeed
+        # try to germinate on germination date. If we're annual and there isn't enough
+        # water, we grow fewer plants. If we're not annual, push back germination date
         if @yearTick is a.germinationDate
+          if poorWater and @plantData[a.type].annual
+            if u.randomFloat(1) < 0.5
+              killList.push a
+              continue
+          else if poorWater and not @plantData[a.type].annual
+            if u.randomFloat(1) < 0.2
+              killList.push a
+            else
+              a.germinationDate += 10
+            continue
           a.isSeed = false
       else
         a.periodAge++
@@ -118,6 +132,8 @@ class PlantEngine
               else a.period = 0
 
         growthRate = a.growthRates[a.period]
+        if poorWater then growthRate -= 0.001
+
         a.size += growthRate
 
         if a.size <= 0 then killList.push a
@@ -158,6 +174,8 @@ class PlantEngine
       growthRates: [0.0014, 0.0018, 0.0001, -0.001, -0.001]
       rootGrowthRates: [0, 0, 0, -0.0005, -0.0005]
       periodVariation: 0.22
+      minimumPrecipitation: 14
+      maximumPrecipitation: 450
       shapes: ["tree1", "tree2", "tree3"]
     grass:
       quantity: 35
@@ -169,7 +187,8 @@ class PlantEngine
       growthRates: [0.002, 0.004, 0.0001, -0.005, -0.002]
       rootGrowthRates: [0, 0, 0, -0.001, -0.001]
       periodVariation: 0.15
-      maxSize: 1.2
+      minimumPrecipitation: 14
+      maximumPrecipitation: 450
       shapes: ["grass1", "grass2"]
     wheat:
       quantity: 20
@@ -181,7 +200,8 @@ class PlantEngine
       growthRates: [0.003, 0.005, 0.0001, -0.002, -0.005]
       rootGrowthRates: [0, 0, 0, -0.001, -0.001]
       periodVariation: 0.04
-      maxSize: 1.5
+      minimumPrecipitation: 14
+      maximumPrecipitation: 450
       shapes: ["wheat1"]
 
 window.PlantEngine = PlantEngine
