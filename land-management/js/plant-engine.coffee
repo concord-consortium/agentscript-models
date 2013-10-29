@@ -188,7 +188,7 @@ class PlantEngine
       maxGermination: 1200
       growthPeriods: [100, 1800, 4800, 1300, 1200]
       growthRates: [0.0014, 0.0018, 0.0001, -0.001, -0.001]
-      rootGrowthRates: [0, 0, -0.0005, -0.0005, -0.0005]
+      rootGrowthRates: [0, -0.0005, 0, -0.0005, -0.0005]
       periodVariation: 0.22
       minimumPrecipitation: 14
       maximumPrecipitation: 450
@@ -201,7 +201,7 @@ class PlantEngine
       maxGermination: 800
       growthPeriods: [120, 210, 1400, 150, 100]
       growthRates: [0.002, 0.004, 0.0001, -0.005, -0.002]
-      rootGrowthRates: [0, 0, -0.001, -0.001, -0.001]
+      rootGrowthRates: [0, -0.001, 0, -0.001, -0.001]
       periodVariation: 0.15
       minimumPrecipitation: 14
       maximumPrecipitation: 450
