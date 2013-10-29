@@ -123,8 +123,9 @@ window.WaterControls =
           ABM.model.rainProbability = ui.value
         ABM.model.rainProbability = 0.35
       templateOptions = $('#template-options')
-      templateOptions.change (evt)->
+      templateOptions.change (evt)=>
         ABM.model.setTemplate templateOptions.val()
+        @resetModel(false)
       irrigationWellButton = $("#irrigation-well-button")
       irrigationWellButton.button().click =>
         @stopDraw()
@@ -475,10 +476,13 @@ window.WaterControls =
       $(".icon-pause").hide()
       $(".icon-play").show()
 
-  resetModel: ->
-    ABM.model.reset()
+  resetModel: (passToModel=true)->
+    ABM.model.reset() if passToModel
     $(".icon-pause").hide()
     $(".icon-play").show()
+
+    @outputGraph.reset()
+    @outputGraph.addSamples [0]
 
   offsetX: (evt, target)->
     return if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)
