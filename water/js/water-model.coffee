@@ -75,6 +75,15 @@ class WaterModel extends ABM.Model
     @setTextParams {name: "drawing"}, "10px sans-serif"
     @setLabelParams {name: "drawing"}, [255,255,255], [0,-20]
 
+    @setCacheAgentsHere()
+
+    @agentBreeds "rain wellWater evap spray"
+
+    @setupRain()
+    @setupEvap()
+    @setupWellWater()
+    @setupSpray()
+
     # init all the patches as sky color
     # unless we have a template to load
     if @template? and @template isnt ""
@@ -91,15 +100,6 @@ class WaterModel extends ABM.Model
           @_clear()
     else
      @_clear()
-
-    @setCacheAgentsHere()
-
-    @agentBreeds "rain wellWater evap spray"
-
-    @setupRain()
-    @setupEvap()
-    @setupWellWater()
-    @setupSpray()
 
     @draw()
     @refreshPatches = false
@@ -499,7 +499,6 @@ class TileControl
         ctx = ABM.util.imageToCtx(img)
         data = ABM.util.ctxToImageData(ctx).data
         @tileData[type] = { data: data, width: img.width, height: img.height }
-        console.log "Setting tile data (" + type + "): ", data
 
         setTimeout ->
           callback.call()
