@@ -39,8 +39,9 @@ class LandGenerator
         p.stability = 1
         @landPatches.push p
 
-        if type is "Terraced" and p.x < 0 and p.x % Math.floor(@patches.minX/5) is 0 and 
-         p.y > @landShapeFunction (p.x-1)
+        if type is "Terraced" and p.x < 0 and
+         (p.x % Math.floor(@patches.minX/5) is 0 and p.y > @landShapeFunction (p.x-1)) or
+         ((p.x-1) % Math.floor(@patches.minX/5) is 0 and p.y > @landShapeFunction (p.x-2))
           p.isTerrace = true
           p.color = TERRACE_COLOR
           p.stability = 100
