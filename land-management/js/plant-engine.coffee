@@ -6,6 +6,7 @@ class PlantEngine
   NORTH = Math.PI/2
 
   managementPlan = ["bare", "bare"]
+  intensive = [false, false]
 
   setupPlants: ->
     @agentBreeds "grass trees wheat"
@@ -45,7 +46,9 @@ class PlantEngine
     by index, 0 or 1.
   ###
   setZoneManagement: (zone, type) ->
-    managementPlan[zone] = type
+    types = type.split "-"
+    managementPlan[zone] = types[0]
+    intensive[zone] = types[1] is "intensive"
 
   manageZones: ->
     if managementPlan.join() is "bare,bare" then return
@@ -126,10 +129,21 @@ class PlantEngine
                 patch = @surfaceLand[@patches.maxX + (u.randomInt(@patches.maxX) * xModifier)]
                 @plantSeed a.type, patch
             when 5
-              if not a.isRoot or u.randomFloat(1) < 0.7
+              kill = false
+              if not a.isRoot
+                kill = true
+              else
+                zone = if a.x <= 0 then 0 else 1
+                if not intensive[zone] and u.randomFloat(1) < 0.45
+                  kill = true
+                if intensive[zone] and u.randomFloat(1) < 0.85
+                  kill = true
+
+              if kill
                 killList.push a
                 continue
-              else a.period = 0
+
+              a.period = 0
 
         growthRate = a.growthRates[a.period]
         if poorWater then growthRate -= 0.001
