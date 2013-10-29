@@ -8,7 +8,7 @@
 
 #controls {
   position: absolute;
-  top: 250px;
+  top: 241px;
   left: 5px;
 }
 
@@ -65,13 +65,13 @@ label.title {
 #show-erosion {
   position: absolute;
   top: 24px;
-  left: 575px;
+  left: 487px;
 }
 
 #date {
   position: absolute;
   top: 0;
-  left: 657px;
+  left: 571px;
   width: 66px;
   padding: 8px;
   margin: 7px;
@@ -90,13 +90,13 @@ label.title {
 }
 
 #zone-1 {
-  top: 227px;
-  left: 170px;
+  top: 221px;
+  left: 144px;
 }
 
 #zone-2 {
-  top: 227px;
-  left: 541px;
+  top: 221px;
+  left: 476px;
 }
 
 #slope-sliders {
@@ -305,12 +305,12 @@ span.slider-units {
 div.graph {
    background-color: #ddf2ff;
    border-radius: 0.25em;
-   width: 334px;
-   height: 240px;
+   width: 290px;
+   height: 233px;
 }
 
 #erosion-graph {
-  left: 765px;
+  left: 669px;
 }
 
 .graph {
