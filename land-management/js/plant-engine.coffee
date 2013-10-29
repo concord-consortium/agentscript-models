@@ -122,7 +122,7 @@ class PlantEngine
             when 4
               if not @plantData[a.type].annual and not a.isRoot
                 #reseed
-                xModifier = if a.x < 0 then -1 else 1
+                xModifier = if a.x <= 0 then -1 else 1
                 patch = @surfaceLand[@patches.maxX + (u.randomInt(@patches.maxX) * xModifier)]
                 @plantSeed a.type, patch
             when 5
