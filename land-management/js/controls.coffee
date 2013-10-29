@@ -133,7 +133,7 @@ setupGraphs = ->
 
 $(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
   $('#date-string').text(model.dateString)
-  erosionGraph.addSamples [0,0,0,0,model.zone1ErosionCount, model.zone2ErosionCount]
+  if erosionGraph then erosionGraph.addSamples [0,0,0,0,model.zone1ErosionCount, model.zone2ErosionCount]
   model.resetErosionCounts()
 
 $(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
