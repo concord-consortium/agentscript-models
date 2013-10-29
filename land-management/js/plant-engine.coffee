@@ -133,11 +133,13 @@ class PlantEngine
               if not a.isRoot
                 kill = true
               else
-                zone = if a.x <= 0 then 0 else 1
-                if not intensive[zone] and u.randomFloat(1) < 0.45
-                  kill = true
-                if intensive[zone] and u.randomFloat(1) < 0.85
-                  kill = true
+                if a.type = "wheat"
+                  zone = if a.x <= 0 then 0 else 1
+                  if not intensive[zone] and u.randomFloat(1) < 0.2
+                    kill = true
+                  if intensive[zone] and u.randomFloat(1) < 0.85
+                    kill = true
+                else if u.randomFloat(1) < 0.5 then kill = true
 
               if kill
                 killList.push a
