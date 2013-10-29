@@ -181,7 +181,7 @@ class PlantEngine
 
   plantData:
     trees:
-      quantity: 20
+      quantity: 19
       inRows: false
       annual: false
       minGermination: 100
@@ -194,7 +194,7 @@ class PlantEngine
       maximumPrecipitation: 450
       shapes: ["tree1", "tree2", "tree3"]
     grass:
-      quantity: 35
+      quantity: 33
       inRows: false
       annual: false
       minGermination: 1
@@ -207,7 +207,7 @@ class PlantEngine
       maximumPrecipitation: 450
       shapes: ["grass1", "grass2"]
     wheat:
-      quantity: 20
+      quantity: 19
       inRows: true
       annual: true
       minGermination: 60
