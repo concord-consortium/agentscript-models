@@ -14,6 +14,7 @@ window.WaterControls =
     xMax: 40
     yMin: 0
     yMax: 600
+    initialValues: [0]
   setup: ->
     if ABM.model?
       $(".icon-pause").hide()
@@ -187,7 +188,7 @@ window.WaterControls =
     @outputGraph = Lab.grapher.Graph '#output-graph', outputOptions
 
     # start the graph with one line at 0,0
-    @outputGraph.addSamples [0]
+    @outputGraph.addSamples @graphOptions.initialValues
 
     @center = ABM.model.patches.patchXY @countOptions.x, @countOptions.y
 
@@ -487,7 +488,7 @@ window.WaterControls =
     $(".icon-play").show()
 
     @outputGraph.reset()
-    @outputGraph.addSamples [0]
+    @outputGraph.addSamples @graphOptions.initialValues
 
   offsetX: (evt, target)->
     return if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)
