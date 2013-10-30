@@ -9,6 +9,11 @@ window.WaterControls =
     dx: 50
     dy: 50
     debug: true
+  graphOptions:
+    xMin: 0
+    xMax: 40
+    yMin: 0
+    yMax: 600
   setup: ->
     if ABM.model?
       $(".icon-pause").hide()
@@ -168,10 +173,10 @@ window.WaterControls =
       title:  "Water Level"
       xlabel: "Time (years)"
       ylabel: "Water Level"
-      xmax:   40
-      xmin:   0
-      ymax:   600
-      ymin:   0
+      xmax:   @graphOptions.xMax
+      xmin:   @graphOptions.xMin
+      ymax:   @graphOptions.yMax
+      ymin:   @graphOptions.yMin
       xTickCount: 4
       yTickCount: 5
       xFormatter: "3.3r"
