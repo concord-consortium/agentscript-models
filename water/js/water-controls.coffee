@@ -130,6 +130,10 @@ window.WaterControls =
         ABM.model.rainProbability = 0.35
       templateOptions = $('#template-options')
       templateOptions.change (evt)=>
+        # FIXME There's got to be a better way to handle this
+        switch templateOptions.val()
+          when "state/WaterModel-Gaining-Losing-Stream-StreamA.json" then @graphOptions.initialValues = [28]
+          when "state/WaterModel-Gaining-Losing-Stream-StreamB.json" then @graphOptions.initialValues = [5333]
         ABM.model.setTemplate templateOptions.val()
         @resetModel(false)
       irrigationWellButton = $("#irrigation-well-button")
