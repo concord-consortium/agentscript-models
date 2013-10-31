@@ -125,6 +125,34 @@ label.title {
   text-align: center;
 }
 
+#quality-key {
+  position: absolute;
+  top: 30px;
+  left: 700px;
+  width: 142px;
+}
+
+#quality-key .section-title {
+  margin-bottom: 15px;
+}
+
+#quality-key span {
+  padding-left: 50px;
+  margin-left: 10px;
+  margin-right: 10px;
+  border: 1px solid #000;
+}
+
+#quality-key .good {
+  background-color: rgb(88, 41, 10);
+}
+#quality-key .medium {
+  background-color: rgb(135, 79, 49);
+}
+#quality-key .poor {
+  background-color: rgb(193, 114, 7);
+}
+
 .section {
   border: 1px solid rgb(128, 128, 128);
   padding: 5px;
