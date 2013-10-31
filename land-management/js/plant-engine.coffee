@@ -178,6 +178,16 @@ class PlantEngine
       if surfacePatch.y < (a.y - 1)
         a.setXY a.x, a.y-0.2
 
+  soilQuality: [1, 1]
+
+  calculateSoilQuality: ->
+    for zone in [0..1]
+      quality = @soilQuality[zone]
+      if managementPlan[zone] is "wheat"
+        if intensive[zone] then quality -= 0.04
+        else quality += 0.04
+        quality = Math.max(Math.min(quality, 2), 0)
+      @soilQuality[zone] = quality
 
   plantData:
     trees:

@@ -41,6 +41,7 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
 
     if (@anim.ticks % @monthLength) == 1
       @updatePrecipitation()
+      @calculateSoilQuality()
       @notifyListeners(LandManagementModel.MONTH_INTERVAL_ELAPSED)
 
     @erode()

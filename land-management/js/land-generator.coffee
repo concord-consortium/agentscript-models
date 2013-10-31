@@ -37,6 +37,7 @@ class LandGenerator
         p.eroded = false
         p.erosionDirection = 0
         p.stability = 1
+        p.quality = 1
         @landPatches.push p
 
         if type is "Terraced" and p.x < 0 and

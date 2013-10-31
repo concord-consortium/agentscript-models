@@ -1,12 +1,16 @@
 SKY_COLOR = [131, 216, 240]
+
 LIGHT_LAND_COLOR = [135, 79, 49]
 DARK_LAND_COLOR = [105, 49, 19]
 TERRACE_COLOR = [60, 60, 60]
 
+GOOD_SOIL_COLOR = [88, 41, 10]
+POOR_SOIL_COLOR = [193, 114, 7]
+
 MAGENTA = [255, 0, 255]
 ORANGE = [255, 127, 0]
 
-MAX_INTERESTING_SOIL_DEPTH = 2
+MAX_INTERESTING_SOIL_DEPTH = 3
 
 SKY  = "sky"
 LAND = "land"
@@ -38,6 +42,8 @@ class ErosionEngine
   zone1ErosionCount: 0
   zone2ErosionCount: 0
 
+  showSoilQuality: false
+
   #
   # Set soil depth such that the top of each "column" of soil's depth is 0,
   # the next depth is 1, etc, up to MAX_INTERESTING_SOIL_DEPTH
@@ -56,7 +62,19 @@ class ErosionEngine
         else if p.isTerrace
           TERRACE_COLOR
         else
-          ( c-(p.depth*5) for c in LIGHT_LAND_COLOR )   # get darker as you go down
+          if not @showSoilQuality
+            LIGHT_LAND_COLOR
+          else
+            zone = if p.x <= 0 then 0 else 1
+            if p.quality < @soilQuality[zone] then p.quality += 0.001
+            if p.quality > @soilQuality[zone] then p.quality -= 0.001
+
+            if p.quality < 0.5
+              POOR_SOIL_COLOR
+            else if p.quality > 1.5
+              GOOD_SOIL_COLOR
+            else
+              LIGHT_LAND_COLOR
 
         if p.depth is 0 then @surfaceLand.push p
 
@@ -123,6 +141,7 @@ class ErosionEngine
       target.zone = p.zone
       target.stability = p.stability
       target.isTerrace = p.isTerrace
+      target.quality = p.quality
 
       # count erosion in zones -- note this is not the same as the target's
       # origin zone (it's color), but where is it *currently* eroding from.
