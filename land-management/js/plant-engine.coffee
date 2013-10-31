@@ -184,8 +184,8 @@ class PlantEngine
     for zone in [0..1]
       quality = @soilQuality[zone]
       if managementPlan[zone] is "wheat"
-        if intensive[zone] then quality -= 0.04
-        else quality += 0.04
+        if intensive[zone] then quality -= 0.02
+        else quality += 0.02
         quality = Math.max(Math.min(quality, 2), 0)
       @soilQuality[zone] = quality
 
