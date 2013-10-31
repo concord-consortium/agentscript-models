@@ -4,6 +4,8 @@ $zone1Slider = $ "#zone-1-slider"
 $zone2Slider = $ "#zone-2-slider"
 $slopeSlidersDiv = $ "#slope-sliders"
 erosionGraph = null
+zone1Planting = ""
+zone2Planting = ""
 
 
 
@@ -74,12 +76,16 @@ $("#terrain-options").change (evt, ui) ->
 $("#zone1-planting-options").change (evt, ui) ->
   selection = ui.selected
   model.setZoneManagement 0, selection
-  reset()
+
+  reset() unless ~selection.indexOf("wheat") && ~zone1Planting.indexOf("wheat")
+  zone1Planting = selection
 
 $("#zone2-planting-options").change (evt, ui) ->
   selection = ui.selected
   model.setZoneManagement 1, selection
-  reset()
+
+  reset() unless ~selection.indexOf("wheat") && ~zone2Planting.indexOf("wheat")
+  zone2Planting = selection
 
 $precipitationSlider.on 'slide', (event, ui) ->
   model.setUserPrecipitation ui.value
