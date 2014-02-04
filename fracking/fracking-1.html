@@ -9,14 +9,13 @@
     <script src="http://lab.concord.org/vendor/d3/d3.js"></script>
     <script src="../lib/lab.grapher.js"></script>
     <script src="../lib/agentscript/agentscript.js"></script>
-    <script src="../lib/agentscript/coffee-script.js"></script>
-    <script src="../lib/well.coffee" type="text/coffeescript"></script>
+    <script src="../lib/well.js"></script>
 
     <link href="css/fracking.css" rel="stylesheet" type="text/css" />
     <link href="css/graph.css" rel="stylesheet" type="text/css" />
-    <script src="js/gas-well.coffee" type="text/coffeescript"></script>
-    <script src="js/fracking-model.coffee" type="text/coffeescript"></script>
-    <script src="js/fracking-controls.coffee" type="text/coffeescript"></script>
+    <script src="js/gas-well.js"></script>
+    <script src="js/fracking-model.js"></script>
+    <script src="js/fracking-controls.js"></script>
     <script src="http://shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
     <script type="text/javascript">new Shutterbug('body', '', null, null);</script>
   </head>
@@ -67,34 +66,25 @@
       <div id='output-graph' class="graph"></div>
     </div>
     <script>
-      var modelReady = false, controls = null;
-      $(document).one('fracking-model-loaded', function() {
-        APP=new FrackingModel("layers", 1.65, 0, 400, 0, 722, false);
-        APP.showEarthPatches = true;
-        APP.setRootVars();
+      var controls = null;
+      
+      APP=new FrackingModel("layers", 1.65, 0, 400, 0, 722, false);
+      APP.showEarthPatches = true;
+      APP.setRootVars();
 
-        // this is inefficient
-        APP.refreshPatches = true
-        var patches = APP.patches;
-        for (i = 0, ii = patches.length; i < ii; i++) {
-          p = patches[i];
-          APP.patchChanged(p);
-        }
-        APP.refreshPatches = false
-      });
-      $(document).on('model-ready', function() {
-        if (controls !== null) {
-          controls.setup();
-        }
-        modelReady = true;
-      });
-      $(document).one('fracking-controls-loaded', function() {
-        controls = new FrackingControls();
-        if (modelReady) {
-          controls.setup();
-          APP.start();
-        }
-      });
+      // this is inefficient
+      APP.refreshPatches = true;
+      var patches = APP.patches;
+      for (i = 0, ii = patches.length; i < ii; i++) {
+        p = patches[i];
+        APP.patchChanged(p);
+      }
+      APP.refreshPatches = false;
+
+      controls = new FrackingControls();
+      controls.setup();
+
+      APP.start();
     </script>
   </body>
 </html>
