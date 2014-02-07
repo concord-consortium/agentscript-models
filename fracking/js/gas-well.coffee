@@ -31,7 +31,7 @@ class GasWell extends Well
   @FRACKED: 'fracked'
 
   # some graphical images
-  @POND_IMG: ABM.util.importImage 'img/well-pond.png'
+  @POOL_IMG: ABM.util.importImage 'img/fracking_pool01.png'
 
   constructor: (@model, @x, @depth, @leaks=false, @pondLeaks=false)->
     # set these here so all Well instances don't share the same arrays
@@ -47,6 +47,10 @@ class GasWell extends Well
     console.log "+" if @pondLeaks
 
     super
+
+  drawWell: ->
+    img = @constructor.WELL_IMG
+    @drawUI img, @head.x, @head.y, 0.5, 0.03
 
   addOpen: (p)->
     @open.push p
@@ -215,11 +219,8 @@ class GasWell extends Well
     @pumping = opens.concat interiors
     @cappingInProgress = true
 
-    if @pond.length > 0 and (rounds = Math.ceil(@pumping.length / 100)) < 13
-      eIdx = (14-rounds)*21
-      for p in @pond.slice(0,eIdx)
-        p.type = "dirtyWaterPond"
-        @model.patchChanged p
+    numberOfPumpingRounds = Math.ceil @pumping.length / 100
+    @numberOfPondPatchesPerRound = Math.ceil @pond.length / numberOfPumpingRounds
 
     @empty()
 
@@ -231,13 +232,9 @@ class GasWell extends Well
       $(document).trigger @constructor.CAPPED
       @tickOpened = @model.anim.ticks
       return
+
     currentPumping = @pumping.slice(0,100)
     @pumping = @pumping.slice(100)
-
-    pondFilling = []
-    if @pond.length > 0 and (roundsLeft = Math.ceil(@pumping.length / 100)) <= 13
-      sIdx = (13-roundsLeft)*21
-      pondFilling = @pond.slice(sIdx, sIdx+21)
 
     setTimeout =>
       @processSet currentPumping, =>
@@ -249,10 +246,12 @@ class GasWell extends Well
           p.type = "open"
         @model.patchChanged p
 
-      if pondFilling.length > 0
-        for p in pondFilling
-          p.type = "dirtyWaterPond"
-          @model.patchChanged p
+      # turn @numberOfPondPatchesPerRound pond patches from air to dirty water
+      n = @numberOfPondPatchesPerRound
+      while n-- and p = @pond.shift()
+        p.type = "dirtyWaterPond"
+        @model.patchChanged p
+
     , 50
 
   cycleWaterColors: ->
@@ -322,17 +321,89 @@ class GasWell extends Well
         g.hidden = false
 
   createWastePond: ->
-    @drawUI @constructor.POND_IMG, @head.x + 17, @head.y
+    imgParams = [@constructor.POOL_IMG, @head.x + 10.5, @head.y, 0, 0.89]
+    @drawUI imgParams...
+    bbox = @getDrawUIBBox imgParams...
 
-    for y in [(@head.y-7)...(@head.y)]
-      for x in [(@head.x+6)...(@head.x+16)]
-        p = @model.patches.patchXY x, y
-        if p?
-          @pond.push p
-          p.type = "air"
-          @model.patchChanged p
+    # find the pixels in the "open" interior of the pond
+    pondPixels = @findEmptyPixels @constructor.POOL_IMG
+    
+    # Offset for finding patches corresponding to pixels. The values -2 is an empirical adjustment
+    # for visual fit, which is necessary because the patches are a non-integer number of pixels
+    # wide. Bounding box height is subtracted from y0 because (x0, y0) needs to be the upper left of
+    # the pond area when mapping pixels to patches. (bbox.x, bbox.y) is the lower left.
+    x0 = Math.round(bbox.x)
+    y0 = Math.round(bbox.y + bbox.height) - 2
+
+    # pondPixels are x, y offsets from a raster image, meaning x, y is the top left corner and y
+    # increases downwards. However, the patches' y coordinates increase upwards.
+    pondPatches = pondPixels.map ([x, y]) => @model.patches.patchXY x + x0 , y0 - y
+    for p in pondPatches
+      if p?
+        p.type = "air"
+        @model.patchChanged p
+        # top of actual wastewater should be ~4 patches below ground level
+        @pond.push(p) if p.y <= @head.y - 4
+
+    # sort resulting patches first by height, then by lateral distance from well. This way they
+    # fill up in a predictable order
+    before = (a, b) -> (a.y < b.y) or (a.y == b.y and a.x < b.x)
+    @pond.sort (a, b) ->
+      return -1 if before a, b
+      return 1 if before b, a
+      return 0
 
     null
+
+  # Given the image `img`, scales it so that 1 pixel of the drawn image corresponds to 1 patch (when
+  # the image is drawn with @drawUI) and returns a list of the [x, y] coordinates of the empty
+  # pixels in the interior of the image. These are found by flood filling all pixels with value 0,
+  # starting at the center of the image.
+  #
+  # (Note that when the same image is drawn with @drawUI, each patch spans > 1.0 pixels. The 1:1 
+  # scaling used in this method allows us to easily find the patches underneath the empty pixels of
+  # the drawn image.)
+  findEmptyPixels: (img) -> 
+    scale = 0.5
+
+    canvas = document.createElement 'canvas'
+    canvas.width = img.width * scale
+    canvas.height = img.height * scale
+    ctx = canvas.getContext '2d'
+    ctx.scale scale, scale
+    ctx.drawImage img, 0, 0
+
+    imageData = ctx.getImageData 0, 0, canvas.width, canvas.height
+
+    w = imageData.width
+    h = imageData.height
+
+    visited = []
+    visited.length = w*h
+    loc = (x, y) -> w * y + x
+    canVisit = (x, y) -> 0 <= x and x < w and 0 <= y and y < h and not visited[loc x, y]
+    
+    # imageData.data is a Uint8ClampedArray, in which each pixel is 4 consecutive 8-bit elements. 
+    # Convert to an array of 32-bit elements, 1 per pixel.
+    pixels = new Uint32Array imageData.data.buffer
+
+    # a basic flood fill algorithm; see http://en.wikipedia.org/wiki/Flood_fill
+    targetColor = 0
+    interiorPixels = []
+    q = [[Math.round(canvas.width / 2), Math.round(canvas.height / 2)]]
+    while q.length > 0
+      n = q.pop()
+      [nx, ny] = n
+      if pixels[loc nx, ny] == targetColor
+        unless visited[loc nx, ny]
+          interiorPixels.push n
+          q.push([nx-1, ny]) if canVisit nx-1, ny
+          q.push([nx+1, ny]) if canVisit nx+1, ny
+          q.push([nx, ny-1]) if canVisit nx, ny-1
+          q.push([nx, ny+1]) if canVisit nx, ny+1
+      visited[loc nx, ny] = true
+
+    interiorPixels
 
   leakWastePondWater: ->
     if @pondLeaks and @capped and @pond.length > 0 and ABM.util.randomInt(50) is 0
@@ -342,6 +413,7 @@ class GasWell extends Well
         a.moveTo @model.patches.patchXY(@head.x + ABM.util.randomInt(12) + 6, @head.y - 8)
 
   eraseUI: ->
+    # TODO. Fix coordinate assumptions here. Also figure out if this is actually used!
     super
     ctx = @model.contexts.drawing
     ctx.save()

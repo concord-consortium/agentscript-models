@@ -26,7 +26,7 @@ class Well
 
   # some graphical images
   # NOTE: relative urls are relative to the model html location!
-  @WELL_IMG: ABM.util.importImage 'img/well-head.png'
+  @WELL_IMG: ABM.util.importImage 'img/fracking_well.png'
 
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays
@@ -47,12 +47,14 @@ class Well
       when 3 then [0,0,255]
       else [255,255,255]
     p.drawLabel(@model.contexts.drawing)
-
-    @drawUI @constructor.WELL_IMG, @head.x + 4, @head.y + 7
-
+    @drawWell()
     @model.draw()
 
     $(document).trigger @constructor.CREATED, @
+
+  drawWell: ->
+    img = @constructor.WELL_IMG
+    @drawUI img, @head.x, @head.y, 0.5, 0
 
   length: ->
     Math.abs(@x - @head.x) + Math.abs(@depth - @head.y)
@@ -186,13 +188,24 @@ class Well
     ctx.fillRect -7, -1, 14, 30
     ctx.restore()
 
-  drawUI: (img, x, y)->
+  # draw image `img` at (x, y). Image will be drawn at 50% scale and  will be centered on the point
+  # (xFraction, yFraction) within the image, where xFraction and yFraction are normalized to the
+  # width and height of the image, and are relative to the bottom left of the image.
+  drawUI: (img, x, y, xFraction = 0, yFraction = 0) ->
     ctx = @model.contexts.drawing
+
     ctx.save()
     ctx.translate x, y
-    ctx.scale 0.5, 0.5
-    ctx.rotate ABM.util.degToRad(180)
-    ctx.drawImage img, 0, 0
+    # Agentscript's origin appears to be the _lower_ left corner, rather than upper left.
+    ctx.scale 0.5, -0.5
+    ctx.drawImage img, -xFraction * img.width, (yFraction - 1) * img.height
     ctx.restore()
+
+  # returns the bounding box of the image, if drawn by passing the same parameters to @drawUI
+  getDrawUIBBox: (img, x, y, xFraction = 0, yFraction = 0) ->
+    x: x + 0.5 * -xFraction * img.width,
+    y: y - 0.5 * yFraction * img.height,
+    width: 0.5 * img.width,
+    height: 0.5 * img.height
 
 window.Well = Well

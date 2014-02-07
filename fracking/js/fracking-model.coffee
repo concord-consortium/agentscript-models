@@ -257,7 +257,7 @@ class FrackingModel extends ABM.Model
         when "exploding" then [215, 50, 41]
         when "open"      then [0, 0, 0]
         when "cleanWaterWell", "cleanWaterOpen" then [45, 141, 190]
-        when "dirtyWaterWell", "dirtyWaterOpen", "dirtyWaterPond" then [38,  90,  90]
+        when "dirtyWaterWell", "dirtyWaterOpen", "dirtyWaterPond" then [0, 147, 177]
         when "cleanPropaneWell", "cleanPropaneOpen", "dirtyPropaneWell", "dirtyPropaneOpen" then [122, 192, 99]
     @toRedraw.push p if redraw
 
