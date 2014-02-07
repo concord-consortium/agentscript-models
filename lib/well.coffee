@@ -26,7 +26,7 @@ class Well
 
   # some graphical images
   # NOTE: relative urls are relative to the model html location!
-  @WELL_IMG: ABM.util.importImage 'img/well-head.png'
+  @WELL_IMG: ABM.util.importImage 'img/fracking_well.svg'
 
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays
@@ -48,7 +48,8 @@ class Well
       else [255,255,255]
     p.drawLabel(@model.contexts.drawing)
 
-    @drawUI @constructor.WELL_IMG, @head.x + 4, @head.y + 7
+    img = @constructor.WELL_IMG
+    @drawUI img, @head.x - img.width / 2, @head.y + img.height
 
     @model.draw()
 
@@ -190,8 +191,7 @@ class Well
     ctx = @model.contexts.drawing
     ctx.save()
     ctx.translate x, y
-    ctx.scale 0.5, 0.5
-    ctx.rotate ABM.util.degToRad(180)
+    ctx.scale 1, -1
     ctx.drawImage img, 0, 0
     ctx.restore()
 
