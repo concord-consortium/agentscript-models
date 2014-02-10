@@ -31,7 +31,8 @@ class GasWell extends Well
   @FRACKED: 'fracked'
 
   # some graphical images
-  @POND_IMG: ABM.util.importImage 'img/well-pond.png'
+  @POOL_IMG: ABM.util.importImage 'img/fracking_pool01.svg'
+  @POOL_WATER_IMG: ABM.util.importImage 'img/fracking_pool02.svg'
 
   constructor: (@model, @x, @depth, @leaks=false, @pondLeaks=false)->
     # set these here so all Well instances don't share the same arrays
@@ -322,10 +323,10 @@ class GasWell extends Well
         g.hidden = false
 
   createWastePond: ->
-    @drawUI @constructor.POND_IMG, @head.x + 4, @head.y, 0, 1
+    @drawUI @constructor.POOL_IMG, @head.x + 10, @head.y, 0, 0.89
 
-    for y in [(@head.y-7)...(@head.y)]
-      for x in [(@head.x+6)...(@head.x+16)]
+    for y in [(@head.y-6)...(@head.y)]
+      for x in [(@head.x+11)...(@head.x+24)]
         p = @model.patches.patchXY x, y
         if p?
           @pond.push p
@@ -342,6 +343,7 @@ class GasWell extends Well
         a.moveTo @model.patches.patchXY(@head.x + ABM.util.randomInt(12) + 6, @head.y - 8)
 
   eraseUI: ->
+    # TODO. Fix coordinate assumptions here. Also figure out if this is actually used!
     super
     ctx = @model.contexts.drawing
     ctx.save()
