@@ -322,7 +322,7 @@ class GasWell extends Well
         g.hidden = false
 
   createWastePond: ->
-    @drawUI @constructor.POND_IMG, @head.x + 17, @head.y
+    @drawUI @constructor.POND_IMG, @head.x + 4, @head.y, 0, 1
 
     for y in [(@head.y-7)...(@head.y)]
       for x in [(@head.x+6)...(@head.x+16)]

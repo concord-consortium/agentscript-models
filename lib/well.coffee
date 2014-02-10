@@ -49,7 +49,7 @@ class Well
     p.drawLabel(@model.contexts.drawing)
 
     img = @constructor.WELL_IMG
-    @drawUI img, @head.x - img.width / 2, @head.y + img.height
+    @drawUI img, @head.x, @head.y, 0.5, 0
 
     @model.draw()
 
@@ -187,12 +187,19 @@ class Well
     ctx.fillRect -7, -1, 14, 30
     ctx.restore()
 
-  drawUI: (img, x, y)->
+  # draw image `img` at (x, y). Image will be drawn at 50% scale and  will be centered on the point
+  # (xFraction, yFraction) within the image, where xFraction and yFraction are normalized to the
+  # width and height of the image, and are relative to the bottom left of the image.
+  drawUI: (img, x, y, xFraction, yFraction) ->
+    xFraction ||= 0
+    yFraction ||= 0
+
     ctx = @model.contexts.drawing
     ctx.save()
     ctx.translate x, y
-    ctx.scale 1, -1
-    ctx.drawImage img, 0, 0
+    # Agentscript's origin appears to be the _lower_ left corner, rather than upper left.
+    ctx.scale 0.5, -0.5
+    ctx.drawImage img, -xFraction * img.width, (yFraction - 1)* img.height
     ctx.restore()
 
 window.Well = Well
