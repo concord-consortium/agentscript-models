@@ -332,6 +332,8 @@ class GasWell extends Well
           p.type = "air"
           @model.patchChanged p
 
+    null
+
   leakWastePondWater: ->
     if @pondLeaks and @capped and @pond.length > 0 and ABM.util.randomInt(50) is 0
       @model.pondWaste += @model.pondWasteScale
