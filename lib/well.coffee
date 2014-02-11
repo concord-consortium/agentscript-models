@@ -47,13 +47,14 @@ class Well
       when 3 then [0,0,255]
       else [255,255,255]
     p.drawLabel(@model.contexts.drawing)
-
-    img = @constructor.WELL_IMG
-    @drawUI img, @head.x, @head.y, 0.5, 0
-
+    @drawWell()
     @model.draw()
 
     $(document).trigger @constructor.CREATED, @
+
+  drawWell: ->
+    img = @constructor.WELL_IMG
+    @drawUI img, @head.x, @head.y, 0.5, 0
 
   length: ->
     Math.abs(@x - @head.x) + Math.abs(@depth - @head.y)

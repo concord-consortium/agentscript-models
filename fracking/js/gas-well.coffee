@@ -49,6 +49,10 @@ class GasWell extends Well
 
     super
 
+  drawWell: ->
+    img = @constructor.WELL_IMG
+    @drawUI img, @head.x, @head.y, 0.5, 0.03
+
   addOpen: (p)->
     @open.push p
     p.well = @
