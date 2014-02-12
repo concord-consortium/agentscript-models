@@ -331,18 +331,20 @@ class GasWell extends Well
     @drawUI imgParams...
     bbox = @getDrawUIBBox imgParams...
 
-    # The top of the pool image is "uncapped", so tighten the bounding box to avoid finding pixels
-    # outside the intended pool interior
-    searchBBox = x: 0, y: 0, width: Math.round(bbox.width), height: Math.round(bbox.height) - 1 
+    # find the pixels in the "open" interior of the pond
+    pondPixels = @findEmptyPixels @constructor.POOL_IMG
+    
+    # Offset for finding patches corresponding to pixels. The values 1 and -2 are empirical 
+    # adjustments for visual fit, which is necessary because the patches are a non-integer number of
+    # pixels wide. Bounding box height is subtracted from y0 because (x0, y0) needs to be the upper
+    # left of the pond area when mapping pixels to patches. (bbox.x, bbox.y) is the lower left.
+    x0 = Math.round(bbox.x) + 1
+    y0 = Math.round(bbox.y + bbox.height) - 2
 
-    pondPixels = @findInteriorPixels @constructor.POOL_IMG, searchBBox, Math.round(bbox.width / 2), Math.round(bbox.height / 2)
-    x0 = Math.round(bbox.x)
-    y0 = Math.round(bbox.y + bbox.height)
-
-    # pondPixels are x, y offsets from a raster image, meaning x,y is top left corner and y
-    # increases downwards. The values 1 and -2 are empirical adjustments for visual fit...
-    @pondPatches = pondPixels.map ([x, y]) => @model.patches.patchXY x + x0 + 1, y0 - y - 2
-    for p in @pondPatches
+    # pondPixels are x, y offsets from a raster image, meaning x, y is the top left corner and y
+    # increases downwards. However, the patches' y coordinates increase upwards.
+    pondPatches = pondPixels.map ([x, y]) => @model.patches.patchXY x + x0 , y0 - y
+    for p in pondPatches
       if p?
         @pond.push p
         p.type = "air"
@@ -350,11 +352,17 @@ class GasWell extends Well
 
     null
 
-  # returns an array of the equal pixels in an image that might be drawn with @drawUI, taking the 
-  # pixel value of position (x,y) in the image as the target. Search is constrained to the specified
-  # bounding box bbox.
-  findInteriorPixels: (img, bbox, x, y) -> 
+  # Given the image `img`, scales it so that 1 pixel of the drawn image corresponds to 1 patch (when
+  # the image is drawn with @drawUI) and returns a list of the [x, y] coordinates of the empty
+  # pixels in the interior of the image. These are found by flood filling all pixels with value 0,
+  # starting at the center of the image.
+  #
+  # (Note that when the same image is drawn with @drawUI, each patch spans > 1.0 pixels. The 1:1 
+  # scaling used in this method allows us to easily find the patches underneath the empty pixels of
+  # the drawn image.)
+  findEmptyPixels: (img) -> 
     scale = 0.5
+
     canvas = document.createElement 'canvas'
     canvas.width = img.width * scale
     canvas.height = img.height * scale
@@ -362,10 +370,7 @@ class GasWell extends Well
     ctx.scale scale, scale
     ctx.drawImage img, 0, 0
 
-    # imageData is in *untransformed* coordinates - x, y is the top left corner of the image and y
-    # increases downwards. But bbox is in the model's transformed coordinates -- its (x, y) is the 
-    # *lower* left corner and y increases upwards.
-    imageData = ctx.getImageData bbox.x, canvas.height - bbox.y - bbox.height, bbox.width, bbox.height
+    imageData = ctx.getImageData 0, 0, canvas.width, canvas.height
 
     w = imageData.width
     h = imageData.height
@@ -378,11 +383,11 @@ class GasWell extends Well
     # imageData.data is a Uint8ClampedArray, in which each pixel is 4 consecutive 8-bit elements. 
     # Convert to an array of 32-bit elements, 1 per pixel.
     pixels = new Uint32Array imageData.data.buffer
-    targetColor = pixels[loc x, y]
 
     # a basic flood fill algorithm; see http://en.wikipedia.org/wiki/Flood_fill
-    interiorPixels = [] 
-    q = [[x, y]]    
+    targetColor = 0
+    interiorPixels = []
+    q = [[Math.round(canvas.width / 2), Math.round(canvas.height / 2)]]
     while q.length > 0
       n = q.pop()
       [nx, ny] = n
