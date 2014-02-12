@@ -392,11 +392,12 @@ class GasWell extends Well
       n = q.pop()
       [nx, ny] = n
       if pixels[loc nx, ny] == targetColor
-        interiorPixels.push(n) unless visited[loc nx, ny]
-        q.push([nx-1, ny]) if canVisit nx-1, ny
-        q.push([nx+1, ny]) if canVisit nx+1, ny
-        q.push([nx, ny-1]) if canVisit nx, ny-1
-        q.push([nx, ny+1]) if canVisit nx, ny+1
+        unless visited[loc nx, ny]
+          interiorPixels.push n
+          q.push([nx-1, ny]) if canVisit nx-1, ny
+          q.push([nx+1, ny]) if canVisit nx+1, ny
+          q.push([nx, ny-1]) if canVisit nx, ny-1
+          q.push([nx, ny+1]) if canVisit nx, ny+1
       visited[loc nx, ny] = true
 
     interiorPixels
