@@ -191,16 +191,21 @@ class Well
   # draw image `img` at (x, y). Image will be drawn at 50% scale and  will be centered on the point
   # (xFraction, yFraction) within the image, where xFraction and yFraction are normalized to the
   # width and height of the image, and are relative to the bottom left of the image.
-  drawUI: (img, x, y, xFraction, yFraction) ->
-    xFraction ||= 0
-    yFraction ||= 0
-
+  drawUI: (img, x, y, xFraction = 0, yFraction = 0) ->
     ctx = @model.contexts.drawing
+
     ctx.save()
     ctx.translate x, y
     # Agentscript's origin appears to be the _lower_ left corner, rather than upper left.
     ctx.scale 0.5, -0.5
-    ctx.drawImage img, -xFraction * img.width, (yFraction - 1)* img.height
+    ctx.drawImage img, -xFraction * img.width, (yFraction - 1) * img.height
     ctx.restore()
+
+  # returns the bounding box of the image, if drawn by passing the same parameters to @drawUI
+  getDrawUIBBox: (img, x, y, xFraction = 0, yFraction = 0) ->
+    x: x + 0.5 * -xFraction * img.width,
+    y: y - 0.5 * yFraction * img.height,
+    width: 0.5 * img.width,
+    height: 0.5 * img.height
 
 window.Well = Well

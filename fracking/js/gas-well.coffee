@@ -327,17 +327,74 @@ class GasWell extends Well
         g.hidden = false
 
   createWastePond: ->
-    @drawUI @constructor.POOL_IMG, @head.x + 10, @head.y, 0, 0.89
+    imgParams = [@constructor.POOL_IMG, @head.x + 10, @head.y, 0, 0.89]
+    @drawUI imgParams...
+    bbox = @getDrawUIBBox imgParams...
 
-    for y in [(@head.y-6)...(@head.y)]
-      for x in [(@head.x+11)...(@head.x+24)]
-        p = @model.patches.patchXY x, y
-        if p?
-          @pond.push p
-          p.type = "air"
-          @model.patchChanged p
+    # The top of the pool image is "uncapped", so tighten the bounding box to avoid finding pixels
+    # outside the intended pool interior
+    searchBBox = x: 0, y: 0, width: Math.round(bbox.width), height: Math.round(bbox.height) - 1 
+
+    pondPixels = @findInteriorPixels @constructor.POOL_IMG, searchBBox, Math.round(bbox.width / 2), Math.round(bbox.height / 2)
+    x0 = Math.round(bbox.x)
+    y0 = Math.round(bbox.y + bbox.height)
+
+    # pondPixels are x, y offsets from a raster image, meaning x,y is top left corner and y
+    # increases downwards. The values 1 and -2 are empirical adjustments for visual fit...
+    @pondPatches = pondPixels.map ([x, y]) => @model.patches.patchXY x + x0 + 1, y0 - y - 2
+    for p in @pondPatches
+      if p?
+        @pond.push p
+        p.type = "air"
+        @model.patchChanged p
 
     null
+
+  # returns an array of the equal pixels in an image that might be drawn with @drawUI, taking the 
+  # pixel value of position (x,y) in the image as the target. Search is constrained to the specified
+  # bounding box bbox.
+  findInteriorPixels: (img, bbox, x, y) -> 
+    scale = 0.5
+    canvas = document.createElement 'canvas'
+    canvas.width = img.width * scale
+    canvas.height = img.height * scale
+    ctx = canvas.getContext '2d'
+    ctx.scale scale, scale
+    ctx.drawImage img, 0, 0
+
+    # imageData is in *untransformed* coordinates - x, y is the top left corner of the image and y
+    # increases downwards. But bbox is in the model's transformed coordinates -- its (x, y) is the 
+    # *lower* left corner and y increases upwards.
+    imageData = ctx.getImageData bbox.x, canvas.height - bbox.y - bbox.height, bbox.width, bbox.height
+
+    w = imageData.width
+    h = imageData.height
+
+    visited = []
+    visited.length = w*h
+    loc = (x, y) -> w * y + x
+    canVisit = (x, y) -> 0 <= x and x < w and 0 <= y and y < h and not visited[loc x, y]
+    
+    # imageData.data is a Uint8ClampedArray, in which each pixel is 4 consecutive 8-bit elements. 
+    # Convert to an array of 32-bit elements, 1 per pixel.
+    pixels = new Uint32Array imageData.data.buffer
+    targetColor = pixels[loc x, y]
+
+    # a basic flood fill algorithm; see http://en.wikipedia.org/wiki/Flood_fill
+    interiorPixels = [] 
+    q = [[x, y]]    
+    while q.length > 0
+      n = q.pop()
+      [nx, ny] = n
+      if pixels[loc nx, ny] == targetColor
+        interiorPixels.push(n) unless visited[loc nx, ny]
+        q.push([nx-1, ny]) if canVisit nx-1, ny
+        q.push([nx+1, ny]) if canVisit nx+1, ny
+        q.push([nx, ny-1]) if canVisit nx, ny-1
+        q.push([nx, ny+1]) if canVisit nx, ny+1
+      visited[loc nx, ny] = true
+
+    interiorPixels
 
   leakWastePondWater: ->
     if @pondLeaks and @capped and @pond.length > 0 and ABM.util.randomInt(50) is 0
