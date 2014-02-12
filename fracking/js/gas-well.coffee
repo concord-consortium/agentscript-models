@@ -220,11 +220,8 @@ class GasWell extends Well
     @pumping = opens.concat interiors
     @cappingInProgress = true
 
-    if @pond.length > 0 and (rounds = Math.ceil(@pumping.length / 100)) < 13
-      eIdx = (14-rounds)*21
-      for p in @pond.slice(0,eIdx)
-        p.type = "dirtyWaterPond"
-        @model.patchChanged p
+    numberOfPumpingRounds = Math.ceil @pumping.length / 100
+    @numberOfPondPatchesPerRound = Math.ceil @pond.length / numberOfPumpingRounds
 
     @empty()
 
@@ -236,13 +233,9 @@ class GasWell extends Well
       $(document).trigger @constructor.CAPPED
       @tickOpened = @model.anim.ticks
       return
+
     currentPumping = @pumping.slice(0,100)
     @pumping = @pumping.slice(100)
-
-    pondFilling = []
-    if @pond.length > 0 and (roundsLeft = Math.ceil(@pumping.length / 100)) <= 13
-      sIdx = (13-roundsLeft)*21
-      pondFilling = @pond.slice(sIdx, sIdx+21)
 
     setTimeout =>
       @processSet currentPumping, =>
@@ -254,10 +247,12 @@ class GasWell extends Well
           p.type = "open"
         @model.patchChanged p
 
-      if pondFilling.length > 0
-        for p in pondFilling
-          p.type = "dirtyWaterPond"
-          @model.patchChanged p
+      # turn @numberOfPondPatchesPerRound pond patches from air to dirty water
+      n = @numberOfPondPatchesPerRound
+      while n-- and p = @pond.shift()
+        p.type = "dirtyWaterPond"
+        @model.patchChanged p
+
     , 50
 
   cycleWaterColors: ->
@@ -346,9 +341,18 @@ class GasWell extends Well
     pondPatches = pondPixels.map ([x, y]) => @model.patches.patchXY x + x0 , y0 - y
     for p in pondPatches
       if p?
-        @pond.push p
         p.type = "air"
         @model.patchChanged p
+        # top of actual wastewater should be ~4 patches below ground level
+        @pond.push(p) if p.y <= @head.y - 4
+
+    # sort resulting patches first by height, then by lateral distance from well. This way they
+    # fill up in a predictable order
+    before = (a, b) -> (a.y < b.y) or (a.y == b.y and a.x < b.x)
+    @pond.sort (a, b) ->
+      return -1 if before a, b
+      return 1 if before b, a
+      return 0
 
     null
 
