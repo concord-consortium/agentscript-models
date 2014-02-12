@@ -327,18 +327,18 @@ class GasWell extends Well
         g.hidden = false
 
   createWastePond: ->
-    imgParams = [@constructor.POOL_IMG, @head.x + 10, @head.y, 0, 0.89]
+    imgParams = [@constructor.POOL_IMG, @head.x + 10.5, @head.y, 0, 0.89]
     @drawUI imgParams...
     bbox = @getDrawUIBBox imgParams...
 
     # find the pixels in the "open" interior of the pond
     pondPixels = @findEmptyPixels @constructor.POOL_IMG
     
-    # Offset for finding patches corresponding to pixels. The values 1 and -2 are empirical 
-    # adjustments for visual fit, which is necessary because the patches are a non-integer number of
-    # pixels wide. Bounding box height is subtracted from y0 because (x0, y0) needs to be the upper
-    # left of the pond area when mapping pixels to patches. (bbox.x, bbox.y) is the lower left.
-    x0 = Math.round(bbox.x) + 1
+    # Offset for finding patches corresponding to pixels. The values -2 is an empirical adjustment
+    # for visual fit, which is necessary because the patches are a non-integer number of pixels
+    # wide. Bounding box height is subtracted from y0 because (x0, y0) needs to be the upper left of
+    # the pond area when mapping pixels to patches. (bbox.x, bbox.y) is the lower left.
+    x0 = Math.round(bbox.x)
     y0 = Math.round(bbox.y + bbox.height) - 2
 
     # pondPixels are x, y offsets from a raster image, meaning x, y is the top left corner and y
