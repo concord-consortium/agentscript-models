@@ -222,6 +222,7 @@ class GasWell extends Well
     numberOfPumpingRounds = Math.ceil @pumping.length / 100
     @numberOfPondPatchesPerRound = Math.ceil @pond.length / numberOfPumpingRounds
 
+    @numberOfPondPatchesToDirty = @pond.length
     @empty()
 
   empty: ->
@@ -248,7 +249,9 @@ class GasWell extends Well
 
       # turn @numberOfPondPatchesPerRound pond patches from air to dirty water
       n = @numberOfPondPatchesPerRound
-      while n-- and p = @pond.shift()
+
+      while n-- > 0 and @numberOfPondPatchesToDirty-- > 0
+        p = @pond[@numberOfPondPatchesToDirty]
         p.type = "dirtyWaterPond"
         @model.patchChanged p
 
@@ -324,6 +327,10 @@ class GasWell extends Well
     imgParams = [@constructor.POOL_IMG, @head.x + 10.5, @head.y, 0, 0.89]
     @drawUI imgParams...
     bbox = @getDrawUIBBox imgParams...
+    @belowPond =
+      y: Math.floor(bbox.y) - 1
+      xMin: Math.floor(bbox.x)
+      xMax: Math.floor(bbox.x) + Math.round(bbox.width) 
 
     # find the pixels in the "open" interior of the pond
     pondPixels = @findEmptyPixels @constructor.POOL_IMG
@@ -349,8 +356,8 @@ class GasWell extends Well
     # fill up in a predictable order
     before = (a, b) -> (a.y < b.y) or (a.y == b.y and a.x < b.x)
     @pond.sort (a, b) ->
-      return -1 if before a, b
-      return 1 if before b, a
+      return -1 if before b, a
+      return 1 if before a, b
       return 0
 
     null
@@ -408,9 +415,10 @@ class GasWell extends Well
   leakWastePondWater: ->
     if @pondLeaks and @capped and @pond.length > 0 and ABM.util.randomInt(50) is 0
       @model.pondWaste += @model.pondWasteScale
+      leakAreaWidth = @belowPond.xMax - @belowPond.xMin + 1
       @model.pondWater.create 1, (a)=>
         a.well = @
-        a.moveTo @model.patches.patchXY(@head.x + ABM.util.randomInt(12) + 6, @head.y - 8)
+        a.moveTo @model.patches.patchXY @belowPond.xMin + ABM.util.randomInt(leakAreaWidth), @belowPond.y
 
   eraseUI: ->
     # TODO. Fix coordinate assumptions here. Also figure out if this is actually used!
