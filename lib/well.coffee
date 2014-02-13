@@ -26,7 +26,7 @@ class Well
 
   # some graphical images
   # NOTE: relative urls are relative to the model html location!
-  @WELL_IMG: ABM.util.importImage 'img/fracking_well.svg'
+  @WELL_IMG: ABM.util.importImage 'img/fracking_well.png'
 
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays
