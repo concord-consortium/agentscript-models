@@ -293,51 +293,71 @@ class FrackingModel extends ABM.Model
     shaleLowerModifier = @u.randomFloat(0.4)
     rock1Angle = @u.randomFloat(0.1)+0.2
     rock2Angle = @u.randomFloat(0.1)+0.05
+    
+    # memoization helper, so we don't constantly recalculate *LowerDepth(x) for every different y
+    memo = (f) =>
+      cache = {}
+      (x) => cache[x] ? cache[x] = f(x)
+
+    degToRad = @u.degToRad
+    sin = (x) -> Math.sin(degToRad(x))
+
+    # this is a common term found in several of the boundary functions
+    f = (c, x, width) => sin(c*x - (width / 4))
+    
+    # Save these functions per-instance, so we can use them later when calculating patches' color
+    # gradient
+    @waterLowerDepth = memo (x) =>
+      @waterDepth + @height * f(0.6, x, @width) / 160
+    
+    @rock1LowerDepth = memo (x) =>
+      x * rock1Angle + @rock1Depth - @height * f(0.3, x, @width) / 160
+
+    @rock2LowerDepth = memo (x) =>
+      x * rock2Angle + @rock2Depth + @height * f(0.4, x, @width) / 160
+
+    @rock3LowerDepth = memo (x) => 
+      @rock3Depth + @height * f(0.2, x, @width) / 160
+
+    @shaleUpperDepth = memo (x) =>
+      @oilDepth + @height * sin(shaleUpperModifier * x) / 30
+
+    @shaleLowerDepth = memo (x) =>
+      @baseDepth - @height * 0.9 * sin(shaleLowerModifier * x + 45) / 50 + p.x / 10
+
+    # TODO. This long if statement is silly, change it to iterate over x then y.
     for p in @patches
       p.type = "n/a"
       p.color = [255,255,255]
-      # continue if p.isOnEdge()
-      waterLowerDepth = (@waterDepth + @height * Math.sin(@u.degToRad(0.6*p.x - (@width / 4))) / 160)
-      rock1LowerDepth = (p.x*rock1Angle)+(@rock1Depth + @height * -Math.sin(@u.degToRad(0.3*p.x - (@width / 4))) / 160)
-      rock2LowerDepth = (p.x*rock2Angle)+(@rock2Depth + @height * Math.sin(@u.degToRad(0.4*p.x - (@width / 4))) / 160)
-      rock3LowerDepth = (@rock3Depth + @height * Math.sin(@u.degToRad(0.2*p.x - (@width / 4))) / 160)
-      shaleUpperDepth = (@oilDepth + @height * Math.sin(@u.degToRad(shaleUpperModifier * p.x)) / 30)
-      shaleLowerDepth = (@baseDepth + @height * 0.9 * -Math.sin(@u.degToRad(shaleLowerModifier * p.x + 45)) / 50 + (p.x / 10))
+
       if p.y > @airDepth
         p.type = "air"
-        @patchChanged(p, false)
-      else if p.y > @landDepth and p.y <= @airDepth
+      else if p.y > @landDepth
         p.type = "land"
-        @patchChanged(p, false)
-      else if @landDepth >= p.y > waterLowerDepth
+      else if p.y > @waterLowerDepth(p.x)
         p.type = "water"
-        @patchChanged(p, false) if @showEarthPatches
-      else if waterLowerDepth >= p.y > rock1LowerDepth
+      else if p.y > @rock1LowerDepth(p.x)
         p.type = "rock"
         p.rockType = "rock1"
-        @patchChanged(p, false) if @showEarthPatches
-      else if rock1LowerDepth >= p.y > rock2LowerDepth
+      else if p.y > @rock2LowerDepth(p.x)
         p.type = "rock"
         p.rockType = "rock2"
-        @patchChanged(p, false) if @showEarthPatches
-      else if rock2LowerDepth >= p.y > rock3LowerDepth
+      else if p.y > @rock3LowerDepth(p.x)
         p.type = "rock"
         p.rockType = "rock3"
-        @patchChanged(p, false) if @showEarthPatches
-      else if rock3LowerDepth >= p.y > shaleUpperDepth
+      else if p.y > @shaleUpperDepth(p.x)
         p.type = "rock"
         p.rockType = "rock4"
-        @patchChanged(p, false) if @showEarthPatches
-      else if shaleUpperDepth >= p.y > shaleLowerDepth
+      else if p.y > @shaleLowerDepth(p.x)
         @shale.push p
         p.type = "shale"
-        @patchChanged(p, false) if @showEarthPatches
-      else if p.y <= shaleLowerDepth
+      else
         p.type = "rock"
         p.rockType = "rock5"
-        @patchChanged(p, false) if @showEarthPatches
 
-      if p.y <= @landDepth and not @showEarthPatches
+      if p.y > @landDepth or @showEarthPatches
+        @patchChanged p, false
+      else
         p.color = @hiddenPatchColor
 
       @toRedraw.push p
