@@ -244,8 +244,8 @@ class FrackingModel extends ABM.Model
     return unless p?
     unless p.isWell
       p.color = switch p.type
-        when "air"   then [128, 173, 255]
-        when "land"  then [ 29, 159, 120]
+        when "air"   then [167, 221, 232]
+        when "land"  then [45, 165, 73]
         when "water" then [ 52,  93, 169]
         when "shale" then [237, 237,  49]
         when "rock"
