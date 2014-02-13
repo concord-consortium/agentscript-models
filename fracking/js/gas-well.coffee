@@ -32,7 +32,6 @@ class GasWell extends Well
 
   # some graphical images
   @POOL_IMG: ABM.util.importImage 'img/fracking_pool01.svg'
-  @POOL_WATER_IMG: ABM.util.importImage 'img/fracking_pool02.svg'
 
   constructor: (@model, @x, @depth, @leaks=false, @pondLeaks=false)->
     # set these here so all Well instances don't share the same arrays
