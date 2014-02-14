@@ -1,4 +1,68 @@
 class FrackingModel extends ABM.Model
+
+  # "class" property
+  @gradients = do ->
+    gradients =
+      air: [
+        { stop: 0    , color: "#CBE9E6" },
+        { stop: 0.178, color: "#A7DDE8" },
+        { stop: 0.351, color: "#85D4EB" },
+        { stop: 0.521, color: "#6BCEEE" },
+        { stop: 0.689, color: "#58CAF0" },
+        { stop: 0.855, color: "#4DC9F5" },
+        { stop: 1    , color: "#49C8F5" }]
+
+      land: [
+        { stop: 0    , color: "#0193B1" },
+        { stop: 0.011, color: "#0293AF" },
+        { stop: 0.264, color: "#199C78" },
+        { stop: 0.452, color: "#28A256" },
+        { stop: 0.555, color: "#2DA549" },
+        { stop: 1    , color: "#2DA549" }]
+
+      water: [
+        { stop: 0    , color: "#426587" },
+        { stop: 0.168, color: "#41678F" },
+        { stop: 0.436, color: "#3A6CA6" },
+        { stop: 0.766, color: "#3D73B9" },
+        { stop: 1    , color: "#4474BA" }]
+
+      rock1: [
+        { stop: 0    , color: "#7E461D" },
+        { stop: 0.018, color: "#7E461D" },
+        { stop: 0.873, color: "#563D2B" },
+        { stop: 0.942, color: "#543D2D" },
+        { stop: 0.966, color: "#4D3D33" },
+        { stop: 0.984, color: "#413E3E" },
+        { stop: 0.998, color: "#303F4C" },        
+        { stop: 1    , color: "#2D3F50" }]
+
+      shale: [
+        { stop: 0    , color: "#DFCBAE" },
+        { stop: 0.258, color: "#D6BE9D" },
+        { stop: 0.769, color: "#BE9D6E" },
+        { stop: 1    , color: "#B48E59" }]
+
+      rock5: [
+        { stop: 0    , color: "#251D19" },
+        { stop: 0.027, color: "#271E1A" },
+        { stop: 0.037, color: "#2E2420" },
+        { stop: 0.044, color: "#39312D" },
+        { stop: 0.045, color: "#3D342F" },
+        { stop: 0.543, color: "#3F3530" },
+        { stop: 0.732, color: "#463931" },  
+        { stop: 0.868, color: "#523F33" },
+        { stop: 0.979, color: "#634835" },  
+        { stop: 1    , color: "#674A36" }]        
+
+    for key, gradient of gradients
+      for el, index in gradient
+        unless index is 0
+          el.priorStop = gradient[index-1].stop
+          el.interpolator = d3.interpolateHsl gradient[index-1].color, el.color
+    
+    gradients
+
   @DEBUG: false
   @showEarthPatches: false
   u: ABM.util
@@ -239,21 +303,32 @@ class FrackingModel extends ABM.Model
         @moveWaterPollution a, 22
       else
         console.log "bad patch type: " + a.p.type
+  
+  getGradientColor: (gradient, y, yMin, yMax) ->
+    # gradient vector points such that 0 => top of gradient area, 1 => bottom of gradient area
+    fraction = (y - yMin) / (yMax - yMin)
+    for el in gradient
+      break if el.stop > fraction
+    color = d3.rgb el.interpolator (fraction - el.priorStop) / (el.stop - el.priorStop)
+
+    [color.r, color.g, color.b]
 
   patchChanged: (p, redraw=true)->
     return unless p?
     unless p.isWell
+      g = @constructor.gradients
       p.color = switch p.type
-        when "air"   then [167, 221, 232]
-        when "land"  then [45, 165, 73]
-        when "water" then [ 52,  93, 169]
-        when "shale" then [237, 237,  49]
+        when "air"   then @getGradientColor g.air ,  p.y, @airDepth - 10       , @world.maxY
+        when "land"  then @getGradientColor g.land,  p.y, @landDepth           , @airDepth
+        when "water" then @getGradientColor g.water, p.y, @waterLowerDepth(p.x), @landDepth
+        when "shale" then @getGradientColor g.shale, p.y, @shaleLowerDepth(p.x), @shaleUpperDepth(p.x)
         when "rock"
-          if p.rockType is "rock1" then [157, 110,  72]
-          else if p.rockType is "rock2" then [157, 132,  72]
-          else if p.rockType is "rock3" then [90, 57,  40]
-          else if p.rockType is "rock4" then [157, 110,  64]
-          else [81, 61,  54]
+          switch p.rockType
+            when "rock1" then @getGradientColor g.rock1, p.y, @rock1LowerDepth(p.x), @waterLowerDepth(p.x)
+            when "rock2" then [157, 132,  72]
+            when "rock3" then [90, 57,  40]
+            when "rock4" then [157, 110,  64]
+            when "rock5" then @getGradientColor g.rock5, p.y, @world.minY, @shaleLowerDepth(p.x)
         when "exploding" then [215, 50, 41]
         when "open"      then [0, 0, 0]
         when "cleanWaterWell", "cleanWaterOpen" then [45, 141, 190]
