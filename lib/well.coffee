@@ -41,20 +41,25 @@ class Well
     p = @model.patches.patchXY(@head.x, @head.y + 1)
     p.label = "" + @id
     @addPatch p
-    @model.contexts.drawing.labelColor = switch @id
-      when 1 then [200,0,0]
-      when 2 then [50,255,20]
-      when 3 then [0,0,255]
-      else [255,255,255]
+    @model.contexts.drawing.labelColor = @getLabelColor @id
     p.drawLabel(@model.contexts.drawing)
     @drawWell()
     @model.draw()
 
     $(document).trigger @constructor.CREATED, @
 
+  # overridden in GasWell
   drawWell: ->
     img = @constructor.WELL_IMG
     @drawUI img, @head.x, @head.y, 0.5, 0
+
+  # overridden in GasWell
+  getLabelColor: (id) ->
+    switch id
+      when 1 then [200,0,0]
+      when 2 then [50,255,20]
+      when 3 then [0,0,255]
+      else [255,255,255]
 
   length: ->
     Math.abs(@x - @head.x) + Math.abs(@depth - @head.y)

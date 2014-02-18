@@ -52,6 +52,13 @@ class GasWell extends Well
     img = @constructor.WELL_IMG
     @drawUI img, @head.x, @head.y, 0.5, 0.03
 
+  getLabelColor: (id) ->
+    switch id
+      when 1 then [228,26,28]
+      when 2 then [27,158,119]
+      when 3 then [152,78,163]
+      else [255,255,255]    
+
   addOpen: (p)->
     @open.push p
     p.well = @
