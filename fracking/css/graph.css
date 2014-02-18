@@ -22,7 +22,7 @@ div.graph {
     outline: #76d2b8 solid 0.2em; }
   .graph div.background {
     position: absolute;
-    background: #efefef; }
+    background: #ffffff; }
   .graph div.button-layer {
     position: absolute;
     text-align: right; }
@@ -34,8 +34,7 @@ div.graph {
       opacity: 1; }
   .graph canvas.overlay {
     position: absolute;
-    background: rgba(0, 255, 0, 0.05); }
-
+    background: #ffffff; }
 svg.graph:focus {
   outline: #76d2b8 solid 0.2em; }
 svg.graph text.title {
