@@ -59,35 +59,34 @@ class GasWell extends Well
     ctx.translate @head.x, @head.y
     ctx.scale 1/ABM.patches.size, -1/ABM.patches.size
     ctx.translate 0, -60
-    
+
     ctx.save()
     ctx.scale 0.8, 1
-
     ctx.fillStyle = 'white'
 
     ctx.beginPath()
-    ctx.moveTo 0, 26
-    ctx.lineTo -15, 5
-    ctx.lineTo 15, 5
-    ctx.lineTo 0, 26
+    ctx.moveTo 0, 20
+    ctx.lineTo -12, 4
+    ctx.lineTo 12, 4
+    ctx.lineTo 0, 20
     ctx.fill()    
     ctx.closePath()
 
     ctx.beginPath()
-    ctx.arc 0, 0, 16, 2 * Math.PI, false
+    ctx.arc 0, 0, 13, 2 * Math.PI, false
     ctx.fill()
     ctx.closePath()
 
     ctx.fillStyle = ABM.util.colorStr @getLabelColor @id
     ctx.beginPath()
-    ctx.arc 0, 0, 13, 2 * Math.PI, false
+    ctx.arc 0, 0, 10, 2 * Math.PI, false
     ctx.fill()
     ctx.closePath()
     ctx.restore()
 
-    ctx.font = '16px "Helvetica Neue\", Helvetica, sans-serif'
+    ctx.font = '12px "Helvetica Neue", Helvetica, sans-serif'
     ctx.fillStyle = 'white'
-    ctx.fillText '' + @id, -4.5, 6
+    ctx.fillText '' + @id, -3.5, 4
     ctx.restore()
 
   getLabelColor: (id) ->
