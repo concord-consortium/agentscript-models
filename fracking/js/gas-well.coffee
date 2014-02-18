@@ -52,6 +52,44 @@ class GasWell extends Well
     img = @constructor.WELL_IMG
     @drawUI img, @head.x, @head.y, 0.5, 0.03
 
+  drawLabel: ->
+    ctx = @model.contexts.drawing
+    
+    ctx.save()
+    ctx.translate @head.x, @head.y
+    ctx.scale 1/ABM.patches.size, -1/ABM.patches.size
+    ctx.translate 0, -60
+    
+    ctx.save()
+    ctx.scale 0.8, 1
+
+    ctx.fillStyle = 'white'
+
+    ctx.beginPath()
+    ctx.moveTo 0, 26
+    ctx.lineTo -15, 5
+    ctx.lineTo 15, 5
+    ctx.lineTo 0, 26
+    ctx.fill()    
+    ctx.closePath()
+
+    ctx.beginPath()
+    ctx.arc 0, 0, 16, 2 * Math.PI, false
+    ctx.fill()
+    ctx.closePath()
+
+    ctx.fillStyle = ABM.util.colorStr @getLabelColor @id
+    ctx.beginPath()
+    ctx.arc 0, 0, 13, 2 * Math.PI, false
+    ctx.fill()
+    ctx.closePath()
+    ctx.restore()
+
+    ctx.font = '16px "Helvetica Neue\", Helvetica, sans-serif'
+    ctx.fillStyle = 'white'
+    ctx.fillText '' + @id, -4.5, 6
+    ctx.restore()
+
   getLabelColor: (id) ->
     switch id
       when 1 then [228,26,28]

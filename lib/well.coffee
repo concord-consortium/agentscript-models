@@ -38,12 +38,8 @@ class Well
     @head.x = @x
     @head.y = @depth
 
-    p = @model.patches.patchXY(@head.x, @head.y + 1)
-    p.label = "" + @id
-    @addPatch p
-    @model.contexts.drawing.labelColor = @getLabelColor @id
-    p.drawLabel(@model.contexts.drawing)
     @drawWell()
+    @drawLabel()
     @model.draw()
 
     $(document).trigger @constructor.CREATED, @
@@ -52,6 +48,14 @@ class Well
   drawWell: ->
     img = @constructor.WELL_IMG
     @drawUI img, @head.x, @head.y, 0.5, 0
+
+  # extended in GasWell
+  drawLabel: ->
+    p = @model.patches.patchXY(@head.x, @head.y + 1)
+    p.label = "" + @id
+    @addPatch p
+    @model.contexts.drawing.labelColor = @getLabelColor @id
+    p.drawLabel(@model.contexts.drawing)    
 
   # overridden in GasWell
   getLabelColor: (id) ->

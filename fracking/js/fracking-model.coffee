@@ -112,8 +112,6 @@ class FrackingModel extends ABM.Model
     @setFastPatches()
     @patches.usePixels true
     @refreshPatches = false
-    @setTextParams {name: "drawing"}, "16px \"Helvetica Neue\", Helvetica, sans-serif"
-    @setLabelParams {name: "drawing"}, [255,255,255], [0,-40]
 
     @setupAgents()
     @setupGlobals()
