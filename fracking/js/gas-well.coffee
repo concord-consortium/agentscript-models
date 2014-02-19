@@ -85,8 +85,9 @@ class GasWell extends Well
     ctx.restore()
 
     ctx.font = '12px "Helvetica Neue", Helvetica, sans-serif'
+    ctx.textAlign = 'center'
     ctx.fillStyle = 'white'
-    ctx.fillText '' + @id, -3.5, 4
+    ctx.fillText '' + @id, 0, 5
     ctx.restore()
 
   getLabelColor: (id) ->
