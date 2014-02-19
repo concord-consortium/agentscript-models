@@ -25,16 +25,13 @@ You can then find the index at file://path.to.agentscript-models/index.html
 
 ## Locally viewing models
 
-The models cannot be viewed using a simple `file://` URL.
-So you can either use a webserver like apache to serve the files, or use an included ruby based rack server.
-To use the rack server you should:
+The models cannot be viewed using a simple `file://` URL and need to be served by a local server. The easiest way to do this is with Python's built-in web server class:
 
-    cd local-server
-    bundle install --binstubs
-    bin/rackup
-    open http://localhost:9292/
+    cd <root of project>
+    python -m SimpleHTTPServer      # Protip: just alias this to `serve`. You'll use it a lot.
+    open http://localhost:8000/
 
-If you haven't used bundler, ruby, and rvm or rbenv before, you will probably need to learn a bit about those before this will work for you.
+Alternately, you can use the Ruby Rackup server in `local-server/` but this requires installing gems and is hardly necessary.
 
 ## GitHub pages
 
