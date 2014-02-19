@@ -1,3 +1,6 @@
 [submodule "lib/agentscript"]
 	path = lib/agentscript
 	url = git://github.com/concord-consortium/agentscript.git
+[submodule "lib/lab-grapher"]
+	path = lib/lab-grapher
+	url = git@github.com:concord-consortium/lab-grapher.git

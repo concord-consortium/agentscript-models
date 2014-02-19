@@ -9,7 +9,7 @@ class LeakingFrackingControls extends FrackingControls
     @leakingSetupCompleted = true
 
   setupPollutionGraph: ->
-    @pollutionGraph = Lab.grapher.Graph '#pollution-graph',
+    @pollutionGraph = LabGrapher '#pollution-graph',
       title:  "Pollution: Methane (red), Wastewater (green) vs Time"
       xlabel: "Time (years)"
       ylabel: ""
@@ -23,6 +23,13 @@ class LeakingFrackingControls extends FrackingControls
       sample: 1
       realTime: true
       fontScaleRelativeToParent: true
+      dataColors: [
+        [160,   0,   0],
+        [ 44, 160,   0],
+        [ 44,   0, 160],
+        [  0,   0,   0],
+        [255, 127,   0],
+        [255,   0, 255]]
 
     # start the graph at 0,20
     @pollutionGraph.addSamples [[@pollutionBaseline],[@pondPollutionBaseline]]

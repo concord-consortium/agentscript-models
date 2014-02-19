@@ -188,8 +188,15 @@ window.WaterControls =
       realTime: false
       fontScaleRelativeToParent: true
       sampleInterval: 1/12
+      dataColors: [
+        [160,   0,   0],
+        [ 44, 160,   0],
+        [ 44,   0, 160],
+        [  0,   0,   0],
+        [255, 127,   0],
+        [255,   0, 255]]
 
-    @outputGraph = Lab.grapher.Graph '#output-graph', outputOptions
+    @outputGraph = LabGrapher '#output-graph', outputOptions
 
     # start the graph with one line at 0,0
     @outputGraph.addSamples @graphOptions.initialValues

@@ -31,8 +31,15 @@ class AirPollutionControls
       sample: 10
       realTime: true
       fontScaleRelativeToParent: true
+      dataColors: [
+        [160,   0,   0],
+        [ 44, 160,   0],
+        [ 44,   0, 160],
+        [  0,   0,   0],
+        [255, 127,   0],
+        [255,   0, 255]]
 
-    @pollutionGraph = Lab.grapher.Graph '#pollution-graph', defaultOptions
+    @pollutionGraph = LabGrapher '#pollution-graph', defaultOptions
 
     # start the graph at 0,0
     @pollutionGraph.addSamples [[0],[0],[0],[0]]

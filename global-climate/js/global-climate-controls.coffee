@@ -143,7 +143,7 @@ setupGraphs = ->
     ymax = if isOceanTemperatureModel then 12 else 12
     ymin = if isOceanTemperatureModel then -12 else -6
 
-    temperatureGraph = Lab.grapher.Graph('#temperature-graph',
+    temperatureGraph = LabGrapher('#temperature-graph',
       title:  title
       xlabel: "Time (year)"
       ylabel: "Temperature"
@@ -158,6 +158,13 @@ setupGraphs = ->
       sampleInterval: 1/300
       realTime: true
       fontScaleRelativeToParent: true
+      dataColors: [
+        [160,   0,   0],
+        [ 44, 160,   0],
+        [ 44,   0, 160],
+        [  0,   0,   0],
+        [255, 127,   0],
+        [255,   0, 255]]
     )
 
   if $('#co2-graph').length
@@ -166,7 +173,7 @@ setupGraphs = ->
     if climateModel.includeVapor then title += ", Vapor (blue)"
     ymax  = if isOceanModel then 30 else 100
 
-    co2Graph = Lab.grapher.Graph('#co2-graph',
+    co2Graph = LabGrapher('#co2-graph',
         title:  title
         xlabel: "Time (year)"
         ylabel: if isOceanModel then "Greenhouse gases" else "CO2"
@@ -181,6 +188,13 @@ setupGraphs = ->
         sampleInterval: 1/300
         realTime: true
         fontScaleRelativeToParent: true
+        dataColors: [
+          [160,   0,   0],
+          [ 44, 160,   0],
+          [ 44,   0, 160],
+          [  0,   0,   0],
+          [255, 127,   0],
+          [255,   0, 255]]
       )
 
 d3.timer (elapsed) ->
