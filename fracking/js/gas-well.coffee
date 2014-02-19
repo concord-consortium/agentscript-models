@@ -1,4 +1,10 @@
 class GasWell extends Well
+  @labelColors = [
+    [228,26,28]
+    [27,158,119]
+    [152,78,163]
+  ]
+
   open: null
   openShale: null
   filling: null
@@ -91,11 +97,7 @@ class GasWell extends Well
     ctx.restore()
 
   getLabelColor: (id) ->
-    switch id
-      when 1 then [228,26,28]
-      when 2 then [27,158,119]
-      when 3 then [152,78,163]
-      else [255,255,255]
+    @constructor.labelColors[id-1] || [255,255,255]
 
   addOpen: (p)->
     @open.push p

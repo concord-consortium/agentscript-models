@@ -142,9 +142,9 @@ class FrackingControls
       realTime: false
       fontScaleRelativeToParent: true
       dataColors: [
-        [160,   0,   0],
-        [ 44, 160,   0],
-        [ 44,   0, 160],
+        GasWell.labelColors[0],
+        GasWell.labelColors[1],
+        GasWell.labelColors[2],
         [  0,   0,   0],
         [255, 127,   0],
         [255,   0, 255]]
