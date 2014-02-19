@@ -38,6 +38,8 @@ If you haven't used bundler, ruby, and rvm or rbenv before, you will probably ne
 
 ## GitHub pages
 
-The live version of this site can be found at [http://concord-consortium.github.io/agentscript-models/](http://concord-consortium.github.io/agentscript-models/)
+The live, production version of this site can be found at http://concord-consortium.github.io/agentscript-models/
 
-To update this site, merge your changes into the gh-pages branch and push.
+The development version can be found at http://concord-consortium.github.io/agentscript-models-dev/
+
+To update the production site, merge your changes into the gh-pages branch of the agentscript-models repository; to update the development site, merge your changes into the gh-pages branch of the agentscript-models-dev repository. It's best to setup a Git remote for the production development sites (as `dev`, say), and to use a different local branch name (such as `gh-pages-dev`) and set it to track `dev/gh-pages,` while allowing `gh-pages` to track the `gh-pages` branch of the production repository
