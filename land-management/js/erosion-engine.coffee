@@ -79,7 +79,7 @@ class ErosionEngine
         if p.depth is 0 then @surfaceLand.push p
 
         if lastDepth >= MAX_INTERESTING_SOIL_DEPTH then break
-  
+
   erode: ->
     # Find and sort the surface patches most exposed to the sky
     for p in @surfaceLand
@@ -164,7 +164,7 @@ class ErosionEngine
     leftHeight  = bottom
     rightHeight = bottom
 
-    while leftHeight < top and @patches.patch(leftEdge, leftHeight).type is LAND 
+    while leftHeight < top and @patches.patch(leftEdge, leftHeight).type is LAND
       leftHeight++
 
     while rightHeight < top and @patches.patch(rightEdge, rightHeight).type is LAND

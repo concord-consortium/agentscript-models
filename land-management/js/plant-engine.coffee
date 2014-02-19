@@ -40,7 +40,7 @@ class PlantEngine
       ctx.translate(width,height)
       ctx.rotate Math.PI
       ctx.drawImage(image, 0, height, width*2, height*2, 0, height, width*2, height*2)
-  
+
   ###
     Defines the planting system of the two zones. Zone is defined
     by index, 0 or 1.

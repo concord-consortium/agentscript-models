@@ -37,7 +37,7 @@ window.initControls = (args) ->
   isOceanTemperatureModel = true if args?.oceanTemperatureModel
 
   modelSetup = args?.setup
-  
+
   setupGraphs()
 
 $('#play-pause-button').click ->
@@ -208,7 +208,7 @@ d3.timer (elapsed) ->
           temperatureGraph.addSamples [temperature-initialTemperature] unless !temperatureGraph?
         else
           temperatureGraph.addSamples [temperature-initialTemperature, 0, oceanTemperature-initialTemperature] unless !temperatureGraph?
-        
+
         if not isOceanModel
           co2Graph.addSamples [co2Count] unless !co2Graph?
         else

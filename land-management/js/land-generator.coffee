@@ -71,9 +71,9 @@ class LandGenerator
       slope = if x < 0 then @zone1Slope else @zone2Slope
       slope /= 10
       midHeight = if (@zone1Slope > 3 and @zone2Slope < -3) then 6 # yes, ugly...
-      else if (@zone1Slope > 2 or @zone2Slope < -2) then 0 
-      else if (@zone1Slope < -3 and @zone2Slope > 3) then -22 
-      else if (@zone1Slope < -2 or @zone2Slope > 2) then -15 
+      else if (@zone1Slope > 2 or @zone2Slope < -2) then 0
+      else if (@zone1Slope < -3 and @zone2Slope > 3) then -22
+      else if (@zone1Slope < -2 or @zone2Slope > 2) then -15
       else -12
       val = x * slope + midHeight
       Math.min @patches.maxY, Math.max @patches.minY, val

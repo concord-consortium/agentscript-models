@@ -55,7 +55,7 @@ class Well
     p.label = "" + @id
     @addPatch p
     @model.contexts.drawing.labelColor = @getLabelColor @id
-    p.drawLabel(@model.contexts.drawing)    
+    p.drawLabel(@model.contexts.drawing)
 
   # overridden in GasWell
   getLabelColor: (id) ->

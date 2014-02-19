@@ -54,7 +54,7 @@ class GasWell extends Well
 
   drawLabel: ->
     ctx = @model.contexts.drawing
-    
+
     ctx.save()
     ctx.translate @head.x, @head.y
     ctx.scale 1/ABM.patches.size, -1/ABM.patches.size
@@ -69,7 +69,7 @@ class GasWell extends Well
     ctx.lineTo -12, 4
     ctx.lineTo 12, 4
     ctx.lineTo 0, 20
-    ctx.fill()    
+    ctx.fill()
     ctx.closePath()
 
     ctx.beginPath()
@@ -95,7 +95,7 @@ class GasWell extends Well
       when 1 then [228,26,28]
       when 2 then [27,158,119]
       when 3 then [152,78,163]
-      else [255,255,255]    
+      else [255,255,255]
 
   addOpen: (p)->
     @open.push p
@@ -375,11 +375,11 @@ class GasWell extends Well
     @belowPond =
       y: Math.floor(bbox.y) - 1
       xMin: Math.floor(bbox.x)
-      xMax: Math.floor(bbox.x) + Math.round(bbox.width) 
+      xMax: Math.floor(bbox.x) + Math.round(bbox.width)
 
     # find the pixels in the "open" interior of the pond
     pondPixels = @findEmptyPixels @constructor.POOL_IMG
-    
+
     # Offset for finding patches corresponding to pixels. The values -2 is an empirical adjustment
     # for visual fit, which is necessary because the patches are a non-integer number of pixels
     # wide. Bounding box height is subtracted from y0 because (x0, y0) needs to be the upper left of
@@ -412,10 +412,10 @@ class GasWell extends Well
   # pixels in the interior of the image. These are found by flood filling all pixels with value 0,
   # starting at the center of the image.
   #
-  # (Note that when the same image is drawn with @drawUI, each patch spans > 1.0 pixels. The 1:1 
+  # (Note that when the same image is drawn with @drawUI, each patch spans > 1.0 pixels. The 1:1
   # scaling used in this method allows us to easily find the patches underneath the empty pixels of
   # the drawn image.)
-  findEmptyPixels: (img) -> 
+  findEmptyPixels: (img) ->
     scale = 0.5
 
     canvas = document.createElement 'canvas'
@@ -434,8 +434,8 @@ class GasWell extends Well
     visited.length = w*h
     loc = (x, y) -> w * y + x
     canVisit = (x, y) -> 0 <= x and x < w and 0 <= y and y < h and not visited[loc x, y]
-    
-    # imageData.data is a Uint8ClampedArray, in which each pixel is 4 consecutive 8-bit elements. 
+
+    # imageData.data is a Uint8ClampedArray, in which each pixel is 4 consecutive 8-bit elements.
     # Convert to an array of 32-bit elements, 1 per pixel.
     pixels = new Uint32Array imageData.data.buffer
 

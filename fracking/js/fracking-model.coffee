@@ -34,7 +34,7 @@ class FrackingModel extends ABM.Model
         { stop: 0.942, color: "#543D2D" },
         { stop: 0.966, color: "#4D3D33" },
         { stop: 0.984, color: "#413E3E" },
-        { stop: 0.998, color: "#303F4C" },        
+        { stop: 0.998, color: "#303F4C" },
         { stop: 1    , color: "#2D3F50" }]
 
       shale: [
@@ -50,17 +50,17 @@ class FrackingModel extends ABM.Model
         { stop: 0.044, color: "#39312D" },
         { stop: 0.045, color: "#3D342F" },
         { stop: 0.543, color: "#3F3530" },
-        { stop: 0.732, color: "#463931" },  
+        { stop: 0.732, color: "#463931" },
         { stop: 0.868, color: "#523F33" },
-        { stop: 0.979, color: "#634835" },  
-        { stop: 1    , color: "#674A36" }]        
+        { stop: 0.979, color: "#634835" },
+        { stop: 1    , color: "#674A36" }]
 
     for key, gradient of gradients
       for el, index in gradient
         unless index is 0
           el.priorStop = gradient[index-1].stop
           el.interpolator = d3.interpolateHsl gradient[index-1].color, el.color
-    
+
     gradients
 
   @DEBUG: false
@@ -301,7 +301,7 @@ class FrackingModel extends ABM.Model
         @moveWaterPollution a, 22
       else
         console.log "bad patch type: " + a.p.type
-  
+
   getGradientColor: (gradient, y, yMin, yMax) ->
     # gradient vector points such that 0 => top of gradient area, 1 => bottom of gradient area
     fraction = (y - yMin) / (yMax - yMin)
@@ -366,7 +366,7 @@ class FrackingModel extends ABM.Model
     shaleLowerModifier = @u.randomFloat(0.4)
     rock1Angle = @u.randomFloat(0.1)+0.2
     rock2Angle = @u.randomFloat(0.1)+0.05
-    
+
     # memoization helper, so we don't constantly recalculate *LowerDepth(x) for every different y
     memo = (f) =>
       cache = {}
@@ -377,19 +377,19 @@ class FrackingModel extends ABM.Model
 
     # this is a common term found in several of the boundary functions
     f = (c, x, width) => sin(c*x - (width / 4))
-    
+
     # Save these functions per-instance, so we can use them later when calculating patches' color
     # gradient
     @waterLowerDepth = memo (x) =>
       @waterDepth + @height * f(0.6, x, @width) / 160
-    
+
     @rock1LowerDepth = memo (x) =>
       x * rock1Angle + @rock1Depth - @height * f(0.3, x, @width) / 160
 
     @rock2LowerDepth = memo (x) =>
       x * rock2Angle + @rock2Depth + @height * f(0.4, x, @width) / 160
 
-    @rock3LowerDepth = memo (x) => 
+    @rock3LowerDepth = memo (x) =>
       @rock3Depth + @height * f(0.2, x, @width) / 160
 
     @shaleUpperDepth = memo (x) =>
