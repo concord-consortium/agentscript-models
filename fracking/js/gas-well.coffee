@@ -1,8 +1,8 @@
 class GasWell extends Well
   @labelColors = [
-    [228,26,28]
-    [27,158,119]
-    [152,78,163]
+    [217,  95,   2]
+    [ 27, 158, 119]
+    [117, 112, 179]
   ]
 
   open: null
