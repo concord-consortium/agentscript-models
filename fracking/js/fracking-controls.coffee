@@ -189,10 +189,10 @@ class FrackingControls
           [255, 127,   0],
           [255,   0, 255]]
 
-      @contaiminantGraph = LabGrapher '#contaminant-graph', contaminantOptions
+      @contaminantGraph = LabGrapher '#contaminant-graph', contaminantOptions
 
       # start the graph with just methane in water
-      @contaiminantGraph.addSamples [FrackingModel.baseMethaneInWater, 0]
+      @contaminantGraph.addSamples [FrackingModel.baseMethaneInWater, 0]
 
       $(document).on FrackingModel.YEAR_ELAPSED, =>
         baseMethane   = ABM.model.baseMethaneInWater
@@ -202,7 +202,7 @@ class FrackingControls
         ABM.model.leakedMethane *= 0.6
         ABM.model.pondWaste     *= 0.6
 
-        @contaiminantGraph.addSamples [baseMethane+leakedMethane, pondWaste]
+        @contaminantGraph.addSamples [baseMethane+leakedMethane, pondWaste]
 
 
 
@@ -235,9 +235,9 @@ class FrackingControls
 
     @outputGraph.reset()
     @outputGraph.addSamples [0, 0, 0, 0]
-    if @contaiminantGraph
-      @contaiminantGraph.reset()
-      @contaiminantGraph.addSamples [FrackingModel.baseMethaneInWater,0]
+    if @contaminantGraph
+      @contaminantGraph.reset()
+      @contaminantGraph.addSamples [FrackingModel.baseMethaneInWater,0]
 
     setTimeout =>
       ABM.model.reset()
