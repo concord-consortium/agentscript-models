@@ -140,6 +140,7 @@ class FrackingControls
       yTickCount: 5
       xFormatter: "3.3r"
       realTime: false
+      enableAutoScaleButton: false
       fontScaleRelativeToParent: true
       dataColors: [
         GasWell.labelColors[0],
@@ -178,6 +179,7 @@ class FrackingControls
         yTickCount: 5
         xFormatter: "3.3r"
         realTime: false
+        enableAutoScaleButton: false
         fontScaleRelativeToParent: true
         dataColors: [
           [160,   0,   0],
