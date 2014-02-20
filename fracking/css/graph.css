@@ -14,6 +14,59 @@ div.graph {
    margin-bottom: 10px;
 }
 
+/** begin styles for "show key" link */
+.graph a {
+  color: #4599D3
+}
+.graph a.show-key {
+  font-size: 0.7em;
+  position: absolute;
+  top: 2.8em;
+  right: 2.25em;
+  z-index: 4;
+}
+.graph a:link {
+  text-decoration: none;
+}
+.graph a:visited {
+  text-decoration: none;
+}
+.graph a:hover {
+  text-decoration: underline;
+  color: #1B7FC3;
+}
+.graph a:active {
+  text-decoration: underline;
+  color: #1B7FC3;
+}
+
+.key {
+  width: 12em;
+  height: 5em;
+  position: absolute;
+  border: none;
+  border-radius: 0.4em;
+  /* need to be higher than div#mouse-catcher */
+  z-index: 11;
+  background-color: white;
+}
+
+.icon-remove-sign {
+  color: #666;
+  position: absolute;
+  right: 0.2em;
+  top: 0.2em;
+}
+
+.icon-remove-sign:hover {
+  color: black;
+}
+.icon-remove-sign:active {
+  color: black;
+}
+/** end styles for "show key" link */
+
+
 .graph {
   position: relative;
   background: rgba(255, 255, 255, 0); }
