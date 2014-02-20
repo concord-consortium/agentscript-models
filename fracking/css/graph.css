@@ -1,6 +1,5 @@
 #output-graphs {
   position: absolute;
-  top: 15px;
   left: 684px;
   width: 264px;
   height: 435px;
@@ -8,8 +7,8 @@
 }
 
 div.graph {
-   background-color: #ddf2ff;
    border-radius: 0.25em;
+   font-family: "Helvetica Neue", Helvetica, sans-serif;
    width: 263px;
    height: 200px;
    margin-bottom: 10px;
