@@ -149,7 +149,7 @@ class ClimateModel extends ABM.Model
       @CO2.create 1, (a) =>
         a.size = @agentSize
         a.color = [0, 255, 0]
-        a.shape ="pentagon"
+        a.shape = "pentagon"
         a.heading = if heading? then heading else u.randomCentered(Math.PI)
         [x,y] = if location? then location else @getRandomLocation(@earthTop+1, @skyTop)
         a.setXY x, y
@@ -350,19 +350,19 @@ class ClimateModel extends ABM.Model
     @agents.create 1, (a) =>
       a.size = 7
       a.color = [188, 140, 56]
-      a.shape ="triangle"
+      a.shape = "triangle"
       a.heading = Math.PI / 2
       a.setXY -17, -3
     @agents.create 1, (a) =>
       a.size = 3
       a.color = [255, 255, 255]
-      a.shape ="triangle"
+      a.shape = "triangle"
       a.heading = Math.PI / 2
       a.setXY -17, -1
     @agents.create 1, (a) =>
       a.size = 6
       a.color = [100, 150, 255]
-      a.shape ="circle"
+      a.shape = "circle"
       a.setXY -17, 1
 
   erupt: ->
