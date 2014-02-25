@@ -5,7 +5,7 @@ class ClimateModel extends ABM.Model
   setup: -> # called by Model ctor
     @anim.ticks = 1
     @refreshPatches = true
-    @agentBreeds "sunrays heat IR CO2 clouds factories"
+    @agentBreeds "sunrays heat IR CO2 clouds factories volcanoes"
 
 
     @setFastPatches()
@@ -44,6 +44,12 @@ class ClimateModel extends ABM.Model
       ctx.rotate Math.PI
       ctx.drawImage factoryImg, 0, 0
 
+    volcanoImg = document.getElementById('volcano-sprite')
+    if volcanoImg then ABM.shapes.add "volcano", false, (ctx) ->
+      ctx.scale -0.1, 0.1
+      ctx.rotate Math.PI
+      ctx.drawImage volcanoImg, 0, 0
+
     # set default agent shapes
     @agents.setDefaultSize @agentSize
     @agents.setDefaultShape "arrow"
@@ -53,6 +59,10 @@ class ClimateModel extends ABM.Model
     @factories.setDefaultShape "factory"
     @factories.setDefaultColor [0,0,0]
     @factories.setDefaultSize 1
+
+    @volcanoes.setDefaultShape "volcano"
+    @volcanoes.setDefaultColor [0,0,0]
+    @volcanoes.setDefaultSize 1
 
     @spacePatches =        (p for p in @patches when p.y == @patches.maxY)
     @skyTopPatches =       (p for p in @patches when p.y <  @patches.maxY && p.y > @skyTop)
@@ -346,23 +356,9 @@ class ClimateModel extends ABM.Model
   # Volcano
   #
   createVolcano: ->
-    @agents.create 1, (a) =>
-      a.size = 7
-      a.color = [188, 140, 56]
-      a.shape = "triangle"
-      a.heading = Math.PI / 2
-      a.setXY -17, -3
-    @agents.create 1, (a) =>
-      a.size = 3
-      a.color = [255, 255, 255]
-      a.shape = "triangle"
-      a.heading = Math.PI / 2
-      a.setXY -17, -1
-    @agents.create 1, (a) =>
-      a.size = 6
-      a.color = [100, 150, 255]
-      a.shape = "circle"
-      a.setXY -17, 1
+    @volcanoes.create 1, (a) =>
+      a.shape = "volcano"
+      a.setXY -23.5, -1
 
   erupt: ->
     for i in [0...15]
