@@ -373,11 +373,7 @@ class ClimateModel extends ABM.Model
   #
   setHumanEmissionRate: (r) ->
     @humanEmissionRate = r
-    if r >= 0.9
-      @setNumFactories 3
-    else if r >= 0.5
-      @setNumFactories 2
-    else if r >= 0.1
+    if r >= 0.1
       @setNumFactories 1
     else @setNumFactories 0
 
