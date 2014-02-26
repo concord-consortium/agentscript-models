@@ -137,7 +137,9 @@ class FrackingControls
         unless $("##{graphId}-key").length > 0
           $key = $("<div id=\"#{graphId}-key\" class=\"key\"><a class=\"icon-remove-sign icon-large\"></a><canvas></canvas></div>").appendTo($(document.body)).draggable()
           canvas = $key.find('canvas')[0]
+          $key.height 18 * (labelInfo.length + 1)
           canvas.height = $key.outerHeight()
+          canvas.width = $key.outerWidth()
           drawKey $key.find('canvas')[0], labelInfo
 
         $key = $ "##{graphId}-key"
@@ -189,8 +191,8 @@ class FrackingControls
 
     @outputGraph = LabGrapher '#output-graph', outputOptions
 
-    appendKeyToGraph 'output-graph', 50,
-      { color: GasWell.labelColors[i], label: "Well #{i+1}"} for i in [0...3]
+    labelInfo = ({ color: GasWell.labelColors[i], label: "Well #{i+1} Output"} for i in [0...3]).concat([{ color: [0, 0, 0], label: "Combined Output" }])
+    appendKeyToGraph 'output-graph', 50, labelInfo
 
     # start the graph with four lines, each at 0,0
     @outputGraph.addSamples [0, 0, 0, 0]
