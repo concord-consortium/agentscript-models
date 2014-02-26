@@ -70,28 +70,46 @@ class ClimateModel extends ABM.Model
     @volcanoes.setDefaultColor [0,0,0]
     @volcanoes.setDefaultSize 1
 
-    @spacePatches =        (p for p in @patches when p.y == @patches.maxY)
-    @skyTopPatches =       (p for p in @patches when p.y <  @patches.maxY && p.y > @skyTop)
-    @skyPatches =          (p for p in @patches when p.y <= @skyTop && p.y > @earthTop)
+    @skyPatches =          (p for p in @patches when p.y > @earthTop)
     @earthSurfacePatches = (p for p in @patches when p.y == @earthTop)
     @earthPatches =        (p for p in @patches when p.y <  @earthTop)
 
-    p.color = [0, 0, 0] for p in @spacePatches
+    @drawBackgroundImages()
 
-    for p in @skyTopPatches
-      p.color = [196, 196, 196] if p.y == @skyTop + 1
-      p.color = [128, 128, 128] if p.y == @skyTop + 2
-      p.color = [64, 64, 64]    if p.y == @skyTop + 3
-      p.color = [32, 32, 32]    if p.y == @skyTop + 4
-
-    p.color = [100, 150, 255] for p in @skyPatches
-    p.color = [255, 200, 200] for p in @earthPatches
-    @updateAlbedoOfSurface()
     @createVolcano()
     @createCO2(13)
     @createHeat(15)
 
     @draw()
+
+  loadBackgroundImages: ->
+    @images = []
+    @backgroundImageUrls.map (url) =>
+      dfd = $.Deferred()
+      u.importImage url, (img) =>
+        @images[url] = img
+        dfd.resolve img
+      dfd
+
+  backgroundImageUrls: ['img/earth.svg', 'img/ground.svg', 'img/sky.svg']
+
+  drawBackgroundImages: ->
+    $.when(@loadBackgroundImages()...).then =>
+      ctx = ABM.drawing
+      p = ABM.patches
+      left = p.minX - 0.5
+      right = p.maxX + 0.5
+      width = right - left
+      # the only sensible way to understand these are as min/max; yMin is the top
+      yMin = p.minY - 0.5
+      yMax = p.maxY + 0.5
+
+      ctx.save()
+      ctx.scale 1, -1
+      ctx.drawImage @images['img/sky.svg'], left, yMin,  width, yMax - yMin
+      ctx.drawImage @images['img/earth.svg'], left, yMax - (@earthTop - yMin),  width, @earthTop - yMin
+      ctx.drawImage @images['img/ground.svg'], left, -@earthTop - 1, width, 2
+      ctx.restore()
 
   setAlbedo: (percent) ->
     @albedo = percent

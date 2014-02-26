@@ -6,6 +6,9 @@ class OceanClimateModel extends ClimateModel
   nCO2Emission: 0.25
   vaporPerDegreeModifier: 10
 
+  oceanLeft: -10
+  oceanBottom: -15
+
   setup: -> # called by Model ctor
     super
 
@@ -43,19 +46,52 @@ class OceanClimateModel extends ClimateModel
     @earthPatches =        (p for p in @patches when p.y <  @earthTop and p.x < @oceanLeft)
     @oceanPatches =        (p for p in @patches when p.y <  @earthTop and p.x >= @oceanLeft)
 
-    p.color = [255, 200, 200] for p in @earthPatches
-
-    for p in @oceanPatches
-      if      p.y == @patches.minY   then p.color = [5, 5, 100]
-      else if p.y == @patches.minY+1 then p.color = [10, 10, 150]
-      else if p.y  < @patches.minY+4 then p.color = [20, 20, 200]
-      else p.color = [30, 30, 240]
+    @setColorOfOceanPatches()
 
     @updateAlbedoOfSurface()
     @createCO2(13)
     @createVapor(5) if @includeVapor
     @createHeat(23)
     @draw()
+
+  backgroundImageUrls: ['img/earth.svg', 'img/ground.svg', 'img/sky.svg', 'img/ocean.png']
+
+  drawBackgroundImages: ->
+    $.when(@loadBackgroundImages()...).then =>
+      ctx = ABM.drawing
+      p = ABM.patches
+      left = p.minX - 0.5
+      right = p.maxX + 0.5
+      width = right - left
+      # the only sensible way to understand these are as min/max; yMin is the top
+      yMin = p.minY - 0.5
+      yMax = p.maxY + 0.5
+
+      ctx.save()
+      ctx.scale 1, -1
+      ctx.drawImage @images['img/sky.svg'], left, yMin,  width, yMax - yMin
+      ctx.drawImage @images['img/earth.svg'], left, yMax - (@earthTop - yMin),  width, @earthTop - yMin
+
+      ctx.save()
+      ctx.beginPath()
+      ctx.moveTo left,  -@earthTop - 1
+      ctx.lineTo @oceanLeft + 0.2, -@earthTop - 1
+      ctx.lineTo @oceanLeft + 0.2, -@earthTop + 1
+      ctx.lineTo left,  -@earthTop + 1
+      ctx.clip()
+
+      ctx.drawImage @images['img/ground.svg'], left, -@earthTop - 1, width, 2
+      ctx.restore()
+
+      ctx.drawImage @images['img/ocean.png'], @oceanLeft, yMax - (@earthTop - yMin) - 0.7,  width - @oceanLeft, @earthTop - yMin + 0.7
+      ctx.restore()
+
+  setColorOfOceanPatches: ->
+    for p in @oceanPatches
+      if      p.y == @patches.minY   then p.color = [5, 5, 100]
+      else if p.y == @patches.minY+1 then p.color = [10, 10, 150]
+      else if p.y  < @patches.minY+4 then p.color = [20, 20, 200]
+      else p.color = [30, 30, 240]
 
   setIncludeWaterVapor: (b) ->
     @includeVapor = b
