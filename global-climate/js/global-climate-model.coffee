@@ -50,6 +50,12 @@ class ClimateModel extends ABM.Model
       ctx.rotate Math.PI
       ctx.drawImage volcanoImg, 0, 0
 
+    cloudImg = document.getElementById 'cloud-sprite-1'
+    if cloudImg then  ABM.shapes.add "cloud", false, (ctx) ->
+      ctx.scale -0.1, 0.1
+      ctx.rotate Math.PI
+      ctx.drawImage cloudImg, 0, 0
+
     # set default agent shapes
     @agents.setDefaultSize @agentSize
     @agents.setDefaultShape "arrow"
@@ -278,20 +284,15 @@ class ClimateModel extends ABM.Model
 
   makeCloud: (cloudNum, total, hidden) ->
     width = @skyTop - @earthTop
-    mid = (@skyTop + @earthTop)/2
-    y = mid + width * ((cloudNum/total) - 0.3) - 2
-    y = 6 if cloudNum == 0
+    mid = (@skyTop + @earthTop) / 2
+    y = if cloudNum is 0 then 6 else mid + width * (cloudNum / total - 0.3) - 2
     x = 2 * u.randomFloat(@patches.maxX) + @patches.minX
-    cloudParts = 3 + u.randomInt(16)
-    while cloudParts--
-      @clouds.create 1, (a) =>
-        a.cloudNum = cloudNum
-        a.color = [255,255,255]
-        a.size = @agentSize + 0.5 + u.randomFloat(1)
-        a.shape = "circle"
-        a.heading = 0
-        a.hidden = hidden
-        a.setXY x + u.randomFloat(5) - 4,  y + (u.randomFloat(u.randomFloat(3)))
+    @clouds.create 1, (a) =>
+      a.cloudNum = cloudNum
+      a.shape = "cloud"
+      a.heading = 0
+      a.hidden = hidden
+      a.setXY x + u.randomFloat(5) - 4,  y + u.randomFloat(u.randomFloat(3))
 
   runClouds: ->
     for a in @clouds
