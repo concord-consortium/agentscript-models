@@ -467,7 +467,16 @@ class ClimateModel extends ABM.Model
 
 window.ClimateModel = ClimateModel
 
-# this is a bit of a hack, to allow the page to know when this
-# script has been loaded and parsed by coffeescript.
-# it would be good to work out a better way to do this
-modelLoaded.resolve()
+# This Coffeescript may be compiled and executed async, and the images used by the model are loaded
+# async. When we get here the Coffescript is ready, so once the images finish loading, resolve the
+# jQuery deferred object that lets the page know that the model is ready to be instantiated and set
+# up.
+imagesLoaded = $('#sprites img').map (img) ->
+  dfd = $.Deferred()
+  if this.width > 0 and this.height > 0
+    dfd.resolve()
+  else
+    this.onload = -> dfd.resolve()
+  dfd
+
+$.when(imagesLoaded...).done -> modelLoaded.resolve()
