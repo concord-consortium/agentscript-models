@@ -80,7 +80,9 @@ class OceanClimateModel extends ClimateModel
       ctx.lineTo left,  -@earthTop + 1
       ctx.clip()
 
-      ctx.drawImage @images['img/ground.svg'], left, -@earthTop - 1, width, 2
+      # The 'ground.svg' image wouldn't stretch from edge to edge in Safari until I moved the left
+      # coordinate by 0.5 and increased the width by 1:
+      ctx.drawImage @images['img/ground.svg'], left - 0.5, -@earthTop - 1, width + 1, 2
       ctx.restore()
 
       ctx.drawImage @images['img/ocean.png'], @oceanLeft, yMax - (@earthTop - yMin) - 0.7,  width - @oceanLeft, @earthTop - yMin + 0.7

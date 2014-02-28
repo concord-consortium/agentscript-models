@@ -108,7 +108,9 @@ class ClimateModel extends ABM.Model
       ctx.scale 1, -1
       ctx.drawImage @images['img/sky.svg'], left, yMin,  width, yMax - yMin
       ctx.drawImage @images['img/earth.svg'], left, yMax - (@earthTop - yMin),  width, @earthTop - yMin
-      ctx.drawImage @images['img/ground.svg'], left, -@earthTop - 1, width, 2
+      # The 'ground.svg' image wouldn't stretch from edge to edge in Safari until I moved the left
+      # coordinate by 0.5 and increased the width by 1:
+      ctx.drawImage @images['img/ground.svg'], left - 0.5, -@earthTop - 1, width + 1, 2
       ctx.restore()
 
   setAlbedo: (percent) ->
