@@ -43,11 +43,6 @@ class OceanClimateModel extends ClimateModel
     @oceanCO2AbsorbtionMax = 1
     @oceanCO2Absorbtion = @oceanCO2AbsorbtionMax
 
-    @earthPatches =        (p for p in @patches when p.y <  @earthTop and p.x < @oceanLeft)
-    @oceanPatches =        (p for p in @patches when p.y <  @earthTop and p.x >= @oceanLeft)
-
-    @setColorOfOceanPatches()
-
     @updateAlbedoOfSurface()
     @createCO2(13)
     @createVapor(5) if @includeVapor
@@ -87,13 +82,6 @@ class OceanClimateModel extends ClimateModel
 
       ctx.drawImage @images['img/ocean.png'], @oceanLeft, yMax - (@earthTop - yMin) - 0.7,  width - @oceanLeft, @earthTop - yMin + 0.7
       ctx.restore()
-
-  setColorOfOceanPatches: ->
-    for p in @oceanPatches
-      if      p.y == @patches.minY   then p.color = [5, 5, 100]
-      else if p.y == @patches.minY+1 then p.color = [10, 10, 150]
-      else if p.y  < @patches.minY+4 then p.color = [20, 20, 200]
-      else p.color = [30, 30, 240]
 
   setIncludeWaterVapor: (b) ->
     @includeVapor = b
