@@ -1,5 +1,15 @@
 class OceanClimateModel extends ClimateModel
   u = ABM.util # static variable
+
+  oceanContour = [
+    [0.0000, 1.0000]
+    [0.0107, 0.7392]
+    [0.0243, 0.4431]
+    [0.1002, 0.1827]
+    [0.1698, 0.0187]
+    [0.1888, 0.0000]
+  ]
+
   twoPI = Math.PI * 2
 
   includeVapor: true
@@ -83,6 +93,37 @@ class OceanClimateModel extends ClimateModel
       ctx.drawImage @images['img/ocean.png'], @oceanLeft, -@earthTop - 0.7, right - @oceanLeft, @earthTop  + 0.7 - yMin
       ctx.restore()
 
+  oceanBoundaryAndNormalAngleAt: (y) ->
+    # bottom left corner of ocean is at [@oceanLeft, yMin]
+    # width is:  right - @oceanLeft
+    # height is: @earthTop + 0.7 - yMin
+
+    # oceanContour[i] = [x, y]
+    # where x = fraction of width
+    #       y = fraction of height
+
+    yMin = @patches.minY - 0.5
+    xMin = @patches.minX - 0.5
+    width  = @patches.maxX + 0.5  - @oceanLeft
+    height = @earthTop + 0.7 - yMin
+    # scaled
+    _y = (y - yMin) / height
+
+    return [xMin, 0] if _y <= 0 or _y >= 1
+
+    for coords, i in oceanContour
+      break if coords[1] < _y
+
+    [x0, y0] = oceanContour[i]
+    [x1, y1] = oceanContour[i-1]
+
+    y0 < _y < y1 or throw new Error "Whoops"
+
+    _x = x0 + (x1 - x0) / (y1 - y0) * (_y - y0)
+
+    [_x * width + @oceanLeft, Math.atan2(y1 - y0, x1 - x0) - Math.PI / 2]
+
+
   setIncludeWaterVapor: (b) ->
     @includeVapor = b
     if not @includeVapor
@@ -138,9 +179,18 @@ class OceanClimateModel extends ClimateModel
           a.stamp()
           a.die()
           return
-        if a.y <= @earthTop + 1 and a.x < @oceanLeft    # bounce off land
-          a.heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
-        else if a.y <= @earthTop + 1 and a.y > @earthTop + 0.9 and a.x >= @oceanLeft    # bounce off sea?
+
+        if a.y <= @earthTop + 0.7
+          [oceanLeft, normal] = @oceanBoundaryAndNormalAngleAt a.y
+
+          if a.x < (@patches.minX - 0.3)
+            # we're on the left edge, wrap back around to the right side
+            a.heading = Math.PI
+          else if a.x < oceanLeft
+            # "bounce" off land-ocean boundary
+            a.heading = u.randomFloat2 normal - Math.PI/4, normal + Math.PI/4
+
+        else if @earthTop + 0.6 < a.y <= @earthTop + 0.7 and a.x >= @oceanLeft    # bounce off sea?
           if @oceanCO2Absorbtion < u.randomFloat 1
             a.heading = Math.PI/2
         else if a.y >= @skyTop + 1                           # bounce off sky
