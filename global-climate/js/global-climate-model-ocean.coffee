@@ -80,7 +80,7 @@ class OceanClimateModel extends ClimateModel
       ctx.drawImage @images['img/ground.svg'], left - 0.5, -@earthTop - 1, width + 1, 2
       ctx.restore()
 
-      ctx.drawImage @images['img/ocean.png'], @oceanLeft, yMax - (@earthTop - yMin) - 0.7,  width - @oceanLeft, @earthTop - yMin + 0.7
+      ctx.drawImage @images['img/ocean.png'], @oceanLeft, -@earthTop - 0.7, right - @oceanLeft, @earthTop  + 0.7 - yMin
       ctx.restore()
 
   setIncludeWaterVapor: (b) ->
