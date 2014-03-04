@@ -2,6 +2,13 @@ class ClimateModel extends ABM.Model
 
   u = ABM.util
 
+  # class method; does not need a 'this' reference
+  @loadShapeFromElement = (shapeName, elementId, scale=0.1, flipHorizontal=false) ->
+    img = document.getElementById elementId
+    if img then ABM.shapes.add shapeName, false, (ctx) ->
+      ctx.scale (if flipHorizontal then -scale else scale), -scale
+      ctx.drawImage img, 0, 0
+
   setup: -> # called by Model ctor
     @anim.ticks = 1
     @refreshPatches = true
@@ -38,23 +45,10 @@ class ClimateModel extends ABM.Model
 
     # import images
     @setCacheAgentsHere()
-    factoryImg = document.getElementById('factory-sprite')
-    ABM.shapes.add "factory", false, (ctx) ->
-      ctx.scale -0.1, 0.1
-      ctx.rotate Math.PI
-      ctx.drawImage factoryImg, 0, 0
 
-    volcanoImg = document.getElementById('volcano-sprite')
-    if volcanoImg then ABM.shapes.add "volcano", false, (ctx) ->
-      ctx.scale -0.1, 0.1
-      ctx.rotate Math.PI
-      ctx.drawImage volcanoImg, 0, 0
-
-    cloudImg = document.getElementById 'cloud-sprite-1'
-    if cloudImg then  ABM.shapes.add "cloud", false, (ctx) ->
-      ctx.scale -0.1, 0.1
-      ctx.rotate Math.PI
-      ctx.drawImage cloudImg, 0, 0
+    [["factory", "factory-sprite"]
+     ["volcano", "volcano-sprite"]
+     ["cloud",   "cloud-sprite-1"]].forEach (u) => @constructor.loadShapeFromElement u...
 
     # set default agent shapes
     @agents.setDefaultSize @agentSize
