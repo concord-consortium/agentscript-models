@@ -61,6 +61,10 @@ class OceanClimateModel extends ClimateModel
 
   backgroundImageUrls: ['img/earth.svg', 'img/ground.svg', 'img/sky.svg', 'img/ocean.png']
 
+  draw: ->
+    super
+    @drawIceSheet?()
+
   drawBackgroundImages: ->
     $.when(@loadBackgroundImages()...).then =>
       ctx = ABM.drawing
@@ -145,12 +149,14 @@ class OceanClimateModel extends ClimateModel
     p.color = earthAlbedo for p in @earthSurfacePatches when p.x < @oceanLeft
     p.color = oceanAlbedo for p in @earthSurfacePatches when p.x >= @oceanLeft
 
-    if @icePercent
-      iceLeft  = @patches.minX - (@patches.minX - @oceanLeft) * @icePercent
-      iceRight = @patches.maxX - (@patches.maxX - @oceanLeft) * @icePercent
-      p.color = [255, 255, 255] for p in @earthSurfacePatches when p.x < iceLeft or p.x >= iceRight
+    l = @iceLeft @icePercent
+    r = @iceRight @icePercent
+    p.color = [255, 255, 255] for p in @earthSurfacePatches when p.x < l or p.x >= r
 
     @draw()
+
+  iceLeft:  (p) -> @patches.minX - 0.5 + p * (@oceanLeft - @patches.minX + 0.5)
+  iceRight: (p) -> @patches.maxX + 0.5 - p * (@patches.maxX - @oceanLeft + 0.5)
 
   #
   # Ice
@@ -160,7 +166,75 @@ class OceanClimateModel extends ClimateModel
 
   setIcePercent: (p) ->
     @icePercent = p
+    scale = 0.04
+    y = @earthTop + 1.3
+
+    if p > 0
+      # i.e., don't create "iceberg" agents @groundIceAgent and @oceanIceAgent in model variants
+      # which never set @icePercent > 0
+      if not @groundIceAgent?
+        @constructor.loadShapeFromElement "iceberg-left",  "iceberg-sprite", scale, flipHorizontal=true
+        @constructor.loadShapeFromElement "iceberg-right", "iceberg-sprite", scale, flipHorizontal=false
+
+        @groundIceAgent ||= (@agents.create 1, (a) =>
+          a.shape = "iceberg-left"
+          a.setXY 0, y)[0]
+
+        @oceanIceAgent ||= (@agents.create 1, (a) =>
+          a.shape = "iceberg-right"
+          a.setXY 0, y)[0]
+
+        img = document.getElementById "iceberg-sprite"
+        @icebergHeight = img.height
+        @icebergWidth = img.width
+
+
+    # the slight 0.001 offset prevents the iceberg agent from "wrapping around" to the other side
+    # when @icePercent is 0
+    @groundIceAgent?.setXY @iceLeft(p) + 0.001, @groundIceAgent.y
+    @oceanIceAgent?.setXY @iceRight(p) - 0.001, @oceanIceAgent.y
+
     @updateAlbedoOfSurface()
+
+  # Draw the "ice sheet" that meets up with the iceberg graphic, onto the agents layer. (This method
+  # is called by the overridden @draw() method so that Agentscript doesn't draw over the ice sheet.)
+  drawIceSheet: ->
+    return unless @icebergHeight?
+
+    # height of the left (or right) edge of the iceberg relative to its maximum height
+    edgeHeightFraction = 0.822
+
+    # empirically, the height of the edge of the iceberg in the units used by agents canvas context
+    # (I don't know why the multiple of 0.3 works, since the iceberg is rendered with scale = 0.04)
+    height = 0.03 * edgeHeightFraction * @icebergHeight
+
+    # y coordinate of the top of the edge of the iceberg
+    y = 0.03 * (1 - edgeHeightFraction) * @icebergHeight - @earthTop - 1.3
+
+    # empirically, the width of the iceberg graphic
+    width = 0.03 * @icebergWidth
+
+    ctx = @contexts.agents
+    ctx.save()
+    ctx.scale 1, -1
+
+    # match the color gradient of the SVG source of the iceberg graphic
+    grd = ctx.createLinearGradient 0, y + height, 0, y
+    grd.addColorStop 0,     "#CAE8E6"
+    grd.addColorStop 0.069, "#D9EFED"
+    grd.addColorStop 0.179, "#EAF6F5"
+    grd.addColorStop 0.314, "#F6FBFB"
+    grd.addColorStop 0.502, "#FDFEFE"
+    grd.addColorStop 1,     "#FFFFFF"
+    ctx.fillStyle = grd
+
+    # the 0.7, 0.2 ensures that there's a little overlap between the "glacier"/"ice sheet" and the
+    # iceberg graphic it joins up with. Without the overlap, there's a little bit of flickering.
+    l = @patches.minX - 0.5
+    ctx.fillRect l, y, @iceLeft(@icePercent) - width - l + 0.2, height
+    l = @iceRight(@icePercent) + width - 0.2
+    ctx.fillRect l, y, @patches.maxX + 0.5 - l, height
+    ctx.restore()
 
   updateIce: (p) ->
     return unless @iceFormedByTemperature
