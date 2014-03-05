@@ -46,9 +46,10 @@ class ClimateModel extends ABM.Model
     # import images
     @setCacheAgentsHere()
 
-    [["factory", "factory-sprite"]
-     ["volcano", "volcano-sprite"]
+    [["volcano", "volcano-sprite"]
      ["cloud",   "cloud-sprite-1"]].forEach (u) => @constructor.loadShapeFromElement u...
+
+    @constructor.loadShapeFromElement "factory", "factory-sprite", 0.07
 
     # set default agent shapes
     @agents.setDefaultSize @agentSize
@@ -401,7 +402,7 @@ class ClimateModel extends ABM.Model
 
       while n--
         @factories.create 1, (a) =>
-          a.setXY 8 / (0.5 * n + 1) - 28, @earthTop + 9.6
+          a.setXY 8 / (0.5 * n + 1) - 28, @earthTop + 7
           a.size = 1 / (0.5 * n + 1)
 
     @draw()
@@ -412,7 +413,7 @@ class ClimateModel extends ABM.Model
       @emitPollution()
 
   emitPollution: ->
-    @createCO2 1, [-15, @earthTop+8], Math.PI/2
+    @createCO2 1, [-18.5, @earthTop + 7.2], Math.PI/2
 
   #
   # Global Functions
