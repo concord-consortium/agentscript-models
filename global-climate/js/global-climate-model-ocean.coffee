@@ -182,15 +182,14 @@ class OceanClimateModel extends ClimateModel
     # height of the left (or right) edge of the iceberg relative to its maximum height
     edgeHeightFraction = 0.822
 
-    # empirically, the height of the edge of the iceberg in the units used by agents canvas context
-    # (I don't know why the multiple of 0.3 works, since the iceberg is rendered with scale = 0.04)
+    # The height of the edge of the iceberg in the units used by agents canvas context
     height = 0.03 * edgeHeightFraction * @icebergImage.height
 
     # y coordinate of the top of the edge of the iceberg
     y = -@earthTop - 1.3
     sheetY = 0.03 * (1 - edgeHeightFraction) * @icebergImage.height + y
 
-    # empirically, the width of the iceberg graphic
+    # The width of the iceberg graphic
     width = 0.03 * @icebergImage.width
 
     ctx = @contexts.agents
@@ -222,8 +221,8 @@ class OceanClimateModel extends ClimateModel
     grd.addColorStop 1,     "#FFFFFF"
     ctx.fillStyle = grd
 
-    # the 0.7, 0.2 ensures that there's a little overlap between the "glacier"/"ice sheet" and the
-    # iceberg graphic it joins up with. Without the overlap, there's a little bit of flickering.
+    # The 0.2 adjustment ensures that there's a little overlap between the "glacier"/"ice sheet" and
+    # the iceberg graphic it joins up with. Without the overlap, there's a little bit of flickering.
     l = @patches.minX - 0.5
     ctx.fillRect l, sheetY, @iceLeft(@icePercent) - width - l + 0.2, height
     l = @iceRight(@icePercent) + width - 0.2
