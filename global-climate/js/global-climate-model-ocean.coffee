@@ -151,6 +151,10 @@ class OceanClimateModel extends ClimateModel
 
     l = @iceLeft @icePercent
     r = @iceRight @icePercent
+
+    # NOTA BENE: Although these patches are not visible, it's important to change the color because
+    # the sunlight reflection is determined by the color of the patches. (AgentScript more or less
+    # inentionally encourages using color to represent model properties.)
     p.color = [255, 255, 255] for p in @earthSurfacePatches when p.x < l or p.x >= r
 
     @draw()
