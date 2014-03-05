@@ -195,14 +195,12 @@ class OceanClimateModel extends ClimateModel
     ctx = @contexts.agents
 
     ctx.save()
-    ctx.scale 1, 1
     ctx.translate @iceLeft(@icePercent), -y
     ctx.scale -0.03, -0.03
     ctx.drawImage @icebergImage, 0, 0
     ctx.restore()
 
     ctx.save()
-    ctx.scale 1, 1
     ctx.translate @iceRight(@icePercent), -y
     ctx.scale 0.03, -0.03
     ctx.drawImage @icebergImage, 0, 0
