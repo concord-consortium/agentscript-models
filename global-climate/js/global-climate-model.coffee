@@ -298,6 +298,8 @@ class ClimateModel extends ABM.Model
     @clouds.create 1, (a) =>
       a.cloudNum = cloudNum
       a.shape = "cloud"
+      # needed to calculate collision with sunrays, but ∄ any way to get width back from ABM.shapes
+      a.width = 0.1 * document.getElementById('cloud-sprite-1').width
       a.heading = 0
       a.hidden = hidden
       a.setXY x + u.randomFloat(5) - 4,  y + u.randomFloat(u.randomFloat(3))
@@ -321,12 +323,11 @@ class ClimateModel extends ABM.Model
 
   reflectSunshineFromClouds: ->
     for a in @sunrays
-      if a
-        if @clouds.inRadius(a, 1).any()
-          heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
-          if @headingUp a
-            heading = -heading
-          a.heading = heading
+      if a? and @clouds.filter((c) => Math.abs(a.y - c.y) < 1 and c.x < a.x <= c.x + c.width).length > 0
+        heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
+        if @headingUp a
+          heading = -heading
+        a.heading = heading
 
   encounterEarth: ->
     for a in @sunrays
