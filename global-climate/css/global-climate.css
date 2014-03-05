@@ -125,6 +125,7 @@ circle {
   top: 1em;
   left: 40em;
   color: white;
+  z-index: 1;
 }
 
 #playback-controls {
