@@ -40,6 +40,60 @@ window.initControls = (args) ->
 
   setupGraphs()
 
+$(document).ready ->
+
+  labels = [
+    { key: "solar radiation", draw: (ctx) -> drawShape ctx, "rgb(235, 235, 0)", "arrow" }
+    { key: "infrared radiation", draw: (ctx) -> drawShape ctx, "rgb(200, 32, 200)", "arrow" }
+    { key: "carbon dioxide", draw: (ctx) -> drawShape ctx, "rgb(0, 255, 0)", "pentagon", 0.8 }
+    { key: "water vapor", draw: (ctx) -> drawShape ctx, "rgb(0, 0, 255)", "circle", 0.8 }
+    { key: "heat", draw: (ctx) -> drawShape ctx, "rgb(255, 63, 63)", "circle", 0.8 }
+  ]
+
+  drawShape = (ctx, fillStyle, shapeName, scale=1) ->
+    ctx.save()
+    ctx.translate 20, -6
+    ctx.scale 18*scale, -18*scale
+    ctx.fillStyle = fillStyle
+    ctx.beginPath()
+    ABM.shapes[shapeName].draw ctx
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+
+  drawKey = (canvas) ->
+    # center the lines vertically
+    nLines = 4
+    perLine = 30
+    ctx = canvas.getContext '2d'
+    ctx.fillStyle = 'black'
+    ctx.font = '18px "Helvetica Neue", Helvetica, sans-serif'
+    ctx.lineWidth = 2
+    ctx.translate 0, 30
+    for label, i in labels
+      ctx.fillText label.key, 50, 0
+      label.draw ctx
+      ctx.translate 0, perLine
+
+  # add a link that, when clicked, pops up a non-modal, draggable canvas element that shows a key
+  # for the different agent shapes
+  $showKey = $('<a href="#" class="show-agents-key">show key</a>').appendTo $ '#content'
+  $showKey.click ->
+    if ($key = $('#agents-key')).length is 0
+      $key = $("<div id='agents-key' class='agents-key'><a class='icon-remove-sign icon-large'></a><canvas></canvas></div>").appendTo($ document.body).draggable()
+      canvas = $key.find('canvas')[0]
+      $key.height 170
+      $key.width 200
+      canvas.height = $key.outerHeight()
+      canvas.width = $key.outerWidth()
+      drawKey $key.find('canvas')[0]
+
+    $key.css
+      left: '5em'
+      top: '5em'
+    .show()
+    .on 'click', 'a', -> $(this).parent().hide()
+
 $('#play-pause-button').click ->
   if climateModel.anim.animStop
     climateModel.start()

@@ -128,6 +128,50 @@ circle {
   z-index: 1;
 }
 
+a.show-agents-key {
+  position: absolute;
+  color: white;
+  top: 1em;
+  left: 1.5em;
+  z-index: 5;
+}
+a.show-agents-key:link {
+  text-decoration: none;
+}
+a.show-agents-key:visited {
+  text-decoration: none;
+}
+a.show-agents-key:hover {
+  text-decoration: underline;
+}
+a.show-agents-key:active {
+  text-decoration: underline;
+}
+
+.agents-key {
+  width: 12em;
+  position: absolute;
+  border: none;
+  border-radius: 0.4em;
+  /* need to be higher than div#mouse-catcher */
+  z-index: 5;
+  background-color: white;
+}
+
+.icon-remove-sign {
+  color: #666;
+  position: absolute;
+  right: 0.2em;
+  top: 0.2em;
+}
+
+.icon-remove-sign:hover {
+  color: black;
+}
+.icon-remove-sign:active {
+  color: black;
+}
+
 #playback-controls {
   position: absolute;
   top: 385px;
