@@ -86,7 +86,7 @@ class ClimateModel extends ABM.Model
         dfd.resolve img
       dfd
 
-  backgroundImageUrls: ['img/earth.svg', 'img/ground.svg', 'img/sky.svg']
+  backgroundImageUrls: ['img/earth.png', 'img/ground.png', 'img/sky.png']
 
   drawBackgroundImages: ->
     $.when(@loadBackgroundImages()...).then =>
@@ -101,11 +101,11 @@ class ClimateModel extends ABM.Model
 
       ctx.save()
       ctx.scale 1, -1
-      ctx.drawImage @images['img/sky.svg'], left, yMin,  width, yMax - yMin
-      ctx.drawImage @images['img/earth.svg'], left, yMax - (@earthTop - yMin),  width, @earthTop - yMin
-      # The 'ground.svg' image wouldn't stretch from edge to edge in Safari until I moved the left
+      ctx.drawImage @images['img/sky.png'], left, yMin,  width, yMax - yMin
+      ctx.drawImage @images['img/earth.png'], left, yMax - (@earthTop - yMin),  width, @earthTop - yMin
+      # The 'ground.png' image wouldn't stretch from edge to edge in Safari until I moved the left
       # coordinate by 0.5 and increased the width by 1:
-      ctx.drawImage @images['img/ground.svg'], left - 0.5, -@earthTop - 1, width + 1, 2
+      ctx.drawImage @images['img/ground.png'], left - 0.5, -@earthTop - 1, width + 1, 2
       ctx.restore()
 
   setAlbedo: (percent) ->

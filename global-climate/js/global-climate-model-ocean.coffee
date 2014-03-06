@@ -59,7 +59,7 @@ class OceanClimateModel extends ClimateModel
     @createHeat(23)
     @draw()
 
-  backgroundImageUrls: ['img/earth.svg', 'img/ground.svg', 'img/sky.svg', 'img/ocean.png']
+  backgroundImageUrls: ['img/earth.png', 'img/ground.png', 'img/sky.png', 'img/ocean.png']
 
   draw: ->
     super
@@ -78,8 +78,8 @@ class OceanClimateModel extends ClimateModel
 
       ctx.save()
       ctx.scale 1, -1
-      ctx.drawImage @images['img/sky.svg'], left, yMin,  width, yMax - yMin
-      ctx.drawImage @images['img/earth.svg'], left, yMax - (@earthTop - yMin),  width, @earthTop - yMin
+      ctx.drawImage @images['img/sky.png'], left, yMin,  width, yMax - yMin
+      ctx.drawImage @images['img/earth.png'], left, yMax - (@earthTop - yMin),  width, @earthTop - yMin
 
       ctx.save()
       ctx.beginPath()
@@ -89,9 +89,9 @@ class OceanClimateModel extends ClimateModel
       ctx.lineTo left,  -@earthTop + 1
       ctx.clip()
 
-      # The 'ground.svg' image wouldn't stretch from edge to edge in Safari until I moved the left
+      # The 'ground.png' image wouldn't stretch from edge to edge in Safari until I moved the left
       # coordinate by 0.5 and increased the width by 1:
-      ctx.drawImage @images['img/ground.svg'], left - 0.5, -@earthTop - 1, width + 1, 2
+      ctx.drawImage @images['img/ground.png'], left - 0.5, -@earthTop - 1, width + 1, 2
       ctx.restore()
 
       ctx.drawImage @images['img/ocean.png'], @oceanLeft, -@earthTop - 0.7, right - @oceanLeft, @earthTop  + 0.7 - yMin
