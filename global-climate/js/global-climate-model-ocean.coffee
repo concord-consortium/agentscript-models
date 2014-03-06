@@ -219,7 +219,8 @@ class OceanClimateModel extends ClimateModel
       ctx.restore()
     else
        # The 0.2 adjustment ensures that there's a little overlap between the "glacier"/"ice sheet"
-       # andthe iceberg graphic it joins up with. Without the overlap, there's a little bit of flickering.
+       # and the iceberg graphic it joins up with. Without the overlap, there's a little bit of
+       # flickering.
       l = @patches.minX - 0.5
       ctx.fillRect l, sheetY, @iceLeft(@icePercent) - width - l + 0.2, height
       l = @iceRight(@icePercent) + width - 0.2
