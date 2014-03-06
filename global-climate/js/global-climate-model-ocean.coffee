@@ -257,7 +257,7 @@ class OceanClimateModel extends ClimateModel
           a.die()
           return
 
-        if a.y <= @earthTop + 0.7
+        if a.y <= @earthTop + 0.7 and a.x < @oceanLeft
           [oceanLeft, normal] = @oceanBoundaryAndNormalAngleAt a.y
 
           if a.x < (@patches.minX - 0.3)
