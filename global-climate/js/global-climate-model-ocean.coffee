@@ -63,7 +63,7 @@ class OceanClimateModel extends ClimateModel
 
   draw: ->
     super
-    @drawIceSheet?()
+    @drawIceSheet()
 
   drawBackgroundImages: ->
     $.when(@loadBackgroundImages()...).then =>
@@ -155,7 +155,7 @@ class OceanClimateModel extends ClimateModel
     # NOTA BENE: Although these patches are not visible, it's important to change the color because
     # the sunlight reflection is determined by the color of the patches. (AgentScript more or less
     # inentionally encourages using color to represent model properties.)
-    p.color = [255, 255, 255] for p in @earthSurfacePatches when p.x < l or p.x >= r
+    p.color = [255, 255, 255] for p in @earthSurfacePatches when p.x <= l or p.x >= r
 
     @draw()
 
@@ -179,32 +179,22 @@ class OceanClimateModel extends ClimateModel
 
     return unless @icebergImage?
 
+    scale = 0.03
+
     # height of the left (or right) edge of the iceberg relative to its maximum height
     edgeHeightFraction = 0.822
 
     # The height of the edge of the iceberg in the units used by agents canvas context
-    height = 0.03 * edgeHeightFraction * @icebergImage.height
+    height = scale * edgeHeightFraction * @icebergImage.height
 
     # y coordinate of the top of the edge of the iceberg
     y = -@earthTop - 1.3
-    sheetY = 0.03 * (1 - edgeHeightFraction) * @icebergImage.height + y
+    sheetY = scale * (1 - edgeHeightFraction) * @icebergImage.height + y
 
     # The width of the iceberg graphic
-    width = 0.03 * @icebergImage.width
+    width = scale * @icebergImage.width
 
     ctx = @contexts.agents
-
-    ctx.save()
-    ctx.translate @iceLeft(@icePercent), -y
-    ctx.scale -0.03, -0.03
-    ctx.drawImage @icebergImage, 0, 0
-    ctx.restore()
-
-    ctx.save()
-    ctx.translate @iceRight(@icePercent), -y
-    ctx.scale 0.03, -0.03
-    ctx.drawImage @icebergImage, 0, 0
-    ctx.restore()
 
     ctx.save()
     ctx.scale 1, -1
@@ -219,13 +209,34 @@ class OceanClimateModel extends ClimateModel
     grd.addColorStop 1,     "#FFFFFF"
     ctx.fillStyle = grd
 
-    # The 0.2 adjustment ensures that there's a little overlap between the "glacier"/"ice sheet" and
-    # the iceberg graphic it joins up with. Without the overlap, there's a little bit of flickering.
-    l = @patches.minX - 0.5
-    ctx.fillRect l, sheetY, @iceLeft(@icePercent) - width - l + 0.2, height
-    l = @iceRight(@icePercent) + width - 0.2
-    ctx.fillRect l, sheetY, @patches.maxX + 0.5 - l, height
-    ctx.restore()
+    leftEdgePatchX  = Math.floor @iceLeft(@icePercent || 0)
+    rightEdgePatchX = Math.ceil  @iceRight(@icePercent || 0)
+
+    if rightEdgePatchX - leftEdgePatchX <= 1
+      # If ice patches completely cover the earth surface, draw a continuous ice sheet with no
+      # iceberg graphic; this is less visually confusing than the alrernative.
+      ctx.fillRect @patches.minX - 0.5, sheetY, @patches.maxX - @patches.minX + 1, height
+      ctx.restore()
+    else
+       # The 0.2 adjustment ensures that there's a little overlap between the "glacier"/"ice sheet"
+       # andthe iceberg graphic it joins up with. Without the overlap, there's a little bit of flickering.
+      l = @patches.minX - 0.5
+      ctx.fillRect l, sheetY, @iceLeft(@icePercent) - width - l + 0.2, height
+      l = @iceRight(@icePercent) + width - 0.2
+      ctx.fillRect l, sheetY, @patches.maxX + 0.5 - l, height
+      ctx.restore()
+
+      ctx.save()
+      ctx.translate @iceLeft(@icePercent), -y
+      ctx.scale -scale, -scale
+      ctx.drawImage @icebergImage, 0, 0
+      ctx.restore()
+
+      ctx.save()
+      ctx.translate @iceRight(@icePercent), -y
+      ctx.scale scale, -scale
+      ctx.drawImage @icebergImage, 0, 0
+      ctx.restore()
 
   updateIce: (p) ->
     return unless @iceFormedByTemperature
