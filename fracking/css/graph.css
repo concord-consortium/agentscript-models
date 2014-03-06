@@ -22,7 +22,7 @@ div.graph {
   font-size: 0.7em;
   position: absolute;
   top: 2.8em;
-  right: 2.25em;
+  left: 4.75em;
   z-index: 4;
 }
 .graph a:link {
