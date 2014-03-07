@@ -40,11 +40,12 @@
 
 #playback {
   vertical-align: top;
+  display: block;
 }
 
 .button-set {
   display: inline-block;
-  margin-right: 20px;
+  margin-left: 20px;
   vertical-align: middle;
 }
 
