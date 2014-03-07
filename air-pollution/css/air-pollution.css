@@ -72,6 +72,10 @@
   font-size: 0.7em;
 }
 
+.wide-labels .button-label-top {
+  width: 425px;
+}
+
 .top-labels .button-title-top {
   position: relative;
   font-weight: bold;
