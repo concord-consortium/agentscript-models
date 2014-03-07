@@ -266,7 +266,7 @@ class ClimateModel extends ABM.Model
   #
   # Clouds
   #
-  addCloud: -> @makeCloud ++@numClouds, @numClouds, false
+  addCloud: -> @makeCloud @numClouds++, @numClouds, false
 
   subtractCloud: -> @clouds[--@numClouds].die() if @numClouds > 0
 
