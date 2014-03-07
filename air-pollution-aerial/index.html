@@ -81,7 +81,7 @@
         <span id="joystick-e">E</span>
         <span id="joystick-s">S</span>
         <span id="joystick-w">W</span>
-        <span id="windspeed">Wind speed: <span id="joystick-speed">0</span> MPH <span id="joystick-direction"></span></span>
+        <span id="windspeed">Wind: <span id="joystick-speed">0</span> MPH <span id="joystick-direction"></span></span>
       </div>
       <div id="instructions">
         <span>Click on the model to add up to four factories.</span>
@@ -202,14 +202,16 @@
       function getCardinalDirection(angle, distLeft) {
         var direction = ["", ""];
         if (angle < 3*Math.PI/8)
-          direction[0] = "south";
-        else if (angle > 5*Math.PI/8)
           direction[0] = "north";
+        else if (angle > 5*Math.PI/8)
+          direction[0] = "south";
         if (angle > Math.PI/8 && angle < 7*Math.PI/8) {
-          direction[1] = (distLeft > 0) ? "east" : "west"
+          direction[1] = (distLeft > 0) ? "west" : "east"
         }
         direction = direction.join("");
-        return direction.charAt(0).toUpperCase() + direction.slice(1);
+        direction = direction.charAt(0).toUpperCase() + direction.slice(1);
+        if (direction.length > 1) direction = "from the " + direction;
+        return direction;
       }
 
       function limitXY(x, y) {
