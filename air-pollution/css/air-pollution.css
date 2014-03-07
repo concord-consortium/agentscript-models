@@ -58,6 +58,10 @@
   min-width: 120px;
 }
 
+.wide-labels .button-label-left {
+  min-width: 160px;
+}
+
 .button-label-top {
   margin-bottom: -5px;
   position: relative;
@@ -122,6 +126,11 @@
 .button-label-top .left {
   position: absolute;
   left: 135px;
+}
+
+.wide-labels .button-label-top .left {
+  position: absolute;
+  left: 175px;
 }
 
 .button-label-top .right {
