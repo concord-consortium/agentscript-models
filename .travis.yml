@@ -3,7 +3,7 @@ rvm:
 - 1.9.3
 script: mkdir -p deploy/agentscript && cp -r !(deploy) deploy/agentscript/
 install: bundle install --without dev
-after_success: if [ "$TRAVIS_BRANCH" == "production" ]; then bundle exec s3_website push --site deploy --headless; fi
+after_success: if [ "$TRAVIS_BRANCH" == "production" ]; then disable_parallel_processing=true bundle exec s3_website push --site deploy --headless; fi
 env:
   global:
   - secure: Qh6OyqAp+5jfJp/XGOtprYUrrnzCYSOqEGpRYAUBU6NmPpzA4uK6gILhQNcqmID5WC4B80k24gPAXhMUzeSlJ8otz1zavUwCIVVpGO3CfUEstDE1XuY9XP9h5hvUpoki4odDjjV2xyMs7SwPkPdH51LXQ8yyM08UGXuRsi3KhZ4=
