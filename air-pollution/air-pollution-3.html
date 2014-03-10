@@ -109,7 +109,7 @@
       $(document).on('model-ready', function() {
         if (controls !== null) {
           controls.setup();
-          ABM.model.carPollutionRate = 30;
+          ABM.model.carPollutionRate = 100;
         }
         modelReady = true;
       });
@@ -117,7 +117,7 @@
         controls = new AirPollutionControls();
         if (modelReady) {
           controls.setup();
-          ABM.model.carPollutionRate = 30;
+          ABM.model.carPollutionRate = 100;
         }
       });
     </script>

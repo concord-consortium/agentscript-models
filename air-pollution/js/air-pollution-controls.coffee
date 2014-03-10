@@ -124,10 +124,10 @@ class AirPollutionControls
       min: 0
       max: 100
       step: 5
-      value: 30
+      value: 60
       slide: (evt, ui)->
         ABM.model.carPollutionRate = ui.value
-    ABM.model.carPollutionRate = 30
+    ABM.model.carPollutionRate = 60
 
     $("#cars-electric-slider").slider
       orientation: 'horizontal'
@@ -154,7 +154,7 @@ class AirPollutionControls
       min: 0
       max: 100
       step: 5
-      value: 25
+      value: 100
       slide: (evt, ui)->
         ABM.model.factoryPollutionRate = ui.value
     ABM.model.factoryPollutionRate = 100
