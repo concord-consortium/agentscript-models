@@ -151,13 +151,13 @@ class AirPollutionControls
 
     $("#factories-pollution-slider").slider
       orientation: 'horizontal'
-      min: 25
+      min: 0
       max: 100
       step: 5
       value: 25
       slide: (evt, ui)->
         ABM.model.factoryPollutionRate = ui.value
-    ABM.model.factoryPollutionRate = 25
+    ABM.model.factoryPollutionRate = 100
 
     $("#temperature-slider").slider
       orientation: 'horizontal'
