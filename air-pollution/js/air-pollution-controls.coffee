@@ -75,7 +75,7 @@ class AirPollutionControls
       min: -100
       max: 100
       step: 10
-      value: 0
+      value: ABM.model.windSpeed
       slide: (evt, ui)->
         ABM.model.setWindSpeed ui.value
         if ui.value > 0
@@ -83,91 +83,82 @@ class AirPollutionControls
           $("#lower-air-temperature").stop().animate({opacity: opacity})
         else
           $("#lower-air-temperature").stop().animate({opacity: 1})
-    ABM.model.setWindSpeed 0
 
     $("#cars-slider").slider
       orientation: 'horizontal'
       min: 0
       max: 10
       step: 1
-      value: 1
+      value: ABM.model.getNumCars()
       slide: (evt, ui)->
         ABM.model.setCars ui.value
-    ABM.model.setCars 1
 
     $("#sunlight-slider").slider
       orientation: 'horizontal'
       min: 0
       max: 10
       step: 1
-      value: 6
+      value: ABM.model.sunlightAmount
       slide: (evt, ui)->
         ABM.model.setSunlight ui.value
       change: (evt, ui)->
         ABM.model.setSunlight ui.value
-    ABM.model.setSunlight 6
 
     $("#rain-slider").slider
       orientation: 'horizontal'
       min: 0
       max: 6
       step: 1
-      value: 3
+      value: ABM.model.rainRate
       slide: (evt, ui)->
         ABM.model.setRainRate ui.value
       change: (evt, ui)->
         ABM.model.setRainRate ui.value
-    ABM.model.setRainRate 3
 
     $("#cars-pollution-slider").slider
       orientation: 'horizontal'
       min: 0
       max: 100
       step: 5
-      value: 60
+      value: ABM.model.carPollutionRate
       slide: (evt, ui)->
         ABM.model.carPollutionRate = ui.value
-    ABM.model.carPollutionRate = 60
 
     $("#cars-electric-slider").slider
       orientation: 'horizontal'
       min: 0
       max: 100
       step: 10
-      value: 25
+      value: ABM.model.carElectricRate
       slide: (evt, ui)->
         ABM.model.carElectricRate = ui.value
-    ABM.model.carElectricRate = 25
 
     $("#factories-slider").slider
       orientation: 'horizontal'
       min: 0
       max: 5
       step: 1
-      value: 1
+      value: ABM.model.getNumFactories()
       slide: (evt, ui)->
         ABM.model.setFactories ui.value
-    ABM.model.setFactories 1
 
     $("#factories-pollution-slider").slider
       orientation: 'horizontal'
       min: 0
       max: 100
       step: 5
-      value: 100
+      value: ABM.model.factoryPollutionRate
       slide: (evt, ui)->
         ABM.model.factoryPollutionRate = ui.value
-    ABM.model.factoryPollutionRate = 100
 
     $("#temperature-slider").slider
       orientation: 'horizontal'
       min: 0
       max: 100
       step: 10
-      value: 50
+      value: ABM.model.temperature
       slide: (evt, ui)->
         ABM.model.temperature = ui.value
-    ABM.model.temperature = 50
 
   startStopModel: ->
     @stopModel() unless @startModel()

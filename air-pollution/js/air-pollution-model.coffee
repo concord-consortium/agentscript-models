@@ -36,9 +36,9 @@ class AirPollutionModel extends ABM.Model
   numCars: 10
   numFactories: 5
   factoryDensity: 5
-  carPollutionRate: 10
+  carPollutionRate: 60
   carElectricRate: 25
-  factoryPollutionRate: 5
+  factoryPollutionRate: 100
   raining: false
   temperature: 50
 
@@ -50,6 +50,8 @@ class AirPollutionModel extends ABM.Model
 
   constructor: ->
     super
+    @setCars 1
+    @setFactories 1
     @setRootVars()
 
   setup: ->
@@ -232,12 +234,18 @@ class AirPollutionModel extends ABM.Model
 
     @draw() if @anim.animStop
 
+  getNumVisible: (xs) -> xs.filter((x) -> not x.hidden).length
+
+  getNumCars: -> @getNumVisible @cars
+
   setFactories: (n)->
     for i in [0...(@factories.length)]
       f = @factories[i]
       f.hidden = (i >= n)
 
     @draw() if @anim.animStop
+
+  getNumFactories: -> @getNumVisible @factories
 
   moveWind: ->
     speed = @_intSpeed(15)
