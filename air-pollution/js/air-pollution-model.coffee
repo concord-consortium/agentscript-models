@@ -48,6 +48,10 @@ class AirPollutionModel extends ABM.Model
   rainRate: 3
   nextRainEnd: 0
 
+  constructor: ->
+    super
+    @setRootVars()
+
   setup: ->
     @anim.setRate 50, false
     @setFastPatches()
