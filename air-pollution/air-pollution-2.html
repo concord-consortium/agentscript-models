@@ -88,8 +88,8 @@
       $(document).on('model-ready', function() {
         if (controls !== null) {
           controls.setup();
-          APP.setCars(2);
-          APP.setFactories(2);
+          APP.setNumCars(2);
+          APP.setNumFactories(2);
         }
         modelReady = true;
       });
@@ -97,8 +97,8 @@
         controls = new AirPollutionControls();
         if (modelReady) {
           controls.setup();
-          APP.setCars(2);
-          APP.setFactories(2);
+          APP.setNumCars(2);
+          APP.setNumFactories(2);
         }
       });
     </script>

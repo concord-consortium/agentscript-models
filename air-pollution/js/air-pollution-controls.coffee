@@ -91,7 +91,7 @@ class AirPollutionControls
       step: 1
       value: ABM.model.getNumCars()
       slide: (evt, ui)->
-        ABM.model.setCars ui.value
+        ABM.model.setNumCars ui.value
 
     $("#sunlight-slider").slider
       orientation: 'horizontal'
@@ -140,7 +140,7 @@ class AirPollutionControls
       step: 1
       value: ABM.model.getNumFactories()
       slide: (evt, ui)->
-        ABM.model.setFactories ui.value
+        ABM.model.setNumFactories ui.value
 
     $("#factories-pollution-slider").slider
       orientation: 'horizontal'

@@ -33,8 +33,8 @@ class AirPollutionModel extends ABM.Model
   graphSampleInterval: 10
 
   windSpeed: 0
-  numCars: 10
-  numFactories: 5
+  maxNumCars: 10
+  maxNumFactories: 5
   factoryDensity: 5
   carPollutionRate: 60
   carElectricRate: 25
@@ -50,8 +50,8 @@ class AirPollutionModel extends ABM.Model
 
   constructor: ->
     super
-    @setCars 1
-    @setFactories 1
+    @setNumCars 1
+    @setNumFactories 1
     @setRootVars()
 
   setup: ->
@@ -155,14 +155,14 @@ class AirPollutionModel extends ABM.Model
     @cars.setDefaultColor [0,0,0]
     @cars.setDefaultHidden true
 
-    @cars.create @numCars, (c)=>
+    @cars.create @maxNumCars, (c)=>
       pos = @CAR_SPAWN[@cars.length - 1]
       c.moveTo @patches.patchXY pos.x, 40
       c.heading = pos.heading
       c.shape = if pos.heading is 0 then 'right-car' else 'left-car'
       c.createTick = @anim.ticks || 0
 
-    @setCars 1
+    @setNumCars 1
 
   setupFactories: ->
     @factories.setDefaultSize 1
@@ -171,13 +171,13 @@ class AirPollutionModel extends ABM.Model
     @factories.setDefaultColor [0,0,0]
     @factories.setDefaultHidden true
 
-    @factories.create @numFactories, (f)=>
+    @factories.create @maxNumFactories, (f)=>
       pos = @FACTORY_SPAWN_POS[@factories.length-1]
       f.moveTo @patches.patchXY pos.x, pos.y
       f.size = pos.size
       f.createTick = @anim.ticks || 0
 
-    @setFactories 1
+    @setNumFactories 1
 
   setupPollution: ->
     @primary.setDefaultSize 3
@@ -227,7 +227,7 @@ class AirPollutionModel extends ABM.Model
       @inversionStrength = speed*4.5 / 100
     @draw() if @anim.animStop
 
-  setCars: (n)->
+  setNumCars: (n)->
     for i in [0...(@cars.length)]
       c = @cars[i]
       c.hidden = (i >= n)
@@ -238,7 +238,7 @@ class AirPollutionModel extends ABM.Model
 
   getNumCars: -> @getNumVisible @cars
 
-  setFactories: (n)->
+  setNumFactories: (n)->
     for i in [0...(@factories.length)]
       f = @factories[i]
       f.hidden = (i >= n)
