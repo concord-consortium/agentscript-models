@@ -9,7 +9,7 @@ h2 {
 
 #playback-controls {
   position: absolute;
-  top: 455px;
+  top: 275px;
   left: 10px;
 }
 
@@ -35,7 +35,7 @@ h2 {
 
 #joystick-control {
     position: absolute;
-    left: 500px;
+    left: 480px;
     top: 235px;
 }
 
@@ -92,13 +92,15 @@ h2 {
 #windspeed {
   position: relative;
   top: 23px;
-  left: -82px;
+  left: -155px;
+  width: 400px;
+  text-align: center;
 }
 
 #instructions {
   position: absolute;
-  top: 469px;
-  left: 145px;
+  top: 330px;
+  left: 10px;
 }
 
 #air-quality {
