@@ -28,9 +28,10 @@ class AirPollutionAerial extends ABM.Model
     @smoke.setDefaultColor [82,98,114]
     @smoke.setDefaultSize 0.4
 
-    @aLimits = {minX: 105, maxX: 120, minY: 135, maxY: 150}
-    @bLimits = {minX: 79, maxX: 101, minY: 76, maxY: 94}
-    @cLimits = {minX: 26, maxX: 56, minY: 16, maxY: 38}
+    # bounding boxes of cities A, B, and C
+    @aLimits = minX: 105, maxX: 123, minY: 80, maxY: 88
+    @bLimits = minX:  88, maxX: 100, minY: 33, maxY: 38
+    @cLimits = minX:  23, maxX:  35, minY: 16, maxY: 25
 
     @aQuality = 100
     @bQuality = 100
@@ -86,6 +87,7 @@ class AirPollutionAerial extends ABM.Model
     aPollution = 0
     bPollution = 0
     cPollution = 0
+
     for a in @smoke
       if @aLimits.minX < a.x < @aLimits.maxX and  @aLimits.minY < a.y < @aLimits.maxY
         aPollution++
@@ -94,7 +96,9 @@ class AirPollutionAerial extends ABM.Model
       else if @cLimits.minX < a.x < @cLimits.maxX and  @cLimits.minY < a.y < @cLimits.maxY
         cPollution++
 
-    cPollution /= 2
+    # rough emprirical adjustment for city sizes
+    bPollution *= 1/0.5
+    cPollution *= 1/0.7
 
     @aQuality = Math.max 100-aPollution, 0
     @bQuality = Math.max 100-bPollution, 0
