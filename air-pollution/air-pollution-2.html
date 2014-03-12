@@ -84,12 +84,12 @@
       var modelReady = false, controls = null;
       $(document).one('air-pollution-model-loaded', function() {
         APP=new AirPollutionModel("layers", 1, 0, 572, 0, 349, true);
+        APP.setNumCars(2);
+        APP.setNumFactories(2);
       });
       $(document).on('model-ready', function() {
         if (controls !== null) {
           controls.setup();
-          APP.setNumCars(2);
-          APP.setNumFactories(2);
         }
         modelReady = true;
       });
@@ -97,8 +97,6 @@
         controls = new AirPollutionControls();
         if (modelReady) {
           controls.setup();
-          APP.setNumCars(2);
-          APP.setNumFactories(2);
         }
       });
     </script>

@@ -86,32 +86,36 @@
     </div>
     <script>
       var modelReady = false, controls = null;
+
       $(document).one('air-pollution-model-loaded', function() {
-        APP=new AirPollutionModel("layers", 1, 0, 572, 0, 349, true);
+        APP = new AirPollutionModel("layers", 1, 0, 572, 0, 349, true);
+
+        APP.includeInversionLayer = true;
+        APP.setNumCars(2);
+        APP.setNumFactories(2);
+        APP.sunlightAmount = 8;
+        APP.rainRate = 0;
       });
+
       $(document).on('model-ready', function() {
         if (controls !== null) {
-          controls.setup();
           finishSetup();
         }
         modelReady = true;
       });
+
       $(document).one('air-pollution-controls-loaded', function() {
         controls = new AirPollutionControls();
         if (modelReady) {
-          controls.setup();
           finishSetup();
         }
       });
-      finishSetup = function(){
-        APP.includeInversionLayer = true;
-        APP.setNumCars(2);
-        APP.setNumFactories(2);
 
-        $("#wind-slider").slider({min: -30, max: 30, step:1});
-        $("#sunlight-slider").slider({value:8});
-        $("#rain-slider").slider({value:0});
+      finishSetup = function() {
+        controls.setup();
+        $("#wind-slider").slider({ min: -30, max: 30, step:1 });
       }
+
     </script>
   </body>
 </html>
