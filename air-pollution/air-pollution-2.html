@@ -86,6 +86,8 @@
         APP=new AirPollutionModel("layers", 1, 0, 572, 0, 349, true);
         APP.setNumCars(2);
         APP.setNumFactories(2);
+        APP.carPollutionRate = 200;
+        APP.factoryPollutionRate = 300;
       });
       $(document).on('model-ready', function() {
         if (controls !== null) {
