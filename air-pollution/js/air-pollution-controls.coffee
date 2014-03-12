@@ -124,6 +124,15 @@ class AirPollutionControls
       slide: (evt, ui)->
         ABM.model.carPollutionRate = ui.value
 
+    $("#cars-pollution-control-slider").slider
+      orientation: 'horizontal'
+      min: 0
+      max: 100
+      step: 5
+      value: 100 - ABM.model.carPollutionRate
+      slide: (evt, ui)->
+        ABM.model.carPollutionRate = 100 - ui.value
+
     $("#cars-electric-slider").slider
       orientation: 'horizontal'
       min: 0
@@ -150,6 +159,15 @@ class AirPollutionControls
       value: ABM.model.factoryPollutionRate
       slide: (evt, ui)->
         ABM.model.factoryPollutionRate = ui.value
+
+    $("#factories-pollution-control-slider").slider
+      orientation: 'horizontal'
+      min: 0
+      max: 100
+      step: 5
+      value: 100 - ABM.model.factoryPollutionRate
+      slide: (evt, ui)->
+        ABM.model.factoryPollutionRate = 100 - ui.value
 
     $("#temperature-slider").slider
       orientation: 'horizontal'
