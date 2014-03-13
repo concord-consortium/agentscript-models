@@ -1,3 +1,7 @@
+body {
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+}
+
 #sprites {
   position: absolute;
   top: 10px;
@@ -55,7 +59,6 @@
   position: relative;
   top: -3px;
   font-size: 1em;
-  font-weight: bold;
   min-width: 120px;
 }
 
@@ -66,7 +69,6 @@
 .button-label-top {
   margin-bottom: -5px;
   position: relative;
-  font-weight: bold;
   width: 385px;
   height: 1em;
   font-size: 0.7em;
@@ -78,7 +80,6 @@
 
 .top-labels .button-title-top {
   position: relative;
-  font-weight: bold;
   height: 1em;
   margin-top: 15px;
   margin-bottom: 5px;
