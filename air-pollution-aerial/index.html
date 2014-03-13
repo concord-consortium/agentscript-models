@@ -22,7 +22,7 @@
       });
 
       $.when(modelLoaded).done(function() {
-        model = new AirPollutionAerial("layers", 3, 0, 150, 0, 90, false);
+        model = new AirPollutionAerial("layers", 3, 0, 225, 0, 135, false);
         //model.start();
       });
     </script>
@@ -59,16 +59,16 @@
         </div>
         <div id="cities">
           <div id="city-a" class="city">
+            <h3>City A</h3>
             <div class="quality-measure"></div>
-            <span>City A</span>
           </div>
           <div id="city-b" class="city">
+            <h3>City B</h3>
             <div class="quality-measure"></div>
-            <span>City B</span>
           </div>
           <div id="city-c" class="city">
+            <h3>City C</h3>
             <div class="quality-measure"></div>
-            <span>City C</span>
           </div>
         </div>
       </div>
@@ -81,7 +81,7 @@
         <span id="joystick-e">E</span>
         <span id="joystick-s">S</span>
         <span id="joystick-w">W</span>
-        <div id="windspeed">Wind: <span id="joystick-speed">0</span> MPH <span id="joystick-direction"></span></div>
+        <div id="windspeed"><span id="joystick-speed">0</span> MPH <span id="joystick-direction"></span></div>
       </div>
       <div id="instructions">
         <span>Click on the model to add up to four power plants.</span>
@@ -192,6 +192,8 @@
               if (speed > 0) {
                 var angle = Math.acos(rel_top/speed);
                 $('#joystick-direction').text(getCardinalDirection(angle, rel_left));
+              } else {
+                $('#joystick-direction').text("");
               }
           },
           stop: function () {
@@ -202,15 +204,13 @@
       function getCardinalDirection(angle, distLeft) {
         var direction = ["", ""];
         if (angle < 3*Math.PI/8)
-          direction[0] = "north";
+          direction[0] = "N";
         else if (angle > 5*Math.PI/8)
-          direction[0] = "south";
+          direction[0] = "S";
         if (angle > Math.PI/8 && angle < 7*Math.PI/8) {
-          direction[1] = (distLeft > 0) ? "west" : "east"
+          direction[1] = (distLeft > 0) ? "W" : "E"
         }
-        direction = direction.join("");
-        direction = direction.charAt(0).toUpperCase() + direction.slice(1);
-        if (direction.length > 1) direction = "from the " + direction;
+        direction = "from the " + direction.join("");
         return direction;
       }
 

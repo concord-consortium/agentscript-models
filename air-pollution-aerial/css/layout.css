@@ -9,7 +9,7 @@ h2 {
 
 #playback-controls {
   position: absolute;
-  top: 275px;
+  top: 410px;
   left: 10px;
 }
 
@@ -35,7 +35,7 @@ h2 {
 
 #joystick-control {
     position: absolute;
-    left: 480px;
+    left: 716px;
     top: 235px;
 }
 
@@ -99,20 +99,20 @@ h2 {
 
 #instructions {
   position: absolute;
-  top: 330px;
+  top: 470px;
   left: 10px;
 }
 
 #air-quality {
   position: absolute;
   top: -16px;
-  left: 480px;
+  left: 700px;
 }
 
 #air-quality-scale {
   position: relative;
-  left: 200px;
-  width: 90px;
+  left: 60px;
+  width: 80px;
   padding: 10px;
   border: #BBB 2px solid
 }
@@ -152,15 +152,16 @@ h2 {
 
 .city {
   width: 150px;
-  clear:both;
-  margin-bottom: 45px;
+  margin-bottom: 1em;
 }
 
+.city h3 {
+  font-size: 1em;
+  font-weight: normal;
+  margin: 0.1em 0 0.1em 0px;
+}
 .quality-measure {
-  float: left;
   width: 40px;
   height: 23px;
   border: 1px solid black;
-  margin-right: 20px;
-  margin-top: -3px;
 }
