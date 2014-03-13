@@ -25,7 +25,7 @@
       <img id="cloud-sprite" src="img/cloud.svg" />
     </div>
     <div id="controls">
-      <div id="playback" class="button-set">
+      <div id="playback">
         <button id="reset-button">
           <i class="icon-step-backward"></i>
         </button>
@@ -84,13 +84,14 @@
       var modelReady = false, controls = null;
       $(document).one('air-pollution-model-loaded', function() {
         APP=new AirPollutionModel("layers", 1, 0, 572, 0, 349, true);
-        APP.setRootVars();
+        APP.setNumCars(2);
+        APP.setNumFactories(2);
+        APP.carPollutionRate = 200;
+        APP.factoryPollutionRate = 300;
       });
       $(document).on('model-ready', function() {
         if (controls !== null) {
           controls.setup();
-          APP.setCars(2);
-          APP.setFactories(2);        
         }
         modelReady = true;
       });
@@ -98,8 +99,6 @@
         controls = new AirPollutionControls();
         if (modelReady) {
           controls.setup();
-          APP.setCars(2);
-          APP.setFactories(2);
         }
       });
     </script>

@@ -25,7 +25,7 @@
       <img id="cloud-sprite" src="img/cloud.svg" />
     </div>
     <div id="controls">
-      <div id="playback" class="button-set">
+      <div id="playback">
         <button id="reset-button">
           <i class="icon-step-backward"></i>
         </button>
@@ -60,30 +60,22 @@
             <i class="icon-building"></i>
           </span>
         </div>
-        <div class="button-label-left">Factories:</div>
+        <div class="button-label-left">Power plants:</div>
         <div id="factories-slider" class="horizontal-slider"></div>
       </div>
       <div class="button-set top-labels">
-        <div class="button-title-top">Cars with pollution control devices:</div>
+        <div class="button-title-top">Percentage of cars with pollution control devices:</div>
         <div id="cars-pollution-top-labels" class="button-label-top">
-          <span class="left"><i class="icon-ban-circle"></i></span>
-          <span class="right">
-            <i class="icon-plus"></i>
-            <i class="icon-plus"></i>
-            <i class="icon-plus"></i>
-          </span>
+          <span class="left">0%</i></span>
+          <span class="right">100%</span>
         </div>
-        <div id="cars-pollution-slider" class="horizontal-slider"></div>
-        <div class="button-title-top">Factories with pollution control devices:</div>
+        <div id="cars-pollution-control-slider" class="horizontal-slider"></div>
+        <div class="button-title-top">Percentage of power plants with pollution control devices:</div>
         <div id="factories-pollution-top-labels" class="button-label-top">
-          <span class="left"><i class="icon-ban-circle"></i></span>
-          <span class="right">
-            <i class="icon-plus"></i>
-            <i class="icon-plus"></i>
-            <i class="icon-plus"></i>
-          </span>
+          <span class="left">0%</i></span>
+          <span class="right">100%</span>
         </div>
-        <div id="factories-pollution-slider" class="horizontal-slider"></div>
+        <div id="factories-pollution-control-slider" class="horizontal-slider"></div>
       </div>
       <div id="filling" class="button-set">
       </div>
@@ -104,12 +96,11 @@
       var modelReady = false, controls = null;
       $(document).one('air-pollution-model-loaded', function() {
         APP=new AirPollutionModel("layers", 1, 0, 572, 0, 349, true);
-        APP.setRootVars();
+        ABM.model.carPollutionRate = 100;
       });
       $(document).on('model-ready', function() {
         if (controls !== null) {
           controls.setup();
-          ABM.model.carPollutionRate = 30;
         }
         modelReady = true;
       });
@@ -117,7 +108,6 @@
         controls = new AirPollutionControls();
         if (modelReady) {
           controls.setup();
-          ABM.model.carPollutionRate = 30;
         }
       });
     </script>

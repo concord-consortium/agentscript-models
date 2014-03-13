@@ -1,3 +1,7 @@
+body {
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+}
+
 #sprites {
   position: absolute;
   top: 10px;
@@ -40,11 +44,12 @@
 
 #playback {
   vertical-align: top;
+  display: block;
 }
 
 .button-set {
   display: inline-block;
-  margin-right: 20px;
+  margin-left: 20px;
   vertical-align: middle;
 }
 
@@ -54,23 +59,27 @@
   position: relative;
   top: -3px;
   font-size: 1em;
-  font-weight: bold;
   min-width: 120px;
+}
+
+.wide-labels .button-label-left {
+  min-width: 160px;
 }
 
 .button-label-top {
   margin-bottom: -5px;
   position: relative;
-  font-weight: bold;
   width: 385px;
   height: 1em;
   font-size: 0.7em;
 }
 
+.wide-labels .button-label-top {
+  width: 425px;
+}
+
 .top-labels .button-title-top {
   position: relative;
-  font-weight: bold;
-  width: 385px;
   height: 1em;
   margin-top: 15px;
   margin-bottom: 5px;
@@ -119,9 +128,18 @@
   left: 248px;
 }
 
+.wide-labels .button-label-top .center {
+  left: 288px;
+}
+
 .button-label-top .left {
   position: absolute;
   left: 135px;
+}
+
+.wide-labels .button-label-top .left {
+  position: absolute;
+  left: 175px;
 }
 
 .button-label-top .right {

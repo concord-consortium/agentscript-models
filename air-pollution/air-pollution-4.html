@@ -24,7 +24,7 @@
       <img id="factory-sprite" src="img/air-pollution-factory.png" />
     </div>
     <div id="controls">
-      <div id="playback" class="button-set">
+      <div id="playback">
         <button id="reset-button">
           <i class="icon-step-backward"></i>
         </button>
@@ -86,33 +86,38 @@
     </div>
     <script>
       var modelReady = false, controls = null;
+
       $(document).one('air-pollution-model-loaded', function() {
-        APP=new AirPollutionModel("layers", 1, 0, 572, 0, 349, true);
-        APP.setRootVars();
+        APP = new AirPollutionModel("layers", 1, 0, 572, 0, 349, true);
+
+        APP.includeInversionLayer = true;
+        APP.setNumCars(2);
+        APP.setNumFactories(2);
+        APP.sunlightAmount = 8;
+        APP.rainRate = 0;
+        APP.carPollutionRate = 200;
+        APP.factoryPollutionRate = 300;
       });
+
       $(document).on('model-ready', function() {
         if (controls !== null) {
-          controls.setup();
-          finishSetup();      
+          finishSetup();
         }
         modelReady = true;
       });
+
       $(document).one('air-pollution-controls-loaded', function() {
         controls = new AirPollutionControls();
         if (modelReady) {
-          controls.setup();
           finishSetup();
         }
       });
-      finishSetup = function(){
-        APP.includeInversionLayer = true;
-        APP.setCars(2);
-        APP.setFactories(2);
 
-        $("#wind-slider").slider({min: -30, max: 30, step:1});
-        $("#sunlight-slider").slider({value:8});
-        $("#rain-slider").slider({value:0});
+      finishSetup = function() {
+        controls.setup();
+        $("#wind-slider").slider({ min: -30, max: 30, step:1 });
       }
+
     </script>
   </body>
 </html>
