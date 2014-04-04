@@ -110,42 +110,56 @@ class ErosionEngine
       # bottom corners, then sides for a patch of sky
       direction = p.direction or direction = 1 - (u.randomInt(2) * 2)
 
-      target = null
+      # remember, indices into p.n relative to patch p (in the center of the below diagram):
+      # 5  6  7
+      # 3  -  4
+      # 0  1  2
 
-      if p.n[1+direction]?.type is SKY
+      if p.x is @patches.minX and direction is -1 or p.x is @patches.maxX and direction is 1
+        # We're moving off the edge, so disappear (no target)
+        target = null
+      else if p.n[1+direction]?.type is SKY
+        # move downward and in the previous lateral direction
         target = p.n[1+direction]
       else if p.n[1-direction]?.type is SKY
+        # move downward and laterally in the opposite of the previous lateral direction
         target = p.n[1-direction]
         direction = direction * -1
       else if p.n[3.5+(direction/2)]?.type is SKY
+        # move horizontally in the previous lateral direction
         target = p.n[3.5+(direction/2)]
       else if p.n[3.5-(direction/2)]?.type is SKY
+        # move horizontally in the opposite of the previous lateral direction
         target = p.n[3.5-(direction/2)]
         direction = direction * -1
       else
+        # We're stuck! Don't change at all.
         p.direction = 0
         continue
-
-      # check below target to make sure it drops down to solid ground
-      while target.n[1].type is SKY
-        target = target.n[1]
-
-      # "move" patch to target
-      p.type = SKY
-      p.color = SKY_COLOR
-      p.eroded = false
-
-      target.type = LAND
-      target.direction = direction
-      target.eroded = true
-      target.zone = p.zone
-      target.stability = p.stability
-      target.isTerrace = p.isTerrace
-      target.quality = p.quality
 
       # count erosion in zones -- note this is not the same as the target's
       # origin zone (it's color), but where is it *currently* eroding from.
       if p.x < 0 then @zone1ErosionCount++ else @zone2ErosionCount++
+
+      # become sky
+      p.type = SKY
+      p.color = SKY_COLOR
+      p.eroded = false
+
+      # unless we're disappearing off the edge, "move" to target by making target a clone of p
+      if target?
+       # first, check below target to make sure it drops down to solid ground
+        while target.n[1].type is SKY
+          target = target.n[1]
+
+        target.type = LAND
+        target.direction = direction
+        target.eroded = true
+        target.zone = p.zone
+        target.stability = p.stability
+        target.isTerrace = p.isTerrace
+        target.quality = p.quality
+
 
   getBoxAroundPoint: (x, y, xStep, yStep) ->
     xStep = 3
