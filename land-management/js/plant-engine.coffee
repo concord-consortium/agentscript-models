@@ -147,7 +147,7 @@ class PlantEngine
 
               a.period = 0
 
-        growthRate = a.growthRates[a.period]
+        growthRate = a.growthRates[a.period] * @topsoilRateFactor(a)
         if poorWater then growthRate -= 0.001
 
         a.size += growthRate
@@ -155,6 +155,15 @@ class PlantEngine
         if a.size <= 0 then killList.push a
 
     a.die() for a in killList
+
+   topsoilRateFactor: (agent) ->
+     if agent.p.isTopsoil
+       # Topsoil layer is @MAX_INTERESTING_SOIL_DEPTH + 1 patches thick.
+       # Surface patches have depth = 0, so if agent is on patch with depth 2, there are
+       # @MAX_INTERESTING_SOIL_DEPTH + 1 - 2 patches of topsoil below the agent.
+       (@MAX_INTERESTING_SOIL_DEPTH + 1 - agent.p.depth) / (@MAX_INTERESTING_SOIL_DEPTH + 1)
+     else
+       0.05
 
   splitRoots: (plant) ->
     plant.p.sprout 1, @[plant.type], (root) =>
