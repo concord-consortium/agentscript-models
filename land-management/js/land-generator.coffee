@@ -6,8 +6,6 @@ TERRACE_COLOR = [60, 60, 60]
 SKY  = "sky"
 LAND = "land"
 
-MAX_INTERESTING_SOIL_DEPTH = 2
-
 class LandGenerator
 
   u = ABM.util
@@ -25,6 +23,8 @@ class LandGenerator
 
     for p in @patches
       p.zone = if p.x <= 0 then 1 else 2
+      # @setSoilDepths will set this to true for topsoil patches
+      p.isTopsoil = false
       if p.y > @landShapeFunction p.x
         p.color = SKY_COLOR
         p.type = SKY
@@ -33,7 +33,8 @@ class LandGenerator
       else
         p.color = DARK_LAND_COLOR
         p.type = LAND
-        p.depth = MAX_INTERESTING_SOIL_DEPTH
+        # @setSoilDepths will adjust this for topsoil patches
+        p.depth = @MAX_INTERESTING_SOIL_DEPTH
         p.eroded = false
         p.erosionDirection = 0
         p.stability = 1

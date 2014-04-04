@@ -10,8 +10,6 @@ POOR_SOIL_COLOR = [193, 114, 7]
 MAGENTA = [255, 0, 255]
 ORANGE = [255, 127, 0]
 
-MAX_INTERESTING_SOIL_DEPTH = 3
-
 SKY  = "sky"
 LAND = "land"
 
@@ -46,17 +44,21 @@ class ErosionEngine
 
   #
   # Set soil depth such that the top of each "column" of soil's depth is 0,
-  # the next depth is 1, etc, up to MAX_INTERESTING_SOIL_DEPTH
-  #
+  # the next depth is 1, etc, up to @MAX_INTERESTING_SOIL_DEPTH. Sets isTopsoil
+  # to true for patches from depth 0 down to the topmost patches having depth
+  # @MAX_INTERESTING_SOIL_DEPTH.
   setSoilDepths: ->
     @surfaceLand = []
 
     for x in [@patches.minX..@patches.maxX]
       lastDepth = -1
       for y in [@patches.maxY..@patches.minY]
+        break if lastDepth >= @MAX_INTERESTING_SOIL_DEPTH
+
         p = @patches.patch x, y
         continue if p.type is SKY
         p.depth = ++lastDepth
+        p.isTopsoil = true
         p.color = if @showErosion and p.eroded
           if p.zone is 1 then ORANGE else MAGENTA
         else if p.isTerrace
@@ -78,7 +80,6 @@ class ErosionEngine
 
         if p.depth is 0 then @surfaceLand.push p
 
-        if lastDepth >= MAX_INTERESTING_SOIL_DEPTH then break
 
   erode: ->
     # Find and sort the surface patches most exposed to the sky

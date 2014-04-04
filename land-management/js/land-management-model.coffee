@@ -14,6 +14,7 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
   month: 0
   monthLength: 100
   monthStrings: "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ")
+  MAX_INTERESTING_SOIL_DEPTH: 3
 
   setup: ->
     @setFastPatches()
