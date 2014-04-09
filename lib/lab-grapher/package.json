@@ -1,0 +1,25 @@
+{
+  "name": "lab-grapher",
+  "version": "0.1.0",
+  "description": "JavaScript fast graphing library",
+  "main": "event-router.js",
+  "dependencies": {},
+  "devDependencies": {
+    "browserify": ">= 2.35 < 3.0",
+    "mocha": "~1.15.1",
+    "vows": "~0.7.0",
+    "jquery": "~1.8.3",
+    "d3": "~3.3.11",
+    "jsdom": "~0.8.9"
+  },
+  "scripts": {
+    "build": "mkdir -p dist && browserify main.js --standalone Lab-grapher  > dist/lab-grapher.js",
+    "test": "mocha && vows test/graph-selection-test.js"
+  },
+  "author": "Stepchen Bannasch <stephen.bannasch@gmail.com>",
+  "licenses": [
+    "MIT",
+    "Simplified BSD",
+    "Apache 2.0"
+  ]
+}

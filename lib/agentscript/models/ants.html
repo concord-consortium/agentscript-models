@@ -1,0 +1,133 @@
+<html>
+  <head>
+    <title>AgentScript Model</title>
+    <script src="../agentscript.js"></script>
+    <script src="../coffee-script.js"></script>
+    <script type="text/coffeescript">
+
+    u = ABM.util # ABM.util alias, u.s is also ABM.shape accessor.
+    class MyModel extends ABM.Model
+      setup: -> # called by Model ctor
+        
+        # No optimizations: 10fps
+        @patches.usePixels() # 24fps
+        # @patches.cacheAgentsHere() # 9-10fps, not needed & modest overhead
+        # two: 27fps, now static colors larger percent of faster patches.
+        @agents.setUseSprites() # 24->46-48fps!
+        
+        # @anim.setRate 25, true # normal: let agents step faster than drawing
+        @anim.setRate 60, false # speed test
+        
+        # globals
+        @nestColor = [255,255,0]  # yellow
+        @foodColor = [0,0,255]    # blue
+
+        # defaults
+        @agents.setDefaultShape("bug")
+        @agents.setDefaultColor(@foodColor) # so default sprite not random color
+        @agents.setDefaultSize(3)
+        
+        # UI globals:
+        @population = 255
+        @maxPheromone = 35
+        @diffusionRate = .30
+        @evaporationRate = .01
+        @wiggleAngle = u.degToRad(30) # radians
+
+        if @agents.useSprites
+          # @nestSprite = ABM.shapes.shapeToSprite "bug", @nestColor, 3*@patches.size
+          # @foodSprite = ABM.shapes.shapeToSprite "bug", @foodColor, 3*@patches.size
+          @nestSprite = ABM.shapes.shapeToSprite "bug", @nestColor, @patches.toBits 3
+          @foodSprite = ABM.shapes.shapeToSprite "bug", @foodColor, @patches.toBits 3
+        
+        @setupPatches()
+        @setupAgents()
+      step: ->
+        console.log @anim.toString() if @anim.ticks % 100 is 0
+        @updateAgents()
+        @updatePatches()
+
+      setupPatches: ->
+        for p in @patches
+          p.isNest = false ; p.isFood = false 
+          # REMIND: agentsOwn etc; NL defaults to 0
+          p.foodPheromone = 0; p.nestPheromone = 0
+        (p.isNest=true;p.color=@nestColor) for p in @patchRect @patches.maxX-6,0,3,3
+        (p.isFood=true;p.color=@foodColor) for p in @patchRect @patches.minX+6,0,3,3
+        null
+      setupAgents: -> # a is agent
+        @agents.create @population, (a) => # fat arrow for @patches etc
+          #a.shape = "bug"
+          #a.size = 3
+          a.setXY @patches.maxX-6, 0
+          @resetAgent(a, false) # sets a.pheromone to max
+      resetAgent: (a, withFood) ->
+        a.carryingFood = withFood
+        if @agents.useSprites
+          a.sprite = if withFood then @nestSprite else @foodSprite
+          # a.setSprite (if withFood then @nestSprite else @foodSprite)
+        else
+          a.color = if withFood then @nestColor else @foodColor
+          # a.colorStr = u.colorStr a.color if @agents.staticColors
+        a.pheromone = @maxPheromone
+
+      updateAgents: ->
+        for a in @agents when a.id < @anim.ticks # gradually leave nest
+            @wiggleUphill a
+            @dropPheromone a
+        null # needed to avoid returning an absurd comprehension
+      wiggleUphill: (a) ->
+        if a.p.isOnEdge()
+          # a.rotate Math.PI 
+          a.rotate u.degToRad(180)
+        else
+          # nAhead = a.inCone a.p.n, Math.PI, 2
+          nAhead = a.inCone a.p.n, u.degToRad(180), 2
+          # nAhead = a.p.n.inCone a.p, a.heading, u.degToRad(180), 2
+          # nAhead = ABM.patches.inCone a.p, a.heading, u.degToRad(180), 2
+          [p, max] = nAhead.maxOneOf ((n) => @targetPheromone(a, n)), true # => for @
+          a.face p if max > .001/@maxPheromone
+          # p = nAhead.maxOneOf ((n) => @targetPheromone(a, n)) # => for @
+          # max = @targetPheromone(a, p)
+          # a.face p if max > .001/@maxPheromone
+        a.rotate u.randomCentered(@wiggleAngle)
+        a.forward 1
+      targetPheromone: (a, p) -> 
+        if a.carryingFood then p.nestPheromone else p.foodPheromone
+      dropPheromone: (a) ->
+        if (not a.carryingFood and a.p.isFood) or (a.carryingFood and a.p.isNest)
+          @resetAgent a, not a.carryingFood
+        if a.carryingFood
+        then a.p.foodPheromone += 0.1*a.pheromone
+        else a.p.nestPheromone += 0.1*a.pheromone
+        a.pheromone *= 0.9
+      
+      updatePatches: ->
+        @patches.diffuse "nestPheromone", @diffusionRate
+        @patches.diffuse "foodPheromone", @diffusionRate
+        for p in @patches
+          p.foodPheromone *= (1 - @evaporationRate)
+          p.nestPheromone *= (1 - @evaporationRate)
+          p.foodPheromone = p.nestPheromone = 0 if p.isOnEdge()
+          if not (p.isNest or p.isFood) #  or p.isOnEdge()
+            if p.foodPheromone > p.nestPheromone
+            then p.scaleColor @foodColor, p.foodPheromone
+            else p.scaleColor @nestColor, p.nestPheromone
+        null
+
+      # utilities
+      patchRect: (x, y, dw, dh) ->
+        @patches.patchRect @patches.patch(x,y), dw, dh, true
+
+    # div, patchSize, minX, maxX, minY, maxY, isTorus=true, hasNeighbors=true
+    #   NL Defaults: 13, -16, 16, -16, 16
+    APP=new MyModel "layers", 6, -40, 40, -40, 40, false
+    APP.setRootVars() # Put Model vars in global name space -- only for demo & debug
+    </script>
+
+  </head>
+  <body onload="ABM.model.start()">
+    <canvas id="test" style="height:0;width:0">Browser doesn't support HTML5 Canvas</canvas>
+    <div id="layers" style="position:relative;padding:20;"></div>
+  </body>
+</html>
