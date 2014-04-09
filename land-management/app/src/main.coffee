@@ -1,0 +1,5 @@
+require 'src/erosion-engine'
+require 'src/plant-engine'
+require 'src/land-generator'
+require 'src/land-management-model'
+require 'src/controls'

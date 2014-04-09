@@ -153,5 +153,3 @@ $(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
   $(".inner-bar").removeClass "current-month"
   $($(".inner-bar")[model.month]).addClass "current-month"
   $("#precipitation-value").text model.precipitation
-
-controlsLoaded.resolve()

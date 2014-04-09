@@ -21,5 +21,13 @@
     "chosen": "https://github.com/harvesthq/chosen/releases/download/v1.1.0/chosen_v1.1.0.zip",
     "d3": "3.x",
     "fontawesome": "3.x"
+  },
+  "overrides": {
+    "fontawesome": {
+      "main": []
+    },
+    "chosen": {
+      "main": "chosen.jquery.js"
+    }
   }
 }

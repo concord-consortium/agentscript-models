@@ -68,4 +68,3 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
 
 
 window.LandManagementModel = LandManagementModel
-modelLoaded.resolve()
