@@ -2,4 +2,5 @@ deploy
 node_modules/
 .DS_Store
 **/.DS_Store
+public/
 land-management/public/

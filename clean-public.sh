@@ -1,0 +1,1 @@
+bash -O extglob -c 'rm -rf public/!(.git|version)'
