@@ -159,6 +159,7 @@ class ErosionEngine
         target.zone = p.zone
         target.stability = p.stability
         target.isTerrace = p.isTerrace
+        target.isTopsoil = p.isTopsoil
         target.quality = p.quality
 
 
