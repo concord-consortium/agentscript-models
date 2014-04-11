@@ -17,10 +17,6 @@ class LandGenerator
   zone2Slope: 0
 
   setupLand: ->
-
-    @skyPatches = []
-    @landPatches = []
-
     for p in @patches
       p.zone = if p.x <= 0 then 1 else 2
       # @setSoilDepths will set this to true for topsoil patches
@@ -29,7 +25,6 @@ class LandGenerator
         p.color = SKY_COLOR
         p.type = SKY
         p.depth = -1
-        @skyPatches.push p
       else
         p.color = DARK_LAND_COLOR
         p.type = LAND
@@ -39,7 +34,6 @@ class LandGenerator
         p.erosionDirection = 0
         p.stability = 1
         p.quality = 1
-        @landPatches.push p
 
         if type is "Terraced" and p.x < 0 and
          ((p.x % Math.floor(@patches.minX/5) is 0 and p.y > @landShapeFunction (p.x-1)) or
