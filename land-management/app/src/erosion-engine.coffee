@@ -42,44 +42,47 @@ class ErosionEngine
 
   showSoilQuality: false
 
-  #
-  # Set soil depth such that the top of each "column" of soil's depth is 0,
-  # the next depth is 1, etc, up to @MAX_INTERESTING_SOIL_DEPTH. Sets isTopsoil
-  # to true for patches from depth 0 down to the topmost patches having depth
-  # @MAX_INTERESTING_SOIL_DEPTH.
-  setSoilDepths: ->
-    @surfaceLand = []
-
+  findSurfaceLandPatches: ->
+    surfaceLand = []
     for x in [@patches.minX..@patches.maxX]
-      lastDepth = -1
-      for y in [@patches.maxY..@patches.minY]
-        break if lastDepth >= @MAX_INTERESTING_SOIL_DEPTH
+      y = @patches.maxY
+      y-- while @patches.patch(x, y).type is SKY
+      surfaceLand.push @patches.patch x, y
 
-        p = @patches.patch x, y
-        continue if p.type is SKY
-        p.depth = ++lastDepth
-        p.isTopsoil = true
-        p.color = if @showErosion and p.eroded
-          if p.zone is 1 then ORANGE else MAGENTA
-        else if p.isTerrace
-          TERRACE_COLOR
-        else
-          if not @showSoilQuality
-            LIGHT_LAND_COLOR
-          else
-            zone = if p.x <= 0 then 0 else 1
-            if p.quality < @soilQuality[zone] then p.quality += 0.001
-            if p.quality > @soilQuality[zone] then p.quality -= 0.001
+    surfaceLand
 
-            if p.quality < 0.5
-              POOR_SOIL_COLOR
-            else if p.quality > 1.5
-              GOOD_SOIL_COLOR
+  # Called every tick to modify colors of surface-most INITIAL_TOPSOIL_DEPTH patches.
+  # (A reasonable assumption is made that the patches that change during a tick are no more than
+  # INITIAL_TOPSOIL_DEPTH deeper the land-sky boundary. Hower, we must process at least that depth
+  # because the land generator relies on this method for the initial setup of the topsoil patches.)
+  updateSurfacePatches: ->
+    @surfaceLand = @findSurfaceLandPatches()
+
+    for surfacePatch in @surfaceLand
+      [x, y] = [surfacePatch.x, surfacePatch.y]
+
+      for i in [0...@INITIAL_TOPSOIL_DEPTH]
+        p = @patches.patch x, y - i
+        newColor =
+          if p.isTerrace
+            TERRACE_COLOR
+          else if p.isTopsoil
+            if @showErosion and p.eroded
+              if p.zone is 1 then ORANGE else MAGENTA
+            else if @showSoilQuality
+              zone = if p.x <= 0 then 0 else 1
+              if p.quality < @soilQuality[zone] then p.quality += 0.001
+              if p.quality > @soilQuality[zone] then p.quality -= 0.001
+
+              if p.quality < 0.5
+                POOR_SOIL_COLOR
+              else if p.quality > 1.5
+                GOOD_SOIL_COLOR
+              else
+                LIGHT_LAND_COLOR
             else
               LIGHT_LAND_COLOR
-
-        if p.depth is 0 then @surfaceLand.push p
-
+        if newColor? then p.color = newColor
 
   erode: ->
     # Find and sort the surface patches most exposed to the sky
@@ -153,14 +156,11 @@ class ErosionEngine
         while target.n[1].type is SKY
           target = target.n[1]
 
+        # 'move' p to target by cloning the land-related properties of p
         target.type = LAND
-        target.direction = direction
         target.eroded = true
-        target.zone = p.zone
-        target.stability = p.stability
-        target.isTerrace = p.isTerrace
-        target.isTopsoil = p.isTopsoil
-        target.quality = p.quality
+        target[property] = p[property] for property in ['direction', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace']
+
 
 
   getBoxAroundPoint: (x, y, xStep, yStep) ->

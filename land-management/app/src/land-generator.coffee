@@ -17,32 +17,34 @@ class LandGenerator
   zone2Slope: 0
 
   setupLand: ->
-    for p in @patches
-      p.zone = if p.x <= 0 then 1 else 2
-      # @setSoilDepths will set this to true for topsoil patches
-      p.isTopsoil = false
-      if p.y > @landShapeFunction p.x
-        p.color = SKY_COLOR
-        p.type = SKY
-        p.depth = -1
-      else
-        p.color = DARK_LAND_COLOR
-        p.type = LAND
-        # @setSoilDepths will adjust this for topsoil patches
-        p.depth = @MAX_INTERESTING_SOIL_DEPTH
-        p.eroded = false
-        p.erosionDirection = 0
-        p.stability = 1
-        p.quality = 1
+    for x in [@patches.minX..@patches.maxX]
+      for y in [@patches.minY..@patches.maxY]
+        p = @patches.patch x, y
+        p.zone = if p.x <= 0 then 1 else 2
 
-        if type is "Terraced" and p.x < 0 and
-         ((p.x % Math.floor(@patches.minX/5) is 0 and p.y > @landShapeFunction (p.x-1)) or
-         ((p.x-1) % Math.floor(@patches.minX/5) is 0 and p.y > @landShapeFunction (p.x-2)))
-          p.isTerrace = true
-          p.color = TERRACE_COLOR
-          p.stability = 100
+        # TODO: memoize landShapeFunction when setting up land?
+        if p.y > @landShapeFunction p.x
+          p.color = SKY_COLOR
+          p.type = SKY
+        else
+          p.isTopsoil = p.y > @landShapeFunction(p.x) - @INITIAL_TOPSOIL_DEPTH
+          p.stability = if p.isTopsoil then 1 else 10  # TODO: higher values are less stable! Reverse.
 
-    @setSoilDepths()
+          # topsoil and terrace colors will be updated by @updateSurfacePatches
+          p.color = DARK_LAND_COLOR
+          p.type = LAND
+          p.eroded = false
+          p.erosionDirection = 0
+          p.quality = 1
+
+          if type is "Terraced" and p.x < 0 and
+           ((p.x % Math.floor(@patches.minX/5) is 0 and p.y > @landShapeFunction (p.x-1)) or
+           ((p.x-1) % Math.floor(@patches.minX/5) is 0 and p.y > @landShapeFunction (p.x-2)))
+            p.isTerrace = true
+            p.color = TERRACE_COLOR
+            p.stability = 100
+
+    @updateSurfacePatches()
 
 
   setLandType: (t) ->

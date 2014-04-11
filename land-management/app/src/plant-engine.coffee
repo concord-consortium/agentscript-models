@@ -156,14 +156,15 @@ class PlantEngine
 
     a.die() for a in killList
 
-   topsoilRateFactor: (agent) ->
-     if agent.p.isTopsoil
-       # Topsoil layer is @MAX_INTERESTING_SOIL_DEPTH + 1 patches thick.
-       # Surface patches have depth = 0, so if agent is on patch with depth 2, there are
-       # @MAX_INTERESTING_SOIL_DEPTH + 1 - 2 patches of topsoil below the agent.
-       (@MAX_INTERESTING_SOIL_DEPTH + 1 - agent.p.depth) / (@MAX_INTERESTING_SOIL_DEPTH + 1)
-     else
-       0.05
+
+  # Return the fraction of current topsoil depth below the plant agent to the initial topsoil
+  # depth, clamped to the range [0.05, 1.0]. This is used to adjust growth rate for topsoil depth.
+  topsoilRateFactor: (agent) ->
+    [x, y] = [agent.p.x, agent.p.y]
+    topsoilDepth = 0
+    topsoilDepth++ while @patches.patch(x, y - topsoilDepth).isTopsoil
+
+    Math.max 0.05, Math.min(1, topsoilDepth / @INITIAL_TOPSOIL_DEPTH)
 
   splitRoots: (plant) ->
     plant.p.sprout 1, @[plant.type], (root) =>
