@@ -133,7 +133,7 @@ class PlantEngine
               if not a.isRoot
                 kill = true
               else
-                if a.type = "wheat"
+                if a.type is "wheat"
                   zone = if a.x <= 0 then 0 else 1
                   if not intensive[zone] and u.randomFloat(1) < 0.2
                     kill = true
