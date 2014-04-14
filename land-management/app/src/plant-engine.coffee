@@ -79,8 +79,8 @@ class PlantEngine
 
   plantSeed: (type, patch) ->
     data = @plantData[type]
-    patch.sprout 1, @[type], (a)->
-      a.size = 0
+    patch.sprout 1, @[type], (a) =>
+      a.size = @plantData[type].initialSize
       a.type = type
       a.shape = u.oneOf data.shapes
       a.isSeed = true
@@ -148,23 +148,27 @@ class PlantEngine
               a.period = 0
 
         growthRate = a.growthRates[a.period] * @topsoilRateFactor(a)
-        if poorWater then growthRate -= 0.001
+        if poorWater then growthRate *= 0.85
 
-        a.size += growthRate
+        a.size *= (growthRate + 1)
 
         if a.size <= 0 then killList.push a
 
     a.die() for a in killList
 
 
-  # Return the fraction of current topsoil depth below the plant agent to the initial topsoil
-  # depth, clamped to the range [0.05, 1.0]. This is used to adjust growth rate for topsoil depth.
+  # Returns a factor in the range [0.7, 1] that is proportional to the fraction of current topsoil
+  # depth below the plant agent to the initial topsoil depth. Returns 1 if the current topsoil depth
+  # is as deep or deeper then the initial topsoil depth.
+
+  # Note that, for wheat, a reduction in the daily growth rate by a factor of 0.7 results in a
+  # maximum size that is 1/2 that of wheat without a reduced growth rate
   topsoilRateFactor: (agent) ->
     [x, y] = [agent.p.x, agent.p.y]
     topsoilDepth = 0
     topsoilDepth++ while @patches.patch(x, y - topsoilDepth).isTopsoil
 
-    Math.max 0.05, Math.min(1, topsoilDepth / @INITIAL_TOPSOIL_DEPTH)
+    0.3 * Math.min(topsoilDepth, @INITIAL_TOPSOIL_DEPTH) / @INITIAL_TOPSOIL_DEPTH + 0.7
 
   splitRoots: (plant) ->
     plant.p.sprout 1, @[plant.type], (root) =>
@@ -206,8 +210,9 @@ class PlantEngine
       annual: false
       minGermination: 100
       maxGermination: 1200
+      initialSize: 0.4
       growthPeriods: [100, 1800, 4800, 1300, 1200]
-      growthRates: [0.0014, 0.0018, 0.0001, -0.001, -0.001]
+      growthRates: [0.00042, 0.00116,  0.00003, -0.00018, -0.00019]
       rootGrowthRates: [0, -0.0005, 0, -0.0005, -0.0005]
       periodVariation: 0.22
       minimumPrecipitation: 14
@@ -217,10 +222,11 @@ class PlantEngine
       quantity: 33
       inRows: false
       annual: false
+      initialSize: 0.2
       minGermination: 1
       maxGermination: 800
       growthPeriods: [120, 210, 1400, 150, 100]
-      growthRates: [0.002, 0.004, 0.0001, -0.005, -0.002]
+      growthRates: [0.0043, 0.0053,  0.0003, -0.0032, 0.0007]
       rootGrowthRates: [0, -0.001, 0, -0.001, -0.001]
       periodVariation: 0.15
       minimumPrecipitation: 14
@@ -230,10 +236,11 @@ class PlantEngine
       quantity: 19
       inRows: true
       annual: true
+      initialSize: 0.2
       minGermination: 60
       maxGermination: 90
       growthPeriods: [120, 210, 350, 100, 100]
-      growthRates: [0.003, 0.005, 0.0001, -0.002, -0.005]
+      growthRates: [0.0049,  0.0061,  0.0008,  0.0003, -0.0027]
       rootGrowthRates: [0, 0, 0, -0.001, -0.001]
       periodVariation: 0.04
       minimumPrecipitation: 14
