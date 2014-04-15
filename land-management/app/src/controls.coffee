@@ -4,6 +4,7 @@ $zone1Slider = $ "#zone-1-slider"
 $zone2Slider = $ "#zone-2-slider"
 $slopeSlidersDiv = $ "#slope-sliders"
 erosionGraph = null
+topsoilCountGraph = null
 zone1Planting = ""
 zone2Planting = ""
 
@@ -52,6 +53,7 @@ reset = ->
   $(".icon-play").show()
   model.reset()
   erosionGraph.reset() if erosionGraph?
+  topsoilCountGraph.reset() if topsoilCountGraph?
 
 $('#play-pause-button').click ->
   if model.anim.animStop
@@ -144,10 +146,39 @@ setupGraphs = ->
         [255,   0, 255]]
     )
 
+  if $('#topsoil-count-graph').length
+    topsoilCountGraph = LabGrapher('#topsoil-count-graph',
+      title:  "Amount of Topsoil in Zone"
+      xlabel: "Time (year)"
+      ylabel: "Amount of Topsoil"
+      xmax:   2020
+      xmin:   2013
+      ymax:   1000
+      ymin:   0
+      xTickCount: 4
+      yTickCount: 5
+      xFormatter: "d"
+      dataSampleStart: 2013
+      sampleInterval: 1/60
+      realTime: true
+      fontScaleRelativeToParent: true
+      dataColors: [
+        [160,   0,   0],
+        [ 44, 160,   0],
+        [ 44,   0, 160],
+        [  0,   0,   0],
+        [255, 127,   0],
+        [255,   0, 255]]
+    )
+
 $(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
   $('#date-string').text(model.dateString)
   if erosionGraph then erosionGraph.addSamples [0,0,0,0,model.zone1ErosionCount, model.zone2ErosionCount]
   model.resetErosionCounts()
+  if topsoilCountGraph
+    topsoilInZone = model.topsoilInZones()
+    topsoilCountGraph.addSamples [0, 0, 0, 0, topsoilInZone[1], topsoilInZone[2]]
+
 
 $(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
   $(".inner-bar").removeClass "current-month"

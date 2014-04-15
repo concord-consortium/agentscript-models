@@ -85,6 +85,8 @@ class ErosionEngine
         if newColor? then p.color = newColor
 
   erode: ->
+    savedProperies = {}
+
     # Find and sort the surface patches most exposed to the sky
     for p in @surfaceLand
       p.skyCount = 0
@@ -145,11 +147,6 @@ class ErosionEngine
       # origin zone (it's color), but where is it *currently* eroding from.
       if p.x < 0 then @zone1ErosionCount++ else @zone2ErosionCount++
 
-      # become sky
-      p.type = SKY
-      p.color = SKY_COLOR
-      p.eroded = false
-
       # unless we're disappearing off the edge, "move" to target by making target a clone of p
       if target?
        # first, check below target to make sure it drops down to solid ground
@@ -161,6 +158,10 @@ class ErosionEngine
         target.eroded = true
         target[property] = p[property] for property in ['direction', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace']
 
+      # become sky
+      p.type = SKY
+      p.color = SKY_COLOR
+      p[property] = undefined for property in ['eroded', 'direction', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace']
 
 
   getBoxAroundPoint: (x, y, xStep, yStep) ->
@@ -222,5 +223,17 @@ class ErosionEngine
       climate.precipitation
     else
       return (userPrecipitation for i in [0...12])
+
+  topsoilInZones: ->
+    ret = []
+    ret[1] = 0
+    ret[2] = 0
+    count = 0
+    for p in @patches
+      if p.isTopsoil
+        count++
+        if p.x < 0 then ret[1]++ else ret[2]++
+    console.log count
+    ret
 
 window.ErosionEngine = ErosionEngine
