@@ -364,28 +364,35 @@ ErosionEngine = (function() {
 
   ErosionEngine.prototype.showSoilQuality = false;
 
-  ErosionEngine.prototype.setSoilDepths = function() {
-    var lastDepth, p, x, y, zone, _i, _ref, _ref1, _results;
-    this.surfaceLand = [];
-    _results = [];
+  ErosionEngine.prototype.findSurfaceLandPatches = function() {
+    var surfaceLand, x, y, _i, _ref, _ref1;
+    surfaceLand = [];
     for (x = _i = _ref = this.patches.minX, _ref1 = this.patches.maxX; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; x = _ref <= _ref1 ? ++_i : --_i) {
-      lastDepth = -1;
+      y = this.patches.maxY;
+      while (this.patches.patch(x, y).type === SKY) {
+        y--;
+      }
+      surfaceLand.push(this.patches.patch(x, y));
+    }
+    return surfaceLand;
+  };
+
+  ErosionEngine.prototype.updateSurfacePatches = function() {
+    var i, newColor, p, surfacePatch, x, y, zone, _i, _len, _ref, _ref1, _results;
+    this.surfaceLand = this.findSurfaceLandPatches();
+    _ref = this.surfaceLand;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      surfacePatch = _ref[_i];
+      _ref1 = [surfacePatch.x, surfacePatch.y], x = _ref1[0], y = _ref1[1];
       _results.push((function() {
-        var _j, _ref2, _ref3, _results1;
+        var _j, _ref2, _results1;
         _results1 = [];
-        for (y = _j = _ref2 = this.patches.maxY, _ref3 = this.patches.minY; _ref2 <= _ref3 ? _j <= _ref3 : _j >= _ref3; y = _ref2 <= _ref3 ? ++_j : --_j) {
-          if (lastDepth >= this.MAX_INTERESTING_SOIL_DEPTH) {
-            break;
-          }
-          p = this.patches.patch(x, y);
-          if (p.type === SKY) {
-            continue;
-          }
-          p.depth = ++lastDepth;
-          p.isTopsoil = true;
-          p.color = this.showErosion && p.eroded ? p.zone === 1 ? ORANGE : MAGENTA : p.isTerrace ? TERRACE_COLOR : !this.showSoilQuality ? LIGHT_LAND_COLOR : (zone = p.x <= 0 ? 0 : 1, p.quality < this.soilQuality[zone] ? p.quality += 0.001 : void 0, p.quality > this.soilQuality[zone] ? p.quality -= 0.001 : void 0, p.quality < 0.5 ? POOR_SOIL_COLOR : p.quality > 1.5 ? GOOD_SOIL_COLOR : LIGHT_LAND_COLOR);
-          if (p.depth === 0) {
-            _results1.push(this.surfaceLand.push(p));
+        for (i = _j = 0, _ref2 = this.INITIAL_TOPSOIL_DEPTH; 0 <= _ref2 ? _j < _ref2 : _j > _ref2; i = 0 <= _ref2 ? ++_j : --_j) {
+          p = this.patches.patch(x, y - i);
+          newColor = p.isTerrace ? TERRACE_COLOR : p.isTopsoil ? this.showErosion && p.eroded ? p.zone === 1 ? ORANGE : MAGENTA : this.showSoilQuality ? (zone = p.x <= 0 ? 0 : 1, p.quality < this.soilQuality[zone] ? p.quality += 0.001 : void 0, p.quality > this.soilQuality[zone] ? p.quality -= 0.001 : void 0, p.quality < 0.5 ? POOR_SOIL_COLOR : p.quality > 1.5 ? GOOD_SOIL_COLOR : LIGHT_LAND_COLOR) : LIGHT_LAND_COLOR : void 0;
+          if (newColor != null) {
+            _results1.push(p.color = newColor);
           } else {
             _results1.push(void 0);
           }
@@ -397,7 +404,7 @@ ErosionEngine = (function() {
   };
 
   ErosionEngine.prototype.erode = function() {
-    var a, direction, i, localErosionProbability, localSlope, n, p, probabilityOfErosion, slopeContribution, target, totalVegetationSize, vegetation, vegetationStoppingPower, vegetiationContribution, _i, _j, _k, _l, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
+    var a, direction, i, localErosionProbability, localSlope, n, p, probabilityOfErosion, property, slopeContribution, target, totalVegetationSize, vegetation, vegetationStoppingPower, vegetiationContribution, _i, _j, _k, _l, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
     _ref = this.surfaceLand;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       p = _ref[_i];
@@ -468,12 +475,17 @@ ErosionEngine = (function() {
           target = target.n[1];
         }
         target.type = LAND;
-        target.direction = direction;
         target.eroded = true;
-        target.zone = p.zone;
-        target.stability = p.stability;
-        target.isTerrace = p.isTerrace;
-        _results.push(target.quality = p.quality);
+        _results.push((function() {
+          var _len3, _m, _ref7, _results1;
+          _ref7 = ['direction', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace'];
+          _results1 = [];
+          for (_m = 0, _len3 = _ref7.length; _m < _len3; _m++) {
+            property = _ref7[_m];
+            _results1.push(target[property] = p[property]);
+          }
+          return _results1;
+        })());
       } else {
         _results.push(void 0);
       }
@@ -597,36 +609,31 @@ LandGenerator = (function() {
   LandGenerator.prototype.zone2Slope = 0;
 
   LandGenerator.prototype.setupLand = function() {
-    var p, _i, _len, _ref;
-    this.skyPatches = [];
-    this.landPatches = [];
-    _ref = this.patches;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      p = _ref[_i];
-      p.zone = p.x <= 0 ? 1 : 2;
-      p.isTopsoil = false;
-      if (p.y > this.landShapeFunction(p.x)) {
-        p.color = SKY_COLOR;
-        p.type = SKY;
-        p.depth = -1;
-        this.skyPatches.push(p);
-      } else {
-        p.color = DARK_LAND_COLOR;
-        p.type = LAND;
-        p.depth = this.MAX_INTERESTING_SOIL_DEPTH;
-        p.eroded = false;
-        p.erosionDirection = 0;
-        p.stability = 1;
-        p.quality = 1;
-        this.landPatches.push(p);
-        if (type === "Terraced" && p.x < 0 && ((p.x % Math.floor(this.patches.minX / 5) === 0 && p.y > this.landShapeFunction(p.x - 1)) || ((p.x - 1) % Math.floor(this.patches.minX / 5) === 0 && p.y > this.landShapeFunction(p.x - 2)))) {
-          p.isTerrace = true;
-          p.color = TERRACE_COLOR;
-          p.stability = 100;
+    var p, x, y, _i, _j, _ref, _ref1, _ref2, _ref3;
+    for (x = _i = _ref = this.patches.minX, _ref1 = this.patches.maxX; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; x = _ref <= _ref1 ? ++_i : --_i) {
+      for (y = _j = _ref2 = this.patches.minY, _ref3 = this.patches.maxY; _ref2 <= _ref3 ? _j <= _ref3 : _j >= _ref3; y = _ref2 <= _ref3 ? ++_j : --_j) {
+        p = this.patches.patch(x, y);
+        p.zone = p.x <= 0 ? 1 : 2;
+        if (p.y > this.landShapeFunction(p.x)) {
+          p.color = SKY_COLOR;
+          p.type = SKY;
+        } else {
+          p.isTopsoil = p.y > this.landShapeFunction(p.x) - this.INITIAL_TOPSOIL_DEPTH;
+          p.stability = p.isTopsoil ? 1 : 10;
+          p.color = DARK_LAND_COLOR;
+          p.type = LAND;
+          p.eroded = false;
+          p.erosionDirection = 0;
+          p.quality = 1;
+          if (type === "Terraced" && p.x < 0 && ((p.x % Math.floor(this.patches.minX / 5) === 0 && p.y > this.landShapeFunction(p.x - 1)) || ((p.x - 1) % Math.floor(this.patches.minX / 5) === 0 && p.y > this.landShapeFunction(p.x - 2)))) {
+            p.isTerrace = true;
+            p.color = TERRACE_COLOR;
+            p.stability = 100;
+          }
         }
       }
     }
-    return this.setSoilDepths();
+    return this.updateSurfacePatches();
   };
 
   LandGenerator.prototype.setLandType = function(t) {
@@ -722,7 +729,7 @@ LandManagementModel = (function(_super) {
 
   LandManagementModel.prototype.monthStrings = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
 
-  LandManagementModel.prototype.MAX_INTERESTING_SOIL_DEPTH = 3;
+  LandManagementModel.prototype.INITIAL_TOPSOIL_DEPTH = 4;
 
   LandManagementModel.prototype.setup = function() {
     this.setFastPatches();
@@ -754,7 +761,7 @@ LandManagementModel = (function(_super) {
       this.notifyListeners(LandManagementModel.MONTH_INTERVAL_ELAPSED);
     }
     this.erode();
-    this.setSoilDepths();
+    this.updateSurfacePatches();
     this.manageZones();
     this.runPlants();
     if ((this.anim.ticks % 50) === 1) {
@@ -912,29 +919,31 @@ PlantEngine = (function() {
   PlantEngine.prototype.plantSeed = function(type, patch) {
     var data;
     data = this.plantData[type];
-    return patch.sprout(1, this[type], function(a) {
-      var p, v;
-      a.size = 0;
-      a.type = type;
-      a.shape = u.oneOf(data.shapes);
-      a.isSeed = true;
-      a.dying = false;
-      a.germinationDate = u.randomInt2(data.minGermination, data.maxGermination);
-      v = data.periodVariation;
-      a.growthPeriods = (function() {
-        var _i, _len, _ref, _results;
-        _ref = data.growthPeriods;
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          p = _ref[_i];
-          _results.push(p + (p * u.randomFloat2(-v, v)));
-        }
-        return _results;
-      })();
-      a.growthRates = data.growthRates;
-      a.period = 0;
-      return a.periodAge = 0;
-    });
+    return patch.sprout(1, this[type], (function(_this) {
+      return function(a) {
+        var p, v;
+        a.size = _this.plantData[type].initialSize;
+        a.type = type;
+        a.shape = u.oneOf(data.shapes);
+        a.isSeed = true;
+        a.dying = false;
+        a.germinationDate = u.randomInt2(data.minGermination, data.maxGermination);
+        v = data.periodVariation;
+        a.growthPeriods = (function() {
+          var _i, _len, _ref, _results;
+          _ref = data.growthPeriods;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            p = _ref[_i];
+            _results.push(p + (p * u.randomFloat2(-v, v)));
+          }
+          return _results;
+        })();
+        a.growthRates = data.growthRates;
+        a.period = 0;
+        return a.periodAge = 0;
+      };
+    })(this));
   };
 
   PlantEngine.prototype.runPlants = function() {
@@ -984,7 +993,7 @@ PlantEngine = (function() {
               if (!a.isRoot) {
                 kill = true;
               } else {
-                if (a.type = "wheat") {
+                if (a.type === "wheat") {
                   zone = a.x <= 0 ? 0 : 1;
                   if (!intensive[zone] && u.randomFloat(1) < 0.2) {
                     kill = true;
@@ -1005,9 +1014,9 @@ PlantEngine = (function() {
         }
         growthRate = a.growthRates[a.period] * this.topsoilRateFactor(a);
         if (poorWater) {
-          growthRate -= 0.001;
+          growthRate *= 0.85;
         }
-        a.size += growthRate;
+        a.size *= growthRate + 1;
         if (a.size <= 0) {
           killList.push(a);
         }
@@ -1022,11 +1031,13 @@ PlantEngine = (function() {
   };
 
   PlantEngine.prototype.topsoilRateFactor = function(agent) {
-    if (agent.p.isTopsoil) {
-      return (this.MAX_INTERESTING_SOIL_DEPTH + 1 - agent.p.depth) / (this.MAX_INTERESTING_SOIL_DEPTH + 1);
-    } else {
-      return 0.05;
+    var topsoilDepth, x, y, _ref;
+    _ref = [agent.p.x, agent.p.y], x = _ref[0], y = _ref[1];
+    topsoilDepth = 0;
+    while (this.patches.patch(x, y - topsoilDepth).isTopsoil) {
+      topsoilDepth++;
     }
+    return 0.3 * Math.min(topsoilDepth, this.INITIAL_TOPSOIL_DEPTH) / this.INITIAL_TOPSOIL_DEPTH + 0.7;
   };
 
   PlantEngine.prototype.splitRoots = function(plant) {
@@ -1091,8 +1102,9 @@ PlantEngine = (function() {
       annual: false,
       minGermination: 100,
       maxGermination: 1200,
+      initialSize: 0.4,
       growthPeriods: [100, 1800, 4800, 1300, 1200],
-      growthRates: [0.0014, 0.0018, 0.0001, -0.001, -0.001],
+      growthRates: [0.00042, 0.00116, 0.00003, -0.00018, -0.00019],
       rootGrowthRates: [0, -0.0005, 0, -0.0005, -0.0005],
       periodVariation: 0.22,
       minimumPrecipitation: 14,
@@ -1103,10 +1115,11 @@ PlantEngine = (function() {
       quantity: 33,
       inRows: false,
       annual: false,
+      initialSize: 0.2,
       minGermination: 1,
       maxGermination: 800,
       growthPeriods: [120, 210, 1400, 150, 100],
-      growthRates: [0.002, 0.004, 0.0001, -0.005, -0.002],
+      growthRates: [0.0043, 0.0053, 0.0003, -0.0032, 0.0007],
       rootGrowthRates: [0, -0.001, 0, -0.001, -0.001],
       periodVariation: 0.15,
       minimumPrecipitation: 14,
@@ -1117,10 +1130,11 @@ PlantEngine = (function() {
       quantity: 19,
       inRows: true,
       annual: true,
+      initialSize: 0.2,
       minGermination: 60,
       maxGermination: 90,
       growthPeriods: [120, 210, 350, 100, 100],
-      growthRates: [0.003, 0.005, 0.0001, -0.002, -0.005],
+      growthRates: [0.0049, 0.0061, 0.0008, 0.0003, -0.0027],
       rootGrowthRates: [0, 0, 0, -0.001, -0.001],
       periodVariation: 0.04,
       minimumPrecipitation: 14,
