@@ -91,7 +91,7 @@
   globals.require.brunch = true;
 })();
 require.register("src/controls", function(exports, require, module) {
-var $precipitationSlider, $precipitationSliderDiv, $slopeSlidersDiv, $zone1Slider, $zone2Slider, enableZoneSliders, erosionGraph, reset, setupGraphs, updatePrecipitationBarchart, zone1Planting, zone2Planting;
+var $precipitationSlider, $precipitationSliderDiv, $slopeSlidersDiv, $zone1Slider, $zone2Slider, enableZoneSliders, erosionGraph, reset, setupGraphs, topsoilCountGraph, updatePrecipitationBarchart, zone1Planting, zone2Planting;
 
 $precipitationSlider = $("#precipitation-slider");
 
@@ -104,6 +104,8 @@ $zone2Slider = $("#zone-2-slider");
 $slopeSlidersDiv = $("#slope-sliders");
 
 erosionGraph = null;
+
+topsoilCountGraph = null;
 
 zone1Planting = "";
 
@@ -181,7 +183,10 @@ reset = function() {
   $(".icon-play").show();
   model.reset();
   if (erosionGraph != null) {
-    return erosionGraph.reset();
+    erosionGraph.reset();
+  }
+  if (topsoilCountGraph != null) {
+    return topsoilCountGraph.reset();
   }
 };
 
@@ -269,7 +274,7 @@ $('input.property').click(function() {
 
 setupGraphs = function() {
   if ($('#erosion-graph').length) {
-    return erosionGraph = LabGrapher('#erosion-graph', {
+    erosionGraph = LabGrapher('#erosion-graph', {
       title: "Erosion Rates",
       xlabel: "Time (year)",
       ylabel: "Monthly Erosion",
@@ -287,14 +292,38 @@ setupGraphs = function() {
       dataColors: [[160, 0, 0], [44, 160, 0], [44, 0, 160], [0, 0, 0], [255, 127, 0], [255, 0, 255]]
     });
   }
+  if ($('#topsoil-count-graph').length) {
+    return topsoilCountGraph = LabGrapher('#topsoil-count-graph', {
+      title: "Amount of Topsoil in Zone",
+      xlabel: "Time (year)",
+      ylabel: "Amount of Topsoil",
+      xmax: 2020,
+      xmin: 2013,
+      ymax: 1000,
+      ymin: 0,
+      xTickCount: 4,
+      yTickCount: 5,
+      xFormatter: "d",
+      dataSampleStart: 2013,
+      sampleInterval: 1 / 60,
+      realTime: true,
+      fontScaleRelativeToParent: true,
+      dataColors: [[160, 0, 0], [44, 160, 0], [44, 0, 160], [0, 0, 0], [255, 127, 0], [255, 0, 255]]
+    });
+  }
 };
 
 $(document).on(LandManagementModel.STEP_INTERVAL_ELAPSED, function() {
+  var topsoilInZone;
   $('#date-string').text(model.dateString);
   if (erosionGraph) {
     erosionGraph.addSamples([0, 0, 0, 0, model.zone1ErosionCount, model.zone2ErosionCount]);
   }
-  return model.resetErosionCounts();
+  model.resetErosionCounts();
+  if (topsoilCountGraph) {
+    topsoilInZone = model.topsoilInZones();
+    return topsoilCountGraph.addSamples([0, 0, 0, 0, topsoilInZone[1], topsoilInZone[2]]);
+  }
 });
 
 $(document).on(LandManagementModel.STEP_INTERVAL_ELAPSED, function() {
@@ -404,7 +433,8 @@ ErosionEngine = (function() {
   };
 
   ErosionEngine.prototype.erode = function() {
-    var a, direction, i, localErosionProbability, localSlope, n, p, probabilityOfErosion, property, slopeContribution, target, totalVegetationSize, vegetation, vegetationStoppingPower, vegetiationContribution, _i, _j, _k, _l, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
+    var a, direction, i, localErosionProbability, localSlope, n, p, probabilityOfErosion, property, savedProperies, slopeContribution, target, totalVegetationSize, vegetation, vegetationStoppingPower, vegetiationContribution, _i, _j, _k, _l, _len, _len1, _len2, _len3, _m, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _results;
+    savedProperies = {};
     _ref = this.surfaceLand;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       p = _ref[_i];
@@ -467,28 +497,30 @@ ErosionEngine = (function() {
       } else {
         this.zone2ErosionCount++;
       }
-      p.type = SKY;
-      p.color = SKY_COLOR;
-      p.eroded = false;
       if (target != null) {
         while (target.n[1].type === SKY) {
           target = target.n[1];
         }
         target.type = LAND;
         target.eroded = true;
-        _results.push((function() {
-          var _len3, _m, _ref7, _results1;
-          _ref7 = ['direction', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace'];
-          _results1 = [];
-          for (_m = 0, _len3 = _ref7.length; _m < _len3; _m++) {
-            property = _ref7[_m];
-            _results1.push(target[property] = p[property]);
-          }
-          return _results1;
-        })());
-      } else {
-        _results.push(void 0);
+        _ref7 = ['direction', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace'];
+        for (_m = 0, _len3 = _ref7.length; _m < _len3; _m++) {
+          property = _ref7[_m];
+          target[property] = p[property];
+        }
       }
+      p.type = SKY;
+      p.color = SKY_COLOR;
+      _results.push((function() {
+        var _len4, _n, _ref8, _results1;
+        _ref8 = ['eroded', 'direction', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace'];
+        _results1 = [];
+        for (_n = 0, _len4 = _ref8.length; _n < _len4; _n++) {
+          property = _ref8[_n];
+          _results1.push(p[property] = void 0);
+        }
+        return _results1;
+      })());
     }
     return _results;
   };
@@ -569,6 +601,28 @@ ErosionEngine = (function() {
         return _results;
       })();
     }
+  };
+
+  ErosionEngine.prototype.topsoilInZones = function() {
+    var count, p, ret, _i, _len, _ref;
+    ret = [];
+    ret[1] = 0;
+    ret[2] = 0;
+    count = 0;
+    _ref = this.patches;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      p = _ref[_i];
+      if (p.isTopsoil) {
+        count++;
+        if (p.x < 0) {
+          ret[1]++;
+        } else {
+          ret[2]++;
+        }
+      }
+    }
+    console.log(count);
+    return ret;
   };
 
   return ErosionEngine;
