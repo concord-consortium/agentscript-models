@@ -76,15 +76,11 @@ $("#terrain-options").change (evt, ui) ->
 $("#zone1-planting-options").change (evt, ui) ->
   selection = ui.selected
   model.setZoneManagement 0, selection
-
-  reset() unless ~selection.indexOf("wheat") && ~zone1Planting.indexOf("wheat")
   zone1Planting = selection
 
 $("#zone2-planting-options").change (evt, ui) ->
   selection = ui.selected
   model.setZoneManagement 1, selection
-
-  reset() unless ~selection.indexOf("wheat") && ~zone2Planting.indexOf("wheat")
   zone2Planting = selection
 
 $precipitationSlider.on 'slide', (event, ui) ->
