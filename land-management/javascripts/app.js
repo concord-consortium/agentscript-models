@@ -216,9 +216,6 @@ $("#zone1-planting-options").change(function(evt, ui) {
   var selection;
   selection = ui.selected;
   model.setZoneManagement(0, selection);
-  if (!(~selection.indexOf("wheat") && ~zone1Planting.indexOf("wheat"))) {
-    reset();
-  }
   return zone1Planting = selection;
 });
 
@@ -226,9 +223,6 @@ $("#zone2-planting-options").change(function(evt, ui) {
   var selection;
   selection = ui.selected;
   model.setZoneManagement(1, selection);
-  if (!(~selection.indexOf("wheat") && ~zone2Planting.indexOf("wheat"))) {
-    reset();
-  }
   return zone2Planting = selection;
 });
 
@@ -862,7 +856,7 @@ require('src/controls');
 var PlantEngine;
 
 PlantEngine = (function() {
-  var NORTH, intensive, managementPlan, u;
+  var NORTH, intensive, managementPlan, needToPlantPerennialsInZone, u;
 
   function PlantEngine() {}
 
@@ -871,6 +865,8 @@ PlantEngine = (function() {
   NORTH = Math.PI / 2;
 
   managementPlan = ["bare", "bare"];
+
+  needToPlantPerennialsInZone = [true, true];
 
   intensive = [false, false];
 
@@ -922,8 +918,14 @@ PlantEngine = (function() {
    */
 
   PlantEngine.prototype.setZoneManagement = function(zone, type) {
-    var types;
+    var plantType, types;
     types = type.split("-");
+    plantType = types[0];
+    if (plantType !== "bare" && !this.plantData[plantType].annual) {
+      if (managementPlan[zone] !== plantType) {
+        needToPlantPerennialsInZone[zone] = true;
+      }
+    }
     managementPlan[zone] = types[0];
     return intensive[zone] = types[1] === "intensive";
   };
@@ -934,8 +936,29 @@ PlantEngine = (function() {
     }
     this.yearTick = this.anim.ticks % (12 * this.monthLength);
     if (this.yearTick === 1) {
+      this.killOffUnwantedPerennials();
       return this.plantPlants();
     }
+  };
+
+  PlantEngine.prototype.killOffUnwantedPerennials = function() {
+    var a, killList, zone, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
+    killList = [];
+    _ref = this.agents;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      a = _ref[_i];
+      zone = ((_ref1 = a.p) != null ? _ref1.x : void 0) < 0 ? 0 : 1;
+      if (!a.isRoot && !((_ref2 = this.plantData[a.type]) != null ? _ref2.annual : void 0) && a.type !== managementPlan[zone]) {
+        console.log("killing off:", a);
+        killList.push(a);
+      }
+    }
+    _results = [];
+    for (_j = 0, _len1 = killList.length; _j < _len1; _j++) {
+      a = killList[_j];
+      _results.push(a.die());
+    }
+    return _results;
   };
 
   PlantEngine.prototype.plantPlants = function() {
@@ -949,8 +972,11 @@ PlantEngine = (function() {
       if (plantType === "bare") {
         continue;
       }
-      if (this.anim.ticks > (12 * this.monthLength) && !this.plantData[plantType].annual) {
-        continue;
+      if (!this.plantData[plantType].annual) {
+        if (!needToPlantPerennialsInZone[zone]) {
+          continue;
+        }
+        needToPlantPerennialsInZone[zone] = false;
       }
       quantity = this.plantData[plantType].quantity;
       inRows = this.plantData[plantType].inRows;
