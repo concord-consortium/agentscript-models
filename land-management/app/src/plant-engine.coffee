@@ -6,6 +6,7 @@ class PlantEngine
   NORTH = Math.PI/2
 
   managementPlan = ["bare", "bare"]
+  needToPlantPerennialsInZone = [true, true]
   intensive = [false, false]
 
   setupPlants: ->
@@ -47,6 +48,12 @@ class PlantEngine
   ###
   setZoneManagement: (zone, type) ->
     types = type.split "-"
+    plantType = types[0]
+    if plantType isnt "bare" and not @plantData[plantType].annual
+      # Unlike annuals, perennials aren't automatically planted every year. But if the user just
+      # requested different perennials, mark them as needing to be planted.
+      needToPlantPerennialsInZone[zone] = true if managementPlan[zone] isnt plantType
+
     managementPlan[zone] = types[0]
     intensive[zone] = types[1] is "intensive"
 
@@ -56,7 +63,19 @@ class PlantEngine
     @yearTick = @anim.ticks % (12 * @monthLength)
 
     if @yearTick is 1
+      @killOffUnwantedPerennials()
       @plantPlants()
+
+  killOffUnwantedPerennials: ->
+    killList = []
+
+    for a in @agents
+      zone = if a.p?.x < 0 then 0 else 1
+      if not a.isRoot and not @plantData[a.type]?.annual and a.type isnt managementPlan[zone]
+        console.log "killing off:", a
+        killList.push a
+
+    a.die() for a in killList
 
   plantPlants: ->
     zoneWidth = @patches.maxX
@@ -64,7 +83,11 @@ class PlantEngine
     for zone in [0, 1]
       plantType = managementPlan[zone]
       continue if plantType is "bare"
-      continue if @anim.ticks > (12 * @monthLength) and not @plantData[plantType].annual
+      # Perennials don't get planted just because the year changed; only plant them if they were
+      # newly requested.
+      if not @plantData[plantType].annual
+        if not needToPlantPerennialsInZone[zone] then continue
+        needToPlantPerennialsInZone[zone] = false
 
       quantity  = @plantData[plantType].quantity
       inRows    = @plantData[plantType].inRows
