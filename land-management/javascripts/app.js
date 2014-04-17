@@ -782,7 +782,6 @@ LandManagementModel = (function(_super) {
   LandManagementModel.prototype.setup = function() {
     this.setFastPatches();
     this.anim.setRate(100, true);
-    this.yearTick = 0;
     this.setCacheAgentsHere();
     this.setupLand();
     this.setupPlants();
@@ -823,6 +822,10 @@ LandManagementModel = (function(_super) {
     this.year = this.initialYear + Math.floor(monthsPassed / 12);
     this.month = monthsPassed % 12;
     return this.dateString = this.monthStrings[this.month] + " " + this.year;
+  };
+
+  LandManagementModel.prototype.yearTick = function() {
+    return this.anim.ticks % (12 * this.monthLength);
   };
 
   LandManagementModel.STEP_INTERVAL_ELAPSED = 'step-interval-elapsed';
@@ -918,24 +921,29 @@ PlantEngine = (function() {
    */
 
   PlantEngine.prototype.setZoneManagement = function(zone, type) {
-    var plantType, types;
+    var plantType, previousPlantType, types;
+    previousPlantType = managementPlan[zone];
     types = type.split("-");
     plantType = types[0];
-    if (plantType !== "bare" && !this.plantData[plantType].annual) {
-      if (managementPlan[zone] !== plantType) {
+    if (plantType !== "bare" && plantType !== managementPlan[zone]) {
+      if (!this.plantData[plantType].annual) {
         needToPlantPerennialsInZone[zone] = true;
       }
     }
     managementPlan[zone] = types[0];
-    return intensive[zone] = types[1] === "intensive";
+    intensive[zone] = types[1] === "intensive";
+    if (this.yearTick !== 0) {
+      if (previousPlantType === "bare") {
+        return this.plantPlantsInZone(zone);
+      }
+    }
   };
 
   PlantEngine.prototype.manageZones = function() {
     if (managementPlan.join() === "bare,bare") {
       return;
     }
-    this.yearTick = this.anim.ticks % (12 * this.monthLength);
-    if (this.yearTick === 1) {
+    if (this.yearTick() === 1) {
       this.killOffUnwantedPerennials();
       return this.plantPlants();
     }
@@ -961,39 +969,43 @@ PlantEngine = (function() {
     return _results;
   };
 
-  PlantEngine.prototype.plantPlants = function() {
-    var i, inRows, patch, plantType, quantity, x, xModifier, zone, zoneWidth, _i, _len, _ref, _results;
+  PlantEngine.prototype.plantPlantsInZone = function(zone) {
+    var i, inRows, patch, plantType, quantity, x, xModifier, zoneWidth, _i, _results;
     zoneWidth = this.patches.maxX;
-    _ref = [0, 1];
+    plantType = managementPlan[zone];
+    if (plantType === "bare") {
+      return;
+    }
+    console.log("not bare");
+    if (!(this.plantData[plantType].annual || needToPlantPerennialsInZone[zone])) {
+      return;
+    }
+    console.log("annual or perennial we will plant");
+    if (this.yearTick() > this.plantData[plantType].maxGermination) {
+      return;
+    }
+    needToPlantPerennialsInZone[zone] = false;
+    quantity = this.plantData[plantType].quantity;
+    inRows = this.plantData[plantType].inRows;
+    xModifier = zone * 2 - 1;
     _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      zone = _ref[_i];
-      plantType = managementPlan[zone];
-      if (plantType === "bare") {
-        continue;
-      }
-      if (!this.plantData[plantType].annual) {
-        if (!needToPlantPerennialsInZone[zone]) {
-          continue;
-        }
-        needToPlantPerennialsInZone[zone] = false;
-      }
-      quantity = this.plantData[plantType].quantity;
-      inRows = this.plantData[plantType].inRows;
-      xModifier = zone * 2 - 1;
-      _results.push((function() {
-        var _j, _results1;
-        _results1 = [];
-        for (i = _j = 0; 0 <= quantity ? _j < quantity : _j > quantity; i = 0 <= quantity ? ++_j : --_j) {
-          x = inRows ? Math.floor((i + 1) * zoneWidth / (quantity + 1)) : u.randomInt(zoneWidth);
-          x *= xModifier;
-          patch = this.surfaceLand[zoneWidth + x];
-          _results1.push(this.plantSeed(plantType, patch));
-        }
-        return _results1;
-      }).call(this));
+    for (i = _i = 0; 0 <= quantity ? _i < quantity : _i > quantity; i = 0 <= quantity ? ++_i : --_i) {
+      x = inRows ? Math.floor((i + 1) * zoneWidth / (quantity + 1)) : u.randomInt(zoneWidth);
+      x *= xModifier;
+      patch = this.surfaceLand[zoneWidth + x];
+      _results.push(this.plantSeed(plantType, patch));
     }
     return _results;
+  };
+
+  PlantEngine.prototype.plantPlants = function() {
+    var zone, _i, _len, _ref;
+    _ref = [0, 1];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      zone = _ref[_i];
+      this.plantPlantsInZone(zone);
+    }
+    return null;
   };
 
   PlantEngine.prototype.plantSeed = function(type, patch) {
@@ -1002,12 +1014,12 @@ PlantEngine = (function() {
     return patch.sprout(1, this[type], (function(_this) {
       return function(a) {
         var p, v;
-        a.size = _this.plantData[type].initialSize;
+        a.size = data.initialSize;
         a.type = type;
         a.shape = u.oneOf(data.shapes);
         a.isSeed = true;
         a.dying = false;
-        a.germinationDate = u.randomInt2(data.minGermination, data.maxGermination);
+        a.germinationDate = u.randomInt2(Math.max(_this.yearTick() + 1, data.minGermination), data.maxGermination);
         v = data.periodVariation;
         a.growthPeriods = (function() {
           var _i, _len, _ref, _results;
@@ -1034,7 +1046,7 @@ PlantEngine = (function() {
       a = _ref[_i];
       poorWater = this.precipitation < this.plantData[a.type].minimumPrecipitation || this.precipitation > this.plantData[a.type].maximumPrecipitation;
       if (a.isSeed) {
-        if (this.yearTick === a.germinationDate) {
+        if (this.yearTick() === a.germinationDate) {
           if (poorWater && this.plantData[a.type].annual) {
             if (u.randomFloat(1) < 0.5) {
               killList.push(a);
