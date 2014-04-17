@@ -47,22 +47,25 @@ class PlantEngine
     by index, 0 or 1.
   ###
   setZoneManagement: (zone, type) ->
+    previousPlantType = managementPlan[zone]
     types = type.split "-"
     plantType = types[0]
-    if plantType isnt "bare" and not @plantData[plantType].annual
+
+    if plantType isnt "bare" and plantType isnt managementPlan[zone]
       # Unlike annuals, perennials aren't automatically planted every year. But if the user just
       # requested different perennials, mark them as needing to be planted.
-      needToPlantPerennialsInZone[zone] = true if managementPlan[zone] isnt plantType
+      needToPlantPerennialsInZone[zone] = true if not @plantData[plantType].annual
 
     managementPlan[zone] = types[0]
     intensive[zone] = types[1] is "intensive"
 
+    unless @yearTick is 0  # (in which case, manageZones() will handle planting)
+      @plantPlantsInZone(zone) if previousPlantType is "bare"
+
   manageZones: ->
     if managementPlan.join() is "bare,bare" then return
 
-    @yearTick = @anim.ticks % (12 * @monthLength)
-
-    if @yearTick is 1
+    if @yearTick() is 1
       @killOffUnwantedPerennials()
       @plantPlants()
 
@@ -77,38 +80,51 @@ class PlantEngine
 
     a.die() for a in killList
 
-  plantPlants: ->
+  plantPlantsInZone: (zone) ->
     zoneWidth = @patches.maxX
+    plantType = managementPlan[zone]
 
-    for zone in [0, 1]
-      plantType = managementPlan[zone]
-      continue if plantType is "bare"
-      # Perennials don't get planted just because the year changed; only plant them if they were
-      # newly requested.
-      if not @plantData[plantType].annual
-        if not needToPlantPerennialsInZone[zone] then continue
-        needToPlantPerennialsInZone[zone] = false
+    return if plantType is "bare"
 
-      quantity  = @plantData[plantType].quantity
-      inRows    = @plantData[plantType].inRows
-      xModifier = zone*2 - 1      # -1, 1
+    console.log "not bare"
 
-      for i in [0...quantity]
-        x = if inRows then Math.floor((i+1) * zoneWidth/(quantity+1)) else u.randomInt(zoneWidth)
-        x *= xModifier
-        patch = @surfaceLand[zoneWidth + x]     # find surface patch with x coord
+    # Perennials don't get planted just because the year changed; only plant them if they were
+    # newly requested.
+    return unless @plantData[plantType].annual or needToPlantPerennialsInZone[zone]
 
-        @plantSeed plantType, patch
+    console.log "annual or perennial we will plant"
+
+    # Wait to next year to plant if last germination date has passed for this year.
+    return if @yearTick() > @plantData[plantType].maxGermination
+
+    # OK, we're planting:
+
+    needToPlantPerennialsInZone[zone] = false
+
+    quantity  = @plantData[plantType].quantity
+    inRows    = @plantData[plantType].inRows
+    xModifier = zone*2 - 1      # -1, 1
+
+    for i in [0...quantity]
+      x = if inRows then Math.floor((i+1) * zoneWidth/(quantity+1)) else u.randomInt(zoneWidth)
+      x *= xModifier
+      patch = @surfaceLand[zoneWidth + x]     # find surface patch with x coord
+
+      @plantSeed plantType, patch
+
+  plantPlants: ->
+    @plantPlantsInZone(zone) for zone in [0, 1]
+    null
 
   plantSeed: (type, patch) ->
     data = @plantData[type]
     patch.sprout 1, @[type], (a) =>
-      a.size = @plantData[type].initialSize
+      a.size = data.initialSize
       a.type = type
       a.shape = u.oneOf data.shapes
       a.isSeed = true
       a.dying = false
-      a.germinationDate = u.randomInt2 data.minGermination, data.maxGermination
+      a.germinationDate = u.randomInt2 Math.max(@yearTick()+1, data.minGermination), data.maxGermination
       v = data.periodVariation
       a.growthPeriods = (p + (p*u.randomFloat2(-v, v)) for p in data.growthPeriods)
       a.growthRates = data.growthRates
@@ -124,7 +140,7 @@ class PlantEngine
       if a.isSeed
         # try to germinate on germination date. If we're annual and there isn't enough
         # water, we grow fewer plants. If we're not annual, push back germination date
-        if @yearTick is a.germinationDate
+        if @yearTick() is a.germinationDate
           if poorWater and @plantData[a.type].annual
             if u.randomFloat(1) < 0.5
               killList.push a

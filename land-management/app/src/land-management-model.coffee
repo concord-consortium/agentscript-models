@@ -20,8 +20,6 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
     @setFastPatches()
     @anim.setRate 100, true
 
-    @yearTick = 0
-
     @setCacheAgentsHere()
     @setupLand()
     @setupPlants()
@@ -59,6 +57,9 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
     @month = monthsPassed % 12
 
     @dateString = @monthStrings[@month] + " " + @year
+
+  yearTick: ->
+    @anim.ticks % (12 * @monthLength)
 
   @STEP_INTERVAL_ELAPSED: 'step-interval-elapsed'
   @MONTH_INTERVAL_ELAPSED: 'month-interval-elapsed'
