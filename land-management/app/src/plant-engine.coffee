@@ -6,6 +6,10 @@ class PlantEngine
   NORTH = Math.PI/2
 
   managementPlan = ["bare", "bare"]
+
+  # Will be set to false (for the relevant zone) when perennials have been planted, as they don't
+  # need to be planted again after being planted the first time (and managementPlan doesn't have
+  # state information indicating whether the requested plants have been planted or not)
   needToPlantPerennialsInZone = [true, true]
   intensive = [false, false]
 
@@ -21,6 +25,9 @@ class PlantEngine
     @addImage "grass1", "grass-1-sprite", 39, 80
     @addImage "grass2", "grass-1-sprite", 39, 80
     @addImage "wheat1", "wheat-1-sprite", 39, 80
+
+
+    needToPlantPerennialsInZone = [true, true]
 
   addImage: (name, id, width, height, scale) ->
     image = document.getElementById(id)
