@@ -139,17 +139,16 @@
         model.setup();
       });
 
-      function offsetX(evt, target) {
-        return evt.offsetX !== null ? evt.offsetX : (evt.pageX - target.offset().left)
+      function offsetX(evt) {
+        return evt.pageX - $(evt.target).offset().left;
       }
 
-      function offsetY(evt, target) {
-        return evt.offsetY !== null ? evt.offsetY : (evt.pageY - target.offset().top)
+      function offsetY(evt) {
+        return evt.pageY - $(evt.target).offset().top;
       }
 
-      var target = $("#layers");
-      target.bind('mousedown', function (evt) {
-        var p = model.patches.patchAtPixel(offsetX(evt, target), offsetY(evt, target));
+      $('#layers').bind('mousedown', function (evt) {
+        var p = model.patches.patchAtPixel(offsetX(evt), offsetY(evt));
         model.addFactoryTo(p)
       });
 
