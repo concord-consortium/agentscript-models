@@ -110,32 +110,31 @@ class ErosionEngine
 
       if (u.randomFloat(100) > probabilityOfErosion) then continue
 
-      # pick a random direction first, then check
-      # bottom corners, then sides for a patch of sky
-      direction = p.direction or direction = 1 - (u.randomInt(2) * 2)
+      # pick a random direction first, then check bottom corners, then sides for a patch of sky
+      p.direction or= 1 - u.randomInt(2) * 2
 
       # remember, indices into p.n relative to patch p (in the center of the below diagram):
       # 5  6  7
       # 3  -  4
       # 0  1  2
 
-      if p.x is @patches.minX and direction is -1 or p.x is @patches.maxX and direction is 1
+      if p.x is @patches.minX and p.direction is -1 or p.x is @patches.maxX and p.direction is 1
         # We're moving off the edge, so disappear (no target)
         target = null
-      else if p.n[1+direction]?.type is SKY
+      else if p.n[1+p.direction]?.type is SKY
         # move downward and in the previous lateral direction
-        target = p.n[1+direction]
-      else if p.n[1-direction]?.type is SKY
+        target = p.n[1+p.direction]
+      else if p.n[1-p.direction]?.type is SKY
         # move downward and laterally in the opposite of the previous lateral direction
-        target = p.n[1-direction]
-        direction = direction * -1
-      else if p.n[3.5+(direction/2)]?.type is SKY
+        target = p.n[1-p.direction]
+        p.direction = -p.direction
+      else if p.n[3.5+(p.direction/2)]?.type is SKY
         # move horizontally in the previous lateral direction
-        target = p.n[3.5+(direction/2)]
-      else if p.n[3.5-(direction/2)]?.type is SKY
+        target = p.n[3.5+(p.direction/2)]
+      else if p.n[3.5-(p.direction/2)]?.type is SKY
         # move horizontally in the opposite of the previous lateral direction
-        target = p.n[3.5-(direction/2)]
-        direction = direction * -1
+        target = p.n[3.5-(p.direction/2)]
+        p.direction = -p.direction
       else
         # We're stuck! Don't change at all.
         p.direction = 0
