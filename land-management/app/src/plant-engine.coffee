@@ -6,11 +6,6 @@ class PlantEngine
   NORTH = Math.PI/2
 
   managementPlan = ["bare", "bare"]
-
-  # Will be set to false (for the relevant zone) when perennials have been planted, as they don't
-  # need to be planted again after being planted the first time (and managementPlan doesn't have
-  # state information indicating whether the requested plants have been planted or not)
-  needToPlantPerennialsInZone = [true, true]
   intensive = [false, false]
 
   setupPlants: ->
@@ -26,8 +21,6 @@ class PlantEngine
     @addImage "grass2", "grass-1-sprite", 39, 80
     @addImage "wheat1", "wheat-1-sprite", 39, 80
 
-
-    needToPlantPerennialsInZone = [true, true]
 
   addImage: (name, id, width, height, scale) ->
     image = document.getElementById(id)
@@ -57,12 +50,6 @@ class PlantEngine
     previousPlantType = managementPlan[zone]
     types = type.split "-"
     plantType = types[0]
-
-    if plantType isnt "bare" and plantType isnt managementPlan[zone]
-      # Unlike annuals, perennials aren't automatically planted every year. But if the user just
-      # requested different perennials, mark them as needing to be planted.
-      needToPlantPerennialsInZone[zone] = true if not @plantData[plantType].annual
-
     managementPlan[zone] = types[0]
     intensive[zone] = types[1] is "intensive"
 
@@ -80,12 +67,51 @@ class PlantEngine
     killList = []
 
     for a in @agents
-      zone = if a.p?.x < 0 then 0 else 1
+      zone = if a.p?.x <= 0 then 0 else 1
       if not a.isRoot and not @plantData[a.type]?.annual and a.type isnt managementPlan[zone]
         console.log "killing off:", a
         killList.push a
 
     a.die() for a in killList
+
+  isPrecipitationOptimalFor: (type) ->
+    plantData = @plantData[type]
+    plantData.minimumPrecipitation <= @precipitation <= plantData.maximumPrecipitation
+
+  # returns the number of plants (seeds and plant bodies, but not detached roots) in zone
+  plantPopulationInZone: (zone) ->
+    @agents.reduce ((x, a) => if @isAgentAPlantInZone(a, zone) then x + 1 else x), 0
+
+  adjustPlantPopulationInZone: (zone) ->
+    killList = []
+    plantType = managementPlan[zone]
+
+    return if not @plantData[plantType]?.isAffectedByPoorWaterAfterPlanting
+
+    actualPopulation = @plantPopulationInZone zone
+    populationIfOptimalPrecipitation = @plantData[plantType].quantity
+
+    if @isPrecipitationOptimalFor managementPlan[zone]
+      # add actualPopulation seeds
+      if actualPopulation < populationIfOptimalPrecipitation then @plantPlantsInZone zone
+    else
+      if actualPopulation is populationIfOptimalPrecipitation
+        # need to kill off some plants
+        for a in @agents
+          if @isAgentAPlantInZone(a, zone) and u.randomFloat(1) < @plantData[plantType].mortalityInPoorWater
+            console.log "killing off (poor water):", a
+            killList.push(a)
+
+    for a in killList
+      # split into roots and body, unless already split
+      if not a.isBody then @splitRoots(a)
+      a.die()
+
+  isAgentAPlantInZone: (a, zone) ->
+    if zone is 0
+      a.x <= 0 and not a.isRoot
+    else
+      a.x > 0 and not a.isRoot
 
   plantPlantsInZone: (zone) ->
     zoneWidth = @patches.maxX
@@ -93,31 +119,29 @@ class PlantEngine
 
     return if plantType is "bare"
 
-    console.log "not bare"
-
-    # Perennials don't get planted just because the year changed; only plant them if they were
-    # newly requested.
-    return unless @plantData[plantType].annual or needToPlantPerennialsInZone[zone]
-
-    console.log "annual or perennial we will plant"
-
     # Wait to next year to plant if last germination date has passed for this year.
     return if @yearTick() > @plantData[plantType].maxGermination
 
     # OK, we're planting:
+    desiredPopulation  = @plantData[plantType].quantity
+    # note that currently, we kill off undesired plants before planting something new, so there
+    # should be no reason to check that the plants are the desired type
+    actualPopulation = @plantPopulationInZone zone
 
-    needToPlantPerennialsInZone[zone] = false
+    sign = zone * 2 - 1      # -1, 1
+    inRows = @plantData[plantType].inRows
 
-    quantity  = @plantData[plantType].quantity
-    inRows    = @plantData[plantType].inRows
-    xModifier = zone*2 - 1      # -1, 1
-
-    for i in [0...quantity]
-      x = if inRows then Math.floor((i+1) * zoneWidth/(quantity+1)) else u.randomInt(zoneWidth)
-      x *= xModifier
-      patch = @surfaceLand[zoneWidth + x]     # find surface patch with x coord
-
+    plantAt = (x) =>
+      patch = @surfaceLand[zoneWidth + x]     # surface patch with given x coordinate
       @plantSeed plantType, patch
+
+    if inRows and actualPopulation is 0
+      for i in [0...desiredPopulation]
+        plantAt sign * Math.floor (i + 1) * zoneWidth / (desiredPopulation+1)
+    else if not inRows
+      for i in [actualPopulation...desiredPopulation]
+        console.log "planting"
+        plantAt sign * u.randomInt zoneWidth
 
   plantPlants: ->
     @plantPlantsInZone(zone) for zone in [0, 1]
@@ -141,21 +165,19 @@ class PlantEngine
   runPlants: ->
     killList = []
 
+    @adjustPlantPopulationInZone(zone) for zone in [0, 1]
+
     for a in @agents
-      poorWater = @precipitation < @plantData[a.type].minimumPrecipitation or
-                  @precipitation > @plantData[a.type].maximumPrecipitation
+      poorWater = not @isPrecipitationOptimalFor a.type
+
       if a.isSeed
         # try to germinate on germination date. If we're annual and there isn't enough
         # water, we grow fewer plants. If we're not annual, push back germination date
         if @yearTick() is a.germinationDate
-          if poorWater and @plantData[a.type].annual
-            if u.randomFloat(1) < 0.5
+          if poorWater
+            if u.randomFloat(1) < @plantData[a.type].mortalityInPoorWater
               killList.push a
-              continue
-          else if poorWater and not @plantData[a.type].annual
-            if u.randomFloat(1) < 0.15
-              killList.push a
-            else
+            else if not @plantData[a.type].annual
               a.germinationDate += 40
             continue
           a.isSeed = false
@@ -167,7 +189,7 @@ class PlantEngine
 
           switch a.period
             when 3
-              @splitRoots a unless a.isRoot
+              @splitRoots a unless a.isRoot or a.growthPeriods[a.period] is Infinity
             when 4
               if not @plantData[a.type].annual and not a.isRoot
                 #reseed
@@ -263,6 +285,8 @@ class PlantEngine
       periodVariation: 0.22
       minimumPrecipitation: 14
       maximumPrecipitation: 450
+      isAffectedByPoorWaterAfterPlanting: false
+      mortalityInPoorWater: 0.15
       shapes: ["tree1", "tree2", "tree3"]
     grass:
       quantity: 33
@@ -271,12 +295,14 @@ class PlantEngine
       initialSize: 0.2
       minGermination: 1
       maxGermination: 800
-      growthPeriods: [120, 210, 1400, 150, 100]
-      growthRates: [0.0043, 0.0053,  0.0003, -0.0032, 0.0007]
       rootGrowthRates: [0, -0.001, 0, -0.001, -0.001]
+      growthPeriods: [120, 210, 1400, Infinity, Infinity]
+      growthRates: [0.0043, 0.0053,  0.0003, 0, 0]
       periodVariation: 0.15
       minimumPrecipitation: 14
       maximumPrecipitation: 450
+      isAffectedByPoorWaterAfterPlanting: true
+      mortalityInPoorWater: 0.15
       shapes: ["grass1", "grass2"]
     wheat:
       quantity: 19
@@ -291,6 +317,8 @@ class PlantEngine
       periodVariation: 0.04
       minimumPrecipitation: 14
       maximumPrecipitation: 450
+      isAffectedByPoorWaterAfterPlanting: false
+      mortalityInPoorWater: 0.5
       shapes: ["wheat1"]
 
 window.PlantEngine = PlantEngine
