@@ -70,6 +70,8 @@ globals [
   soil-nitrogen-colors
   soil-water-colors
   color-layers?
+  month-start-topsoil-zone1
+  month-start-topsoil-zone2
   start-run-for-set-interval?
   management-plan-for-year
 ;;time variables:
@@ -174,6 +176,8 @@ to setup
   set color-layers? false
   ask patches [if depth >= 0 and depth <= default-topsoil-depth [ set topsoil? true set Water 50] ] ;mark topsoil
   set-soil-color-indicators
+  set month-start-topsoil-zone1 count patches with [zone-num = 1 and topsoil?]
+  set month-start-topsoil-zone2 count patches with [zone-num = 2 and topsoil?]
   set start-run-for-set-interval? true
   ;set surface-set soil-surface-list
   reset-ticks
@@ -308,10 +312,11 @@ to erode [precip] ;erosion is a function of monthly preciptation,and other (glob
                   ;  It will stop moving when there are no skycolor neighobors below it or to either side.
   
                   ;start with "exposed" surface patches, that is, those who touch the skycolor with at least 3 neighbors 
- ;let erosion-set patches with [ (is-soil?) and ((count neighbors with [ not is-soil? ]) >= 3) or (((count neighbors with [ not is-soil? ]) = 1) and ((pxcor = min-pxcor) or (pxcor = max-pxcor)))] 
- ; let sky-neighbor-ct count patches with [ neighbors != is-soil? ]
-  let eroders patches with [ (is-soil?) and ((count neighbors with [ not is-soil? ]) >= 4) or (is-soil? and ((count neighbors with [ not is-soil? ]) >= 2) and ((pxcor = min-pxcor) or (pxcor = max-pxcor)))]    
-; ; let erosion-set patches with [ is-soil? and (count (neighbors with [ is-soil? ]) >= 1) and (count neighbors with [ not is-soil? ]) >= 3]
+                  ;let erosion-set patches with [ (is-soil?) and ((count neighbors with [ not is-soil? ]) >= 3) or (((count neighbors with [ not is-soil? ]) = 1) and ((pxcor = min-pxcor) or (pxcor = max-pxcor)))] 
+                  ; let sky-neighbor-ct count patches with [ neighbors != is-soil? ]
+  let eroders patches with [ (is-soil?) and (pycor > (min-pycor + 1)) and ((count neighbors with [ not is-soil? ]) >= 4) or (is-soil? and (pycor > (min-pycor + 1)) and ((count neighbors with [ not is-soil? ]) >= 1) and ((pxcor = min-pxcor) or (pxcor = max-pxcor)))] 
+  ;ask eroders [set pcolor pink]   
+  ; ; let erosion-set patches with [ is-soil? and (count (neighbors with [ is-soil? ]) >= 1) and (count neighbors with [ not is-soil? ]) >= 3]
 ;  ;order the surface patches so that the ones with the greatest number of skycolor neigbors are at the front of the list. These are the most "exposed"
 ;  let surface-list sort-on [ (- count neighbors with [ not is-soil? ] ) ] erosion-set
 ;  let len length surface-list
@@ -327,57 +332,119 @@ to erode [precip] ;erosion is a function of monthly preciptation,and other (glob
   if eroders != nobody
   [
     ask eroders [  
+      let delta ifelse-value (pxcor > 0) [-6][6]
       let rand-x 0                ;is set to the relative x offset from the patch in question
       let tester-list []          ;this keeps a prioritized list of potential places for an erodable patch to move
       ifelse erode-direction = 0  ;logic here could be simplified, but maybe it's clearer as it is
       [                              ;if the patch has never been eroded...
-        ifelse (pxcor = min-pxcor)   ;  check left and right boundaries 
+        ifelse (pxcor = min-pxcor)   ;  check left boundaries 
         [
-          set rand-x 1  ;can only move to the right
-          set tester-list (list (patch-at 0 -1) (patch-at rand-x -1) (patch-at rand-x 0))
+          let m-at-edge soil-surface-slope-to-side pxcor pycor delta
+          let m-at-near-point soil-surface-slope-to-side (pxcor + delta) (soil-surface-height (pxcor + delta)) delta
+;          show (word "edge slope=" (precision m-at-edge 2) " near edge slope=" (precision m-at-near-point 2))
+          if  (m-at-edge >= 0) and (m-at-edge < m-at-near-point)  ;if at the left edge and the area has a positive slope
+          [            
+            set erode-direction -1    ;set rand-x 1  ;can only move to the right
+            set tester-list (list (patch-at 0 0)) ;itself--not sure this will work
+            ;set pcolor pink
+;            show "found left edge erosion candidate"
+          ]
         ]
         [
-          ifelse (pxcor = max-pxcor)
+          ifelse (pxcor = max-pxcor)  ;check right boundary
           [
-            set rand-x -1  ;can only move to the left
-            set tester-list (list (patch-at 0 -1) (patch-at rand-x -1) (patch-at rand-x 0))
+            let m-at-edge soil-surface-slope-to-side pxcor pycor delta
+            let m-at-near-point soil-surface-slope-to-side (pxcor + delta) (soil-surface-height (pxcor + delta)) delta
+;            show (word "right edge slope=" (precision m-at-edge 2) " right near edge slope=" (precision m-at-near-point 2))
+            if  (m-at-edge <= 0) and (abs(m-at-edge) < abs(m-at-near-point))  ;if at the right edge has a negative or zero slope and the slope near it is greater than at the edge
+            [  
+              set erode-direction 1  ;can only move to the left
+              set tester-list (list (patch-at 0 0))
+            ]
           ]
           [
             set rand-x one-of [ -1 1 ]           ;if not on the boundary choose a direction to go randomly
             set tester-list (list (patch-at 0 -1) (patch-at rand-x -1) (patch-at (-1 * rand-x) -1) (patch-at rand-x 0) patch-at (-1 * rand-x) 0) 
           ]
         ]
-      ]
+      ] ;end if erode-direction = 0
       [ ;else if erode-direction has been set to either 1 or -1
         ifelse (pxcor = min-pxcor) 
         [
-          set rand-x 1  ;has to move to the right
-          set tester-list (list (patch-at 0 -1) (patch-at rand-x -1) (patch-at rand-x 0))
-        ]
-        [
-          ifelse (pxcor = max-pxcor)
+          ifelse (erode-direction = -1)
           [
-            set rand-x -1
+            let m-at-edge soil-surface-slope-to-side pxcor pycor delta
+            let m-at-near-point soil-surface-slope-to-side (pxcor + delta) (soil-surface-height (pxcor + delta)) delta
+;            show (word "moving patch: left edge slope=" (precision m-at-edge 2) " near left edge slope=" (precision m-at-near-point 2))
+            if  (m-at-edge >= 0) and (m-at-edge < m-at-near-point)  ;if at the left edge and the area has a positive slope
+            [            
+              set tester-list (list (patch-at 0 0)) ;itself--not sure this will work
+;              show "found left edge erosion candidate"            
+            ]
+          ]
+          [
+            set rand-x 1  ;has to move to the right
             set tester-list (list (patch-at 0 -1) (patch-at rand-x -1) (patch-at rand-x 0))
           ]
+        ]
+        [  
+          ifelse (pxcor = max-pxcor) ;(and if erode-direction = +1)
           [
-            set rand-x erode-direction
+            ifelse (erode-direction = 1)
+            [
+              let m-at-edge soil-surface-slope-to-side pxcor pycor delta
+              let m-at-near-point soil-surface-slope-to-side (pxcor + delta) (soil-surface-height (pxcor + delta)) delta
+;              show (word "moving patch: right edge slope=" (precision m-at-edge 2) " near right edge slope=" (precision m-at-near-point 2))
+              if  (m-at-edge <= 0) and (abs(m-at-edge) < abs(m-at-near-point))  ;if at the right edge slope is negative and the slope near it has larger a negative slope
+              [            
+                set tester-list (list (patch-at 0 0)) ;itself--not sure this will work
+;                show "found right edge erosion candidate"            
+              ]            
+            ]
+            [
+              set tester-list (list (patch-at 0 -1) (patch-at -1 -1) (patch-at -1 0))
+            ]
+          ]
+          [
+            set rand-x erode-direction ;-1   ;not on the boundaries, i.e., this is the "normal condition" for all patches between the edges...
             set tester-list (list (patch-at 0 -1) (patch-at rand-x -1) (patch-at (-1 * rand-x) -1) (patch-at rand-x 0) patch-at (-1 * rand-x) 0) 
           ]
+         
         ]
       ]
       ;will test for sky at: patch below, then patch below and beside on either side, then patch on either side
       let i 0
       let num length tester-list
       ;show (word "length tester-list: " num)
-      while [i < num]
+      while [num > 0 and i < num]
       [
-        let one item i tester-list
+        let one item i tester-list  ;the variable "one" is drawn from the list of potential eroders
+        
+        let patch-below no-patches  ; the next code snip sets "one" to be the lowest empty (not is-soil?) patch
+        if [pycor] of one > min-pycor
+          [
+            set patch-below [patch-at 0 -1] of one
+          ]
+        while [([pycor] of one > min-pycor) and (patch-below != no-patches) and ([not is-soil?] of patch-below)]
+        [ 
+          set one patch-below
+;          show "found a hole @@@@"
+          if [pycor] of one > min-pycor
+          [
+            set patch-below [patch-at 0 -1] of one
+          ]
+        ]
+;        while [([pycor] of one) > min-pycor and ([[not is-soil?] of (patch-at 0 -1)] of one)] ;for some reason, this commented out code which should do the same thing as the code above it, does not work.
+;          [
+;            set one patch-at 0 -1
+;            show "found a hole!!!!!!!"
+;          ]        
         ifelse one != nobody
         [
           ask one
           [
-            ifelse ([not is-soil?] of one) ;if we have hit sky
+;            if (([pxcor] of one = [pxcor] of myself) and ([pycor] of one = [pycor] of myself)) [show "found patch on left edge"]
+            ifelse ([not is-soil?] of one) or (([pxcor] of one = [pxcor] of myself) and ([pycor] of one = [pycor] of myself));if we have hit sky
             [
               ;calculate the effect of the plants in the vicinity on erosion:
               let radius 5  ;not actually looking at a circular radius, just a delta, plus and minus
@@ -428,6 +495,11 @@ to erode [precip] ;erosion is a function of monthly preciptation,and other (glob
                   set is-soil? false
                   set topsoil? false
                 ]
+;                while [([pycor] of one) > min-pycor and ([[not is-soil?] of (patch-at 0 -1)] of one)] 
+;                [
+;                  set one patch-at 0 -1
+;                  show "found a hole!!!!!!!"
+;                ]
                 ifelse (save-pxcor = min-pxcor and save-erode-direction = -1) or (save-pxcor = max-pxcor and save-erode-direction = 1)
                 [
                   ask one [
@@ -439,9 +511,11 @@ to erode [precip] ;erosion is a function of monthly preciptation,and other (glob
                     set Nitrogen 0
                     set Water 0
                     set erode-direction 0
+;                    show "eliminate soil patch"
                   ]
                 ]
                 [
+
                 ask one [
                   set zone-num save-zone
                   set topsoil? save-topsoil?
@@ -855,12 +929,29 @@ to-report plan-data-object
   let pdo no-turtles
   create-plan-data 1 
   [ 
+    set hidden? true
     set end-states [ 0 ]  ;will be a list of length num-of-plantings
     set pdo self
   ]
   report pdo
 end
 
+to-report soil-surface-height [ x ]  
+  ifelse any? patches with [(pxcor = x) and is-soil?]
+  [
+    let p patches with [(pxcor < max-pxcor) and ((pxcor = x) and is-soil?) and (not [is-soil?] of patch-at 0 1)]
+    ifelse ( p != no-patches )
+       [
+         report [pycor] of max-one-of p [pycor]
+       ]
+       [
+         report max-pycor
+       ]
+  ]
+  [
+    report min-pycor
+  ]
+end
 
 ;this creates a list of soil patches that are at the boundary of the sky and soil
 to-report soil-surface-list                          ;this function is SLOW so it can only be called when it is REALLY needed.
@@ -970,6 +1061,69 @@ to-report soil-surface-slope2 [ x y ] ;this version uses all patch sets and no i
   ;show (word "y-lbound: " y-lbound " y-rbound: " y-rbound " delta-y: " delta-y " delta-x: " delta-x " slope: " slope)
   report ( slope )
 end
+
+to-report soil-surface-slope-to-side [ x y x-span]
+  ;let horiz-delta 3
+  let vert-delta 5
+  let lbound 0
+  let rbound 0
+  let y-lbound 0
+  let y-rbound 0
+  ifelse x-span > 0
+  [
+    set lbound x
+    set rbound ifelse-value ((x + x-span) > max-pxcor)[max-pxcor][x + x-span]
+  ]
+  [ 
+    ifelse x-span < 0
+    [
+      set lbound ifelse-value ((x + x-span) < min-pxcor)[min-pxcor][x + x-span]  ;remember that x-span is negative in this case
+      set rbound x
+    ]
+    [
+      report 0  ;only occurs with error on input parameter
+    ]
+  ]
+;  let lbound ifelse-value ((x - horiz-delta) < min-pxcor)[min-pxcor][x - horiz-delta]
+;  let rbound ifelse-value ((x + horiz-delta) > max-pxcor)[max-pxcor][x + horiz-delta]
+  let bbound ifelse-value ((y - vert-delta)  < min-pycor)[min-pycor][y - vert-delta]
+  let tbound ifelse-value ((y + vert-delta)  > max-pycor)[max-pycor][y + vert-delta]
+  
+  let l-list []    ;create a list of vertical patches "horiz-delta" to the left of x, and "vert-delta" above and below x
+  let i bbound
+  while [i <= tbound]
+    [
+      set l-list lput (patch lbound i) l-list
+      set i i + 1
+    ]
+  let r-list []    ;create a list of vertical patches "horiz-delta" to the right of x, and "vert-delta" above and below x
+  set i bbound
+  while [i <= tbound]
+    [
+      set r-list lput (patch rbound i) r-list
+      set i i + 1
+    ]
+  ;show (word "x: " x " y: "  y " l: " lbound " r: " rbound " b: " bbound " t: " tbound)
+  
+  let l-set (patch-set l-list) 
+  let l-set-soil l-set with [is-soil?]   ;from the lists create agentsets of soil only patches
+  ;show (word "l-set: " l-set)
+  ;show (word "l-set-soil: " l-set-soil)
+  ifelse any? l-set-soil
+    [ set y-lbound [pycor] of (max-one-of l-set-soil [pycor]) ]   ;find the highest soil patch
+    [ set y-lbound y - (vert-delta + 1) ]                         ;if all the patches are skycolor, then just assume that the next patch below is a soil patch (this defines max-slope)
+  let r-set (patch-set r-list) 
+  let r-set-soil r-set with [is-soil?]
+  ifelse any? r-set-soil
+    [set y-rbound [pycor] of (max-one-of r-set-soil[pycor]) ]
+    [set y-rbound y - (vert-delta + 1)]
+  let delta-y (y-rbound - y-lbound)
+  let delta-x (rbound - lbound)
+  let slope delta-y / delta-x              ;calculate slope (line between the two top patches that are "horiz-delta" away from x)
+  ;show (word "y-lbound: " y-lbound " y-rbound: " y-rbound " delta-y: " delta-y " delta-x: " delta-x " slope: " slope)
+  report ( slope )
+end
+
 
 to advance-time   ;we assume a year of 360 days, and all months of 30 days; this procedure increments one day and calculates month and year
   set day day + 1  
@@ -1735,7 +1889,7 @@ CHOOSER
 Zone-2-Management-Plan
 Zone-2-Management-Plan
 "Bare Soil" "Forest" "Grass" "Wheat" "Soy" "Soy-Winter Wheat"
-2
+5
 
 CHOOSER
 2
@@ -1764,7 +1918,7 @@ TEXTBOX
 345
 Zone 1 
 11
-9.9
+124.0
 1
 
 TEXTBOX
@@ -1774,7 +1928,7 @@ TEXTBOX
 345
 Zone 2
 11
-9.9
+26.0
 1
 
 MONITOR
@@ -1829,7 +1983,7 @@ PLOT
 353
 378
 503
-Erosion Rates
+Erosion Rates in Zones
 Time
 Monthly Erosion
 0.0
@@ -1840,8 +1994,8 @@ true
 true
 "" ""
 PENS
-"Zone 1" 1.0 0 -5825686 true "" "if day != 0 and day mod 30 = 0\n[plot zone1-erode-ct\n set zone1-erode-ct 0]"
-"Zone 2" 1.0 0 -955883 true "" "if day != 0 and day mod 30 = 0\n[plot zone2-erode-ct\n set zone2-erode-ct 0]"
+"Zone 1" 1.0 0 -16777216 true "" "if day != 0 and day mod 30 = 0\n[plot zone1-erode-ct\n set zone1-erode-ct 0]"
+"Zone 2" 1.0 0 -7500403 true "" "if day != 0 and day mod 30 = 0\n[plot zone2-erode-ct\n set zone2-erode-ct 0]"
 
 SLIDER
 3
@@ -1852,7 +2006,7 @@ Zone-1-slope
 Zone-1-slope
 -0.5
 0.5
-0.4
+0.5
 0.1
 1
 NIL
@@ -1867,7 +2021,7 @@ Zone-2-slope
 Zone-2-slope
 -0.5
 0.5
--0.4
+-0.1
 0.1
 1
 NIL
@@ -1882,7 +2036,7 @@ Elevation
 Elevation
 -25
 25
-17
+25
 1
 1
 NIL
@@ -1907,7 +2061,7 @@ ave-precip-per-month
 ave-precip-per-month
 0
 500
-343
+500
 1
 1
 mm
@@ -1958,7 +2112,7 @@ CHOOSER
 Zone-1-Management-Plan
 Zone-1-Management-Plan
 "Bare Soil" "Forest" "Grass" "Wheat" "Soy" "Soy-Winter Wheat"
-1
+5
 
 OUTPUT
 386
@@ -2006,7 +2160,7 @@ Carbon-Test
 Carbon-Test
 0
 100
-62
+52
 1
 1
 NIL
@@ -2072,6 +2226,25 @@ Zone-2-Fertilize
 Zone-2-Fertilize
 "None" "Light" "Medium" "Heavy"
 0
+
+PLOT
+564
+619
+816
+769
+Quantity of Topsoil
+Time
+Topsoil
+0.0
+10.0
+0.0
+800.0
+true
+true
+"" ""
+PENS
+"Zone 1" 1.0 0 -16777216 true "" "if day != 0 and day mod 30 = 0\n[\n  let z1 count patches with [pxcor < 0 and topsoil?]\n  plot z1\n  set month-start-topsoil-zone1 z1\n  ;show (word \"zone1: \"(item month months) \": \" z1)\n]"
+"Zone 2" 1.0 0 -7500403 true "" "if day != 0 and day mod 30 = 0\n[ \n let z2 count patches with [pxcor > 0 and topsoil?]\n plot z2\n set month-start-topsoil-zone2 z2\n ;show (word \"zone2: \"(item month months) \": \" z2)\n]"
 
 @#$#@#$#@
 ## WHAT IS IT?
