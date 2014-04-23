@@ -166,10 +166,20 @@ class ErosionEngine
     xStep = 3
     yStep = 5
 
-    leftEdge  = Math.max x-xStep, @patches.minX
-    rightEdge = Math.min x+xStep, @patches.maxX
+    # Minimize edge effects by making sure to sample a window of width 2*xStep
+    if x - xStep < @patches.minX
+      leftEdge = @patches.minX
+      rightEdge = leftEdge + 2 * xStep
+    else if x + xStep > @patches.maxX
+      rightEdge = @patches.maxX
+      leftEdge = rightEdge - 2 * xStep
+    else
+      leftEdge  = x - xStep
+      rightEdge = y - yStep
+
     top       = Math.min y+yStep, @patches.maxY
     bottom    = Math.max y-yStep, @patches.minY
+
     [leftEdge, rightEdge, top, bottom]
 
 
