@@ -28,18 +28,21 @@ class PlantEngine
       ctx.scale(-0.1, 0.1);
       ctx.translate(width,height)
       ctx.rotate Math.PI
+      ctx.globalAlpha = 0.3
       ctx.drawImage(image, 0, 0)
 
     ABM.shapes.add "#{name}-body", false, (ctx)=>
       ctx.scale(-0.1, 0.1);
       ctx.translate(width,height)
       ctx.rotate Math.PI
+      ctx.globalAlpha = 0.3
       ctx.drawImage(image, 0, -height, width*2, height*2, 0, -height, width*2, height*2)
 
     ABM.shapes.add "#{name}-root", false, (ctx)=>
       ctx.scale(-0.1, 0.1);
       ctx.translate(width,height)
       ctx.rotate Math.PI
+      ctx.globalAlpha = 0.3
       ctx.drawImage(image, 0, height, width*2, height*2, 0, height, width*2, height*2)
 
   ###
