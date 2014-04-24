@@ -37,9 +37,22 @@ $ ->
   $zone1Slider.slider  min: -3, max: 3, step: 0.5, value: 0
   $zone2Slider.slider  min: -3, max: 3, step: 0.5, value: 0
 
+  $('#min-erosion-probability-slider')
+    .slider min: 0, max: 1, step: 0.05, value: model.minErosionProbability
+    .on 'slide', (event, ui) ->
+      model.minErosionProbability = ui.value
+      $(this).parent().parent().find('.slider-value').html ui.value.toFixed(2)
+    .parent().parent().find('.slider-value').html model.minErosionProbability.toFixed(2)
+
+  $('#fully-protective-vegetation-level-slider')
+    .slider min: 0, max: 5, step: 0.25, value: model.fullyProtectiveVegetationLevel
+    .on 'slide', (event, ui) ->
+      model.fullyProtectiveVegetationLevel = ui.value
+      $(this).parent().parent().find('.slider-value').html ui.value.toFixed(2)
+    .parent().parent().find('.slider-value').html model.fullyProtectiveVegetationLevel.toFixed(2)
+
   enableZoneSliders false
   $precipitationSlider.slider("disable")
-
 
 
 window.initControls = ->

@@ -33,7 +33,9 @@ class ErosionEngine
 
   precipitation: 0
 
-  erosionProbability = 30
+  minErosionProbability: 0.2
+  fullyProtectiveVegetationLevel: 2
+
   maxSlope = 2 # necessary?
   showErosion: true
 
@@ -98,7 +100,7 @@ class ErosionEngine
       vegetation = @getLocalVegetation p.x, p.y
       totalVegetationSize = 0
       totalVegetationSize += (if a.isBody then a.size/3 else if a.isRoot then a.size*2/3 else a.size) for a in vegetation
-      vegetationContribution = 0.2 + 0.8 * (1 - Math.min(1, totalVegetationSize / 2))
+      vegetationContribution = @minErosionProbability + 0.8 * (1 - Math.min(1, totalVegetationSize / Math.max(@fullyProtectiveVegetationLevel, 0.01)))
 
       precipitationContribution  = @precipitation / 500
 

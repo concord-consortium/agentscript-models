@@ -85,6 +85,14 @@ label.title {
   width: 253px;
 }
 
+#erosion-parameters {
+  position: absolute;
+  top: 225px;
+  left: 0px;
+  width: 253px;
+}
+
+
 #terrain {
   margin-left: 47px;
 }
@@ -230,6 +238,13 @@ label.title {
 
 span.slider-units {
   font-size: 90%;
+}
+
+span.slider-value {
+  color: red;
+  position: relative;
+  top: -7px;
+  left: 5px;
 }
 
 .ui-slider {
