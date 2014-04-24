@@ -167,6 +167,24 @@ $(function() {
     step: 0.5,
     value: 0
   });
+  $('#min-erosion-probability-slider').slider({
+    min: 0,
+    max: 1,
+    step: 0.05,
+    value: model.minErosionProbability
+  }).on('slide', function(event, ui) {
+    model.minErosionProbability = ui.value;
+    return $(this).parent().parent().find('.slider-value').html(ui.value.toFixed(2));
+  }).parent().parent().find('.slider-value').html(model.minErosionProbability.toFixed(2));
+  $('#fully-protective-vegetation-level-slider').slider({
+    min: 0,
+    max: 5,
+    step: 0.25,
+    value: model.fullyProtectiveVegetationLevel
+  }).on('slide', function(event, ui) {
+    model.fullyProtectiveVegetationLevel = ui.value;
+    return $(this).parent().parent().find('.slider-value').html(ui.value.toFixed(2));
+  }).parent().parent().find('.slider-value').html(model.fullyProtectiveVegetationLevel.toFixed(2));
   enableZoneSliders(false);
   return $precipitationSlider.slider("disable");
 });
@@ -351,7 +369,7 @@ SKY = "sky";
 LAND = "land";
 
 ErosionEngine = (function() {
-  var climate, climateData, erosionProbability, maxSlope, u, userPrecipitation;
+  var climate, climateData, maxSlope, u, userPrecipitation;
 
   function ErosionEngine() {}
 
@@ -375,7 +393,9 @@ ErosionEngine = (function() {
 
   ErosionEngine.prototype.precipitation = 0;
 
-  erosionProbability = 30;
+  ErosionEngine.prototype.minErosionProbability = 0.2;
+
+  ErosionEngine.prototype.fullyProtectiveVegetationLevel = 2;
 
   maxSlope = 2;
 
@@ -447,7 +467,7 @@ ErosionEngine = (function() {
         a = vegetation[_j];
         totalVegetationSize += (a.isBody ? a.size / 3 : a.isRoot ? a.size * 2 / 3 : a.size);
       }
-      vegetationContribution = 0.2 + 0.8 * (1 - Math.min(1, totalVegetationSize / 2));
+      vegetationContribution = this.minErosionProbability + 0.8 * (1 - Math.min(1, totalVegetationSize / Math.max(this.fullyProtectiveVegetationLevel, 0.01)));
       precipitationContribution = this.precipitation / 500;
       probabilityOfErosion = 0.1 * slopeContribution * vegetationContribution * precipitationContribution * p.stability;
       if (u.randomFloat(1) > probabilityOfErosion) {
@@ -881,6 +901,7 @@ PlantEngine = (function() {
         ctx.scale(-0.1, 0.1);
         ctx.translate(width, height);
         ctx.rotate(Math.PI);
+        ctx.globalAlpha = 0.3;
         return ctx.drawImage(image, 0, 0);
       };
     })(this));
@@ -889,6 +910,7 @@ PlantEngine = (function() {
         ctx.scale(-0.1, 0.1);
         ctx.translate(width, height);
         ctx.rotate(Math.PI);
+        ctx.globalAlpha = 0.3;
         return ctx.drawImage(image, 0, -height, width * 2, height * 2, 0, -height, width * 2, height * 2);
       };
     })(this));
@@ -897,6 +919,7 @@ PlantEngine = (function() {
         ctx.scale(-0.1, 0.1);
         ctx.translate(width, height);
         ctx.rotate(Math.PI);
+        ctx.globalAlpha = 0.3;
         return ctx.drawImage(image, 0, height, width * 2, height * 2, 0, height, width * 2, height * 2);
       };
     })(this));
