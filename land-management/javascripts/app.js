@@ -156,15 +156,15 @@ $(function() {
     value: 166
   });
   $zone1Slider.slider({
-    min: -5,
-    max: 5,
-    step: 1,
+    min: -3,
+    max: 3,
+    step: 0.5,
     value: 0
   });
   $zone2Slider.slider({
-    min: -5,
-    max: 5,
-    step: 1,
+    min: -3,
+    max: 3,
+    step: 0.5,
     value: 0
   });
   enableZoneSliders(false);
@@ -392,7 +392,7 @@ ErosionEngine = (function() {
     surfaceLand = [];
     for (x = _i = _ref = this.patches.minX, _ref1 = this.patches.maxX; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; x = _ref <= _ref1 ? ++_i : --_i) {
       y = this.patches.maxY;
-      while (this.patches.patch(x, y).type === SKY) {
+      while (this.patches.patch(x, y).type === SKY && y > this.patches.minY) {
         y--;
       }
       surfaceLand.push(this.patches.patch(x, y));
@@ -427,104 +427,94 @@ ErosionEngine = (function() {
   };
 
   ErosionEngine.prototype.erode = function() {
-    var a, direction, i, localErosionProbability, localSlope, n, p, probabilityOfErosion, property, savedProperies, slopeContribution, target, totalVegetationSize, vegetation, vegetationStoppingPower, vegetiationContribution, _i, _j, _k, _l, _len, _len1, _len2, _len3, _m, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _results;
-    savedProperies = {};
-    _ref = this.surfaceLand;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      p = _ref[_i];
-      p.skyCount = 0;
-      _ref1 = p.n;
-      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-        n = _ref1[_j];
-        if ((n != null ? n.type : void 0) === SKY) {
-          p.skyCount++;
-        }
-      }
-      if (p.y === this.patches.maxY) {
-        p.skyCount += 3;
-      }
-    }
-    this.surfaceLand.sort(function(a, b) {
-      if (a.skyCount <= b.skyCount) {
+    var a, i, localSlope, p, precipitationContribution, probabilityOfErosion, signOf, slopeContribution, target, totalVegetationSize, vegetation, vegetationContribution, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
+    signOf = function(x) {
+      if (x === 0) {
         return 1;
       } else {
-        return -1;
+        return Math.round(x / Math.abs(x));
       }
-    });
+    };
+    _ref = this.surfaceLand;
     _results = [];
-    for (i = _k = 0, _ref2 = this.surfaceLand.length / 2; _k < _ref2; i = _k += 1) {
-      p = this.surfaceLand[i];
+    for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+      p = _ref[i];
       localSlope = this.getLocalSlope(p.x, p.y);
-      slopeContribution = 0.35 * Math.abs(localSlope / 2);
+      slopeContribution = Math.min(1, 2 * Math.abs(localSlope));
       vegetation = this.getLocalVegetation(p.x, p.y);
       totalVegetationSize = 0;
-      for (_l = 0, _len2 = vegetation.length; _l < _len2; _l++) {
-        a = vegetation[_l];
+      for (_j = 0, _len1 = vegetation.length; _j < _len1; _j++) {
+        a = vegetation[_j];
         totalVegetationSize += (a.isBody ? a.size / 3 : a.isRoot ? a.size * 2 / 3 : a.size);
       }
-      vegetationStoppingPower = Math.min(totalVegetationSize / 5, 0.99);
-      vegetiationContribution = 0.65 * (1 - vegetationStoppingPower);
-      localErosionProbability = erosionProbability / p.stability;
-      probabilityOfErosion = localErosionProbability * (this.precipitation / 400) * (slopeContribution + vegetiationContribution);
-      if (u.randomFloat(100) > probabilityOfErosion) {
+      vegetationContribution = 0.2 + 0.8 * (1 - Math.min(1, totalVegetationSize / 2));
+      precipitationContribution = this.precipitation / 500;
+      probabilityOfErosion = 0.1 * slopeContribution * vegetationContribution * precipitationContribution * p.stability;
+      if (u.randomFloat(1) > probabilityOfErosion) {
         continue;
       }
-      direction = p.direction || (direction = 1 - (u.randomInt(2) * 2));
-      if (p.x === this.patches.minX && direction === -1 || p.x === this.patches.maxX && direction === 1) {
+      p.direction = signOf(-localSlope);
+      if (p.x === this.patches.minX && p.direction === -1 || p.x === this.patches.maxX && p.direction === 1) {
         target = null;
-      } else if (((_ref3 = p.n[1 + direction]) != null ? _ref3.type : void 0) === SKY) {
-        target = p.n[1 + direction];
-      } else if (((_ref4 = p.n[1 - direction]) != null ? _ref4.type : void 0) === SKY) {
-        target = p.n[1 - direction];
-        direction = direction * -1;
-      } else if (((_ref5 = p.n[3.5 + (direction / 2)]) != null ? _ref5.type : void 0) === SKY) {
-        target = p.n[3.5 + (direction / 2)];
-      } else if (((_ref6 = p.n[3.5 - (direction / 2)]) != null ? _ref6.type : void 0) === SKY) {
-        target = p.n[3.5 - (direction / 2)];
-        direction = direction * -1;
+      } else if (((_ref1 = p.n[1 + p.direction]) != null ? _ref1.type : void 0) === SKY) {
+        target = p.n[1 + p.direction];
+      } else if (((_ref2 = p.n[1 - p.direction]) != null ? _ref2.type : void 0) === SKY) {
+        target = p.n[1 - p.direction];
+      } else if (((_ref3 = p.n[3.5 + (p.direction / 2)]) != null ? _ref3.type : void 0) === SKY) {
+        target = p.n[3.5 + (p.direction / 2)];
+      } else if (((_ref4 = p.n[3.5 - (p.direction / 2)]) != null ? _ref4.type : void 0) === SKY) {
+        target = p.n[3.5 - (p.direction / 2)];
       } else {
         p.direction = 0;
         continue;
       }
-      if (p.x < 0) {
+      if (p.x <= 0) {
         this.zone1ErosionCount++;
       } else {
         this.zone2ErosionCount++;
       }
       if (target != null) {
-        while (target.n[1].type === SKY) {
+        while (((_ref5 = target.n[1]) != null ? _ref5.type : void 0) === SKY) {
           target = target.n[1];
         }
-        target.type = LAND;
+        this.swapSkyAndLand(target, p);
         target.eroded = true;
-        _ref7 = ['direction', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace'];
-        for (_m = 0, _len3 = _ref7.length; _m < _len3; _m++) {
-          property = _ref7[_m];
-          target[property] = p[property];
-        }
       }
       p.type = SKY;
       p.color = SKY_COLOR;
-      _results.push((function() {
-        var _len4, _n, _ref8, _results1;
-        _ref8 = ['eroded', 'direction', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace'];
-        _results1 = [];
-        for (_n = 0, _len4 = _ref8.length; _n < _len4; _n++) {
-          property = _ref8[_n];
-          _results1.push(p[property] = void 0);
-        }
-        return _results1;
-      })());
+      if (((_ref6 = p.n[6]) != null ? _ref6.type : void 0) === LAND) {
+        _results.push(this.swapSkyAndLand(p, p.n[6]));
+      } else {
+        _results.push(void 0);
+      }
     }
     return _results;
+  };
+
+  ErosionEngine.prototype.swapSkyAndLand = function(sky, land) {
+    var property, _i, _len, _ref, _ref1;
+    _ref = ['direction', 'eroded', 'type', 'color', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace'];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      property = _ref[_i];
+      _ref1 = [sky[property], land[property]], land[property] = _ref1[0], sky[property] = _ref1[1];
+    }
+    return null;
   };
 
   ErosionEngine.prototype.getBoxAroundPoint = function(x, y, xStep, yStep) {
     var bottom, leftEdge, rightEdge, top;
     xStep = 3;
     yStep = 5;
-    leftEdge = Math.max(x - xStep, this.patches.minX);
-    rightEdge = Math.min(x + xStep, this.patches.maxX);
+    if (x - xStep < this.patches.minX) {
+      leftEdge = this.patches.minX;
+      rightEdge = leftEdge + 2 * xStep;
+    } else if (x + xStep > this.patches.maxX) {
+      rightEdge = this.patches.maxX;
+      leftEdge = rightEdge - 2 * xStep;
+    } else {
+      leftEdge = x - xStep;
+      rightEdge = x + xStep;
+    }
     top = Math.min(y + yStep, this.patches.maxY);
     bottom = Math.max(y - yStep, this.patches.minY);
     return [leftEdge, rightEdge, top, bottom];
@@ -667,7 +657,7 @@ LandGenerator = (function() {
           p.type = SKY;
         } else {
           p.isTopsoil = p.y > this.landShapeFunction(p.x) - this.INITIAL_TOPSOIL_DEPTH;
-          p.stability = p.isTopsoil ? 1 : 10;
+          p.stability = p.isTopsoil ? 1 : 0.2;
           p.color = DARK_LAND_COLOR;
           p.type = LAND;
           p.eroded = false;
@@ -676,7 +666,7 @@ LandGenerator = (function() {
           if (type === "Terraced" && p.x < 0 && ((p.x % Math.floor(this.patches.minX / 5) === 0 && p.y > this.landShapeFunction(p.x - 1)) || ((p.x - 1) % Math.floor(this.patches.minX / 5) === 0 && p.y > this.landShapeFunction(p.x - 2)))) {
             p.isTerrace = true;
             p.color = TERRACE_COLOR;
-            p.stability = 100;
+            p.stability = 0.01;
           }
         }
       }
@@ -859,7 +849,7 @@ require('src/controls');
 var PlantEngine;
 
 PlantEngine = (function() {
-  var NORTH, intensive, managementPlan, needToPlantPerennialsInZone, u;
+  var NORTH, intensive, managementPlan, u;
 
   function PlantEngine() {}
 
@@ -868,8 +858,6 @@ PlantEngine = (function() {
   NORTH = Math.PI / 2;
 
   managementPlan = ["bare", "bare"];
-
-  needToPlantPerennialsInZone = [true, true];
 
   intensive = [false, false];
 
@@ -925,11 +913,6 @@ PlantEngine = (function() {
     previousPlantType = managementPlan[zone];
     types = type.split("-");
     plantType = types[0];
-    if (plantType !== "bare" && plantType !== managementPlan[zone]) {
-      if (!this.plantData[plantType].annual) {
-        needToPlantPerennialsInZone[zone] = true;
-      }
-    }
     managementPlan[zone] = types[0];
     intensive[zone] = types[1] === "intensive";
     if (this.yearTick !== 0) {
@@ -955,7 +938,7 @@ PlantEngine = (function() {
     _ref = this.agents;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       a = _ref[_i];
-      zone = ((_ref1 = a.p) != null ? _ref1.x : void 0) < 0 ? 0 : 1;
+      zone = ((_ref1 = a.p) != null ? _ref1.x : void 0) <= 0 ? 0 : 1;
       if (!a.isRoot && !((_ref2 = this.plantData[a.type]) != null ? _ref2.annual : void 0) && a.type !== managementPlan[zone]) {
         console.log("killing off:", a);
         killList.push(a);
@@ -969,33 +952,103 @@ PlantEngine = (function() {
     return _results;
   };
 
+  PlantEngine.prototype.isPrecipitationOptimalFor = function(type) {
+    var plantData, _ref;
+    plantData = this.plantData[type];
+    return (plantData.minimumPrecipitation <= (_ref = this.precipitation) && _ref <= plantData.maximumPrecipitation);
+  };
+
+  PlantEngine.prototype.plantPopulationInZone = function(zone) {
+    return this.agents.reduce(((function(_this) {
+      return function(x, a) {
+        if (_this.isAgentAPlantInZone(a, zone)) {
+          return x + 1;
+        } else {
+          return x;
+        }
+      };
+    })(this)), 0);
+  };
+
+  PlantEngine.prototype.adjustPlantPopulationInZone = function(zone) {
+    var a, actualPopulation, killList, plantType, populationIfOptimalPrecipitation, _i, _j, _len, _len1, _ref, _ref1, _results;
+    killList = [];
+    plantType = managementPlan[zone];
+    if (!((_ref = this.plantData[plantType]) != null ? _ref.isAffectedByPoorWaterAfterPlanting : void 0)) {
+      return;
+    }
+    actualPopulation = this.plantPopulationInZone(zone);
+    populationIfOptimalPrecipitation = this.plantData[plantType].quantity;
+    if (this.isPrecipitationOptimalFor(managementPlan[zone])) {
+      if (actualPopulation < populationIfOptimalPrecipitation) {
+        this.plantPlantsInZone(zone);
+      }
+    } else {
+      if (actualPopulation === populationIfOptimalPrecipitation) {
+        _ref1 = this.agents;
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          a = _ref1[_i];
+          if (this.isAgentAPlantInZone(a, zone) && u.randomFloat(1) < this.plantData[plantType].mortalityInPoorWater) {
+            console.log("killing off (poor water):", a);
+            killList.push(a);
+          }
+        }
+      }
+    }
+    _results = [];
+    for (_j = 0, _len1 = killList.length; _j < _len1; _j++) {
+      a = killList[_j];
+      if (!a.isBody) {
+        this.splitRoots(a);
+      }
+      _results.push(a.die());
+    }
+    return _results;
+  };
+
+  PlantEngine.prototype.isAgentAPlantInZone = function(a, zone) {
+    if (zone === 0) {
+      return a.x <= 0 && !a.isRoot;
+    } else {
+      return a.x > 0 && !a.isRoot;
+    }
+  };
+
   PlantEngine.prototype.plantPlantsInZone = function(zone) {
-    var i, inRows, patch, plantType, quantity, x, xModifier, zoneWidth, _i, _results;
+    var actualPopulation, desiredPopulation, i, inRows, plantAt, plantType, sign, zoneWidth, _i, _j, _results, _results1;
     zoneWidth = this.patches.maxX;
     plantType = managementPlan[zone];
     if (plantType === "bare") {
       return;
     }
-    console.log("not bare");
-    if (!(this.plantData[plantType].annual || needToPlantPerennialsInZone[zone])) {
-      return;
-    }
-    console.log("annual or perennial we will plant");
     if (this.yearTick() > this.plantData[plantType].maxGermination) {
       return;
     }
-    needToPlantPerennialsInZone[zone] = false;
-    quantity = this.plantData[plantType].quantity;
+    desiredPopulation = this.plantData[plantType].quantity;
+    actualPopulation = this.plantPopulationInZone(zone);
+    sign = zone * 2 - 1;
     inRows = this.plantData[plantType].inRows;
-    xModifier = zone * 2 - 1;
-    _results = [];
-    for (i = _i = 0; 0 <= quantity ? _i < quantity : _i > quantity; i = 0 <= quantity ? ++_i : --_i) {
-      x = inRows ? Math.floor((i + 1) * zoneWidth / (quantity + 1)) : u.randomInt(zoneWidth);
-      x *= xModifier;
-      patch = this.surfaceLand[zoneWidth + x];
-      _results.push(this.plantSeed(plantType, patch));
+    plantAt = (function(_this) {
+      return function(x) {
+        var patch;
+        patch = _this.surfaceLand[zoneWidth + x];
+        return _this.plantSeed(plantType, patch);
+      };
+    })(this);
+    if (inRows && actualPopulation === 0) {
+      _results = [];
+      for (i = _i = 0; 0 <= desiredPopulation ? _i < desiredPopulation : _i > desiredPopulation; i = 0 <= desiredPopulation ? ++_i : --_i) {
+        _results.push(plantAt(sign * Math.floor((i + 1) * zoneWidth / (desiredPopulation + 1))));
+      }
+      return _results;
+    } else if (!inRows) {
+      _results1 = [];
+      for (i = _j = actualPopulation; actualPopulation <= desiredPopulation ? _j < desiredPopulation : _j > desiredPopulation; i = actualPopulation <= desiredPopulation ? ++_j : --_j) {
+        console.log("planting");
+        _results1.push(plantAt(sign * u.randomInt(zoneWidth)));
+      }
+      return _results1;
     }
-    return _results;
   };
 
   PlantEngine.prototype.plantPlants = function() {
@@ -1039,23 +1092,23 @@ PlantEngine = (function() {
   };
 
   PlantEngine.prototype.runPlants = function() {
-    var a, growthRate, kill, killList, patch, poorWater, xModifier, zone, _i, _j, _len, _len1, _ref, _results;
+    var a, growthRate, kill, killList, patch, poorWater, xModifier, zone, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _results;
     killList = [];
-    _ref = this.agents;
+    _ref = [0, 1];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      a = _ref[_i];
-      poorWater = this.precipitation < this.plantData[a.type].minimumPrecipitation || this.precipitation > this.plantData[a.type].maximumPrecipitation;
+      zone = _ref[_i];
+      this.adjustPlantPopulationInZone(zone);
+    }
+    _ref1 = this.agents;
+    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+      a = _ref1[_j];
+      poorWater = !this.isPrecipitationOptimalFor(a.type);
       if (a.isSeed) {
         if (this.yearTick() === a.germinationDate) {
-          if (poorWater && this.plantData[a.type].annual) {
-            if (u.randomFloat(1) < 0.5) {
+          if (poorWater) {
+            if (u.randomFloat(1) < this.plantData[a.type].mortalityInPoorWater) {
               killList.push(a);
-              continue;
-            }
-          } else if (poorWater && !this.plantData[a.type].annual) {
-            if (u.randomFloat(1) < 0.15) {
-              killList.push(a);
-            } else {
+            } else if (!this.plantData[a.type].annual) {
               a.germinationDate += 40;
             }
             continue;
@@ -1069,7 +1122,7 @@ PlantEngine = (function() {
           a.periodAge = 0;
           switch (a.period) {
             case 3:
-              if (!a.isRoot) {
+              if (!(a.isRoot || a.growthPeriods[a.period] === Infinity)) {
                 this.splitRoots(a);
               }
               break;
@@ -1115,8 +1168,8 @@ PlantEngine = (function() {
       }
     }
     _results = [];
-    for (_j = 0, _len1 = killList.length; _j < _len1; _j++) {
-      a = killList[_j];
+    for (_k = 0, _len2 = killList.length; _k < _len2; _k++) {
+      a = killList[_k];
       _results.push(a.die());
     }
     return _results;
@@ -1201,6 +1254,8 @@ PlantEngine = (function() {
       periodVariation: 0.22,
       minimumPrecipitation: 14,
       maximumPrecipitation: 450,
+      isAffectedByPoorWaterAfterPlanting: false,
+      mortalityInPoorWater: 0.15,
       shapes: ["tree1", "tree2", "tree3"]
     },
     grass: {
@@ -1210,12 +1265,14 @@ PlantEngine = (function() {
       initialSize: 0.2,
       minGermination: 1,
       maxGermination: 800,
-      growthPeriods: [120, 210, 1400, 150, 100],
-      growthRates: [0.0043, 0.0053, 0.0003, -0.0032, 0.0007],
       rootGrowthRates: [0, -0.001, 0, -0.001, -0.001],
+      growthPeriods: [120, 210, 1400, Infinity, Infinity],
+      growthRates: [0.0043, 0.0053, 0.0003, 0, 0],
       periodVariation: 0.15,
       minimumPrecipitation: 14,
       maximumPrecipitation: 450,
+      isAffectedByPoorWaterAfterPlanting: true,
+      mortalityInPoorWater: 0.15,
       shapes: ["grass1", "grass2"]
     },
     wheat: {
@@ -1231,6 +1288,8 @@ PlantEngine = (function() {
       periodVariation: 0.04,
       minimumPrecipitation: 14,
       maximumPrecipitation: 450,
+      isAffectedByPoorWaterAfterPlanting: false,
+      mortalityInPoorWater: 0.5,
       shapes: ["wheat1"]
     }
   };
