@@ -46,7 +46,7 @@ class ErosionEngine
     surfaceLand = []
     for x in [@patches.minX..@patches.maxX]
       y = @patches.maxY
-      y-- while @patches.patch(x, y).type is SKY
+      y-- while @patches.patch(x, y).type is SKY and y > @patches.minY
       surfaceLand.push @patches.patch x, y
 
     surfaceLand
@@ -82,62 +82,54 @@ class ErosionEngine
                 LIGHT_LAND_COLOR
             else
               LIGHT_LAND_COLOR
+
         if newColor? then p.color = newColor
 
+
   erode: ->
-    savedProperies = {}
 
-    # Find and sort the surface patches most exposed to the sky
-    for p in @surfaceLand
-      p.skyCount = 0
-      p.skyCount++ for n in p.n when n?.type is SKY
-      p.skyCount += 3 if p.y is @patches.maxY
+    signOf = (x) -> if x is 0 then 1 else Math.round x / Math.abs(x)
 
-    @surfaceLand.sort (a,b) ->
-      return if a.skyCount <= b.skyCount then 1 else -1
-
-    # Take the top 25% of most exposed soil patches and erode them
-    for i in [0...@surfaceLand.length/2] by 1
-      p = @surfaceLand[i]
+    for p, i in @surfaceLand
 
       localSlope = @getLocalSlope p.x, p.y
-      slopeContribution = 0.35 * Math.abs(localSlope/2)
+      slopeContribution = Math.min(1, 2 * Math.abs localSlope)
+
       vegetation = @getLocalVegetation p.x, p.y
       totalVegetationSize = 0
       totalVegetationSize += (if a.isBody then a.size/3 else if a.isRoot then a.size*2/3 else a.size) for a in vegetation
-      vegetationStoppingPower = Math.min totalVegetationSize/5, 0.99
-      vegetiationContribution = 0.65 * (1 - vegetationStoppingPower)
-      localErosionProbability = erosionProbability / p.stability
-      probabilityOfErosion = localErosionProbability * (@precipitation/400) * (slopeContribution + vegetiationContribution)
+      vegetationContribution = 0.2 + 0.8 * (1 - Math.min(1, totalVegetationSize / 2))
 
-      if (u.randomFloat(100) > probabilityOfErosion) then continue
+      precipitationContribution  = @precipitation / 500
 
-      # pick a random direction first, then check
-      # bottom corners, then sides for a patch of sky
-      direction = p.direction or direction = 1 - (u.randomInt(2) * 2)
+      probabilityOfErosion = 0.1 * slopeContribution * vegetationContribution * precipitationContribution * p.stability
+
+      continue if u.randomFloat(1) > probabilityOfErosion
+
+      p.direction = signOf -localSlope
 
       # remember, indices into p.n relative to patch p (in the center of the below diagram):
       # 5  6  7
       # 3  -  4
       # 0  1  2
 
-      if p.x is @patches.minX and direction is -1 or p.x is @patches.maxX and direction is 1
+      if p.x is @patches.minX and p.direction is -1 or p.x is @patches.maxX and p.direction is 1
         # We're moving off the edge, so disappear (no target)
         target = null
-      else if p.n[1+direction]?.type is SKY
+      else if p.n[1+p.direction]?.type is SKY
         # move downward and in the previous lateral direction
-        target = p.n[1+direction]
-      else if p.n[1-direction]?.type is SKY
+        target = p.n[1+p.direction]
+      else if p.n[1-p.direction]?.type is SKY
         # move downward and laterally in the opposite of the previous lateral direction
-        target = p.n[1-direction]
-        direction = direction * -1
-      else if p.n[3.5+(direction/2)]?.type is SKY
+        target = p.n[1-p.direction]
+        #p.direction = -p.direction
+      else if p.n[3.5+(p.direction/2)]?.type is SKY
         # move horizontally in the previous lateral direction
-        target = p.n[3.5+(direction/2)]
-      else if p.n[3.5-(direction/2)]?.type is SKY
+        target = p.n[3.5+(p.direction/2)]
+      else if p.n[3.5-(p.direction/2)]?.type is SKY
         # move horizontally in the opposite of the previous lateral direction
-        target = p.n[3.5-(direction/2)]
-        direction = direction * -1
+        target = p.n[3.5-(p.direction/2)]
+        #p.direction = -p.direction
       else
         # We're stuck! Don't change at all.
         p.direction = 0
@@ -145,33 +137,45 @@ class ErosionEngine
 
       # count erosion in zones -- note this is not the same as the target's
       # origin zone (it's color), but where is it *currently* eroding from.
-      if p.x < 0 then @zone1ErosionCount++ else @zone2ErosionCount++
+      if p.x <= 0 then @zone1ErosionCount++ else @zone2ErosionCount++
 
-      # unless we're disappearing off the edge, "move" to target by making target a clone of p
       if target?
-       # first, check below target to make sure it drops down to solid ground
-        while target.n[1].type is SKY
-          target = target.n[1]
-
-        # 'move' p to target by cloning the land-related properties of p
-        target.type = LAND
+        target = target.n[1] while target.n[1]?.type is SKY
+        @swapSkyAndLand target, p
         target.eroded = true
-        target[property] = p[property] for property in ['direction', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace']
 
-      # become sky
+      # make sure p becomes sky, whether target exists or not
       p.type = SKY
       p.color = SKY_COLOR
-      p[property] = undefined for property in ['eroded', 'direction', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace']
 
+      # Now, look UP from the patch p (which is now sky) and see if we left a land patch "hanging"
+      # above a sky patch. (All land patches are settled on terra firma after each iteration of
+      # this loop, so we need to look upward no more than 1 patch.)
+      @swapSkyAndLand p, p.n[6] if p.n[6]?.type is LAND
+
+  swapSkyAndLand: (sky, land) ->
+    for property in ['direction', 'eroded', 'type', 'color', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace']
+      [land[property], sky[property]] = [sky[property], land[property]]
+    null
 
   getBoxAroundPoint: (x, y, xStep, yStep) ->
     xStep = 3
     yStep = 5
 
-    leftEdge  = Math.max x-xStep, @patches.minX
-    rightEdge = Math.min x+xStep, @patches.maxX
+    # Minimize edge effects by making sure to sample a window of width 2*xStep
+    if x - xStep < @patches.minX
+      leftEdge = @patches.minX
+      rightEdge = leftEdge + 2 * xStep
+    else if x + xStep > @patches.maxX
+      rightEdge = @patches.maxX
+      leftEdge = rightEdge - 2 * xStep
+    else
+      leftEdge  = x - xStep
+      rightEdge = x + xStep
+
     top       = Math.min y+yStep, @patches.maxY
     bottom    = Math.max y-yStep, @patches.minY
+
     [leftEdge, rightEdge, top, bottom]
 
 

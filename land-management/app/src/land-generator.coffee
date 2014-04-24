@@ -28,7 +28,7 @@ class LandGenerator
           p.type = SKY
         else
           p.isTopsoil = p.y > @landShapeFunction(p.x) - @INITIAL_TOPSOIL_DEPTH
-          p.stability = if p.isTopsoil then 1 else 10  # TODO: higher values are less stable! Reverse.
+          p.stability = if p.isTopsoil then 1 else 0.2
 
           # topsoil and terrace colors will be updated by @updateSurfacePatches
           p.color = DARK_LAND_COLOR
@@ -42,7 +42,7 @@ class LandGenerator
            ((p.x-1) % Math.floor(@patches.minX/5) is 0 and p.y > @landShapeFunction (p.x-2)))
             p.isTerrace = true
             p.color = TERRACE_COLOR
-            p.stability = 100
+            p.stability = 0.01
 
     @updateSurfacePatches()
 
