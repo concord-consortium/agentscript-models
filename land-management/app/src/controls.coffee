@@ -33,8 +33,8 @@ $ ->
     disable_search:true
     width: 158
   $precipitationSlider.slider  min: 0, max: 500, step: 1, value: 166
-  $zone1Slider.slider  min: -5, max: 5, step: 1, value: 0
-  $zone2Slider.slider  min: -5, max: 5, step: 1, value: 0
+  $zone1Slider.slider  min: -3, max: 3, step: 0.5, value: 0
+  $zone2Slider.slider  min: -3, max: 3, step: 0.5, value: 0
 
   enableZoneSliders false
   $precipitationSlider.slider("disable")
