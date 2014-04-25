@@ -88,11 +88,77 @@ class ErosionEngine
         if newColor? then p.color = newColor
 
 
+
+  # We need some way to avoid the overaccumulation of eroded soil and other edge effects that occur
+  # at the left and right edges of the model, which occur because the model doesn't actually
+  # simulate what happens when particles move past the edge of the model window.
+  #
+  # This just forces the left and rightmost edges to have the a height that matches the local slope
+  # at the left and right edges of the model. We use a linear regression here instead of the cruder
+  # (but faster) single-sample estimate made by @getLocalSlope, because this is only done twice per
+  # tick and probably helps to avoid visual artifacts.
+  adjustEdges: ->
+    @adjustEdge 0, 1
+    @adjustEdge @surfaceLand.length - 1, -1
+
+  adjustEdge: (iLim, direction) ->
+    SURFACE_WIDTH = 10
+
+    currentY = @surfaceLand[iLim].y
+    data = ([i, @surfaceLand[i].y] for i in [iLim + direction .. iLim + SURFACE_WIDTH * direction])
+    desiredY = Math.round(ss.linear_regression().data(data).line()(iLim))
+    x = @surfaceLand[iLim].x
+
+    if currentY < desiredY
+      @convertSkyToLand(@patches.patch x, y) for y in [currentY + 1 .. desiredY]
+    else if currentY > desiredY
+      @convertLandToSky(@patches.patch x, y) for y in [desiredY + 1 .. currentY]
+    null
+
+  # A little tricky. This takes a sky patch p and converts it to land. It uses majority rules to
+  # guess its zone of origin and whether it's topsoil or subsoil.
+  convertSkyToLand: (p) ->
+    xMin = Math.max(0, p.x - 5)
+    xMax = Math.min(@patches.maxX - 1, p.x + 5)
+
+    # take a census of nearby patches to see if we should be topsoil and which zone we came from
+    zones =   [0, 0]
+    topsoil = [0, 0]
+
+    for x in [xMin..xMax]
+      ySurface = @surfaceLand[x - @patches.minX].y
+      for y in [ySurface - 2 .. ySurface]
+        p1 = @patches.patch x, y
+        continue if p1.type isnt LAND
+
+        ++zones[p1.zone]
+        ++topsoil[p1.isTopsoil+0]
+
+    p.zone = if zones[0] > zones[1] then 0 else 1
+    p.isTopsoil = topsoil[1] > topsoil[0]
+
+    p.type = LAND
+    p.eroded = true
+    p.isTerrace = false
+    p.stability = 1
+
+    # we'll let @updateSurfaceLandPatches sort it out next cycle
+    p.quality = 1
+    p.color = if p.isTopsoil then LIGHT_LAND_COLOR else DARK_LAND_COLOR
+
+  convertLandToSky: (p) ->
+      p.type = SKY
+      p.color = SKY_COLOR
+      @removeLandProperties p
+
   erode: ->
 
     signOf = (x) -> if x is 0 then 1 else Math.round x / Math.abs(x)
 
-    for p, i in @surfaceLand
+    @adjustEdges()
+
+    for i in [1...@surfaceLand.length-1]
+      p = @surfaceLand[i]
 
       localSlope = @getLocalSlope p.x, p.y
       slopeContribution = Math.min(1, 2 * Math.abs localSlope)
@@ -115,8 +181,18 @@ class ErosionEngine
       # 3  -  4
       # 0  1  2
 
-      if p.x is @patches.minX and p.direction is -1 or p.x is @patches.maxX and p.direction is 1
-        # We're moving off the edge, so disappear (no target)
+      if p.x is @patches.minX and p.direction is -1
+        # Trying a very simple formula. Basic idea is to extrapolate height to left of leftmost
+        # patch of model, *without* using the leftmost patch itself to determine that height.
+        expectedHeightToLeft = 2 * @surfaceLand[1].y - @surfaceLand[3].y
+        # if land is expected to be higher to the left, we can't erode leftwards
+        continue if expectedHeightToLeft >= p.y
+        # we'll move left and leave the model (p will become sky but not be cloned to a target)
+        target = null
+      else if p.x is @patches.maxX and p.direction is 1
+        lastIndex = @surfaceLand.length - 1
+        expectedHeightToRight = 2 * @surfaceLand[lastIndex - 1].y - @surfaceLand[lastIndex - 3].y
+        continue if expectedHeightToRight >= p.y
         target = null
       else if p.n[1+p.direction]?.type is SKY
         # move downward and in the previous lateral direction
@@ -146,10 +222,9 @@ class ErosionEngine
         @swapSkyAndLand target, p
         target.eroded = true
 
+
       # make sure p becomes sky, whether target exists or not
-      p.type = SKY
-      p.color = SKY_COLOR
-      @removeLandProperties p
+      @convertLandToSky p
 
       # Now, look UP from the patch p (which is now sky) and see if we left a land patch "hanging"
       # above a sky patch. (All land patches are settled on terra firma after each iteration of
@@ -244,7 +319,6 @@ class ErosionEngine
       if p.isTopsoil
         count++
         if p.x < 0 then ret[1]++ else ret[2]++
-    console.log count
     ret
 
 window.ErosionEngine = ErosionEngine
