@@ -502,6 +502,7 @@ ErosionEngine = (function() {
       }
       p.type = SKY;
       p.color = SKY_COLOR;
+      this.removeLandProperties(p);
       if (((_ref6 = p.n[6]) != null ? _ref6.type : void 0) === LAND) {
         _results.push(this.swapSkyAndLand(p, p.n[6]));
       } else {
@@ -513,10 +514,20 @@ ErosionEngine = (function() {
 
   ErosionEngine.prototype.swapSkyAndLand = function(sky, land) {
     var property, _i, _len, _ref, _ref1;
-    _ref = ['direction', 'eroded', 'type', 'color', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace'];
+    _ref = this.landPropertyNames.concat(['type', 'color']);
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       property = _ref[_i];
       _ref1 = [sky[property], land[property]], land[property] = _ref1[0], sky[property] = _ref1[1];
+    }
+    return null;
+  };
+
+  ErosionEngine.prototype.removeLandProperties = function(p) {
+    var property, _i, _len, _ref;
+    _ref = this.landPropertyNames;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      property = _ref[_i];
+      p[property] = null;
     }
     return null;
   };
@@ -666,8 +677,10 @@ LandGenerator = (function() {
 
   LandGenerator.prototype.zone2Slope = 0;
 
+  LandGenerator.prototype.landPropertyNames = ['direction', 'eroded', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace'];
+
   LandGenerator.prototype.setupLand = function() {
-    var p, x, y, _i, _j, _ref, _ref1, _ref2, _ref3;
+    var p, property, x, y, _i, _j, _k, _len, _ref, _ref1, _ref2, _ref3, _ref4;
     for (x = _i = _ref = this.patches.minX, _ref1 = this.patches.maxX; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; x = _ref <= _ref1 ? ++_i : --_i) {
       for (y = _j = _ref2 = this.patches.minY, _ref3 = this.patches.maxY; _ref2 <= _ref3 ? _j <= _ref3 : _j >= _ref3; y = _ref2 <= _ref3 ? ++_j : --_j) {
         p = this.patches.patch(x, y);
@@ -675,18 +688,25 @@ LandGenerator = (function() {
         if (p.y > this.landShapeFunction(p.x)) {
           p.color = SKY_COLOR;
           p.type = SKY;
+          _ref4 = this.landPropertyNames;
+          for (_k = 0, _len = _ref4.length; _k < _len; _k++) {
+            property = _ref4[_k];
+            p[property] = null;
+          }
         } else {
           p.isTopsoil = p.y > this.landShapeFunction(p.x) - this.INITIAL_TOPSOIL_DEPTH;
           p.stability = p.isTopsoil ? 1 : 0.2;
           p.color = DARK_LAND_COLOR;
           p.type = LAND;
           p.eroded = false;
-          p.erosionDirection = 0;
+          p.direction = 0;
           p.quality = 1;
           if (type === "Terraced" && p.x < 0 && ((p.x % Math.floor(this.patches.minX / 5) === 0 && p.y > this.landShapeFunction(p.x - 1)) || ((p.x - 1) % Math.floor(this.patches.minX / 5) === 0 && p.y > this.landShapeFunction(p.x - 2)))) {
             p.isTerrace = true;
             p.color = TERRACE_COLOR;
             p.stability = 0.01;
+          } else {
+            p.isTerrace = false;
           }
         }
       }
