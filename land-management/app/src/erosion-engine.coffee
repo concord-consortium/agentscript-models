@@ -157,12 +157,12 @@ class ErosionEngine
       @swapSkyAndLand p, p.n[6] if p.n[6]?.type is LAND
 
   swapSkyAndLand: (sky, land) ->
-    for property in ['direction', 'eroded', 'type', 'color', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace']
+    for property in @landPropertyNames.concat(['type', 'color'])
       [land[property], sky[property]] = [sky[property], land[property]]
     null
 
   removeLandProperties: (p) ->
-    delete p[property] for property in ['direction', 'eroded', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace']
+    p[property] = null for property in @landPropertyNames
     null
 
   getBoxAroundPoint: (x, y, xStep, yStep) ->

@@ -16,6 +16,8 @@ class LandGenerator
   zone1Slope: 0
   zone2Slope: 0
 
+  landPropertyNames: ['direction', 'eroded', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace']
+
   setupLand: ->
     for x in [@patches.minX..@patches.maxX]
       for y in [@patches.minY..@patches.maxY]
@@ -26,6 +28,8 @@ class LandGenerator
         if p.y > @landShapeFunction p.x
           p.color = SKY_COLOR
           p.type = SKY
+          # help js engine by making sure all patches have the same fields
+          p[property] = null for property in @landPropertyNames
         else
           p.isTopsoil = p.y > @landShapeFunction(p.x) - @INITIAL_TOPSOIL_DEPTH
           p.stability = if p.isTopsoil then 1 else 0.2
@@ -34,7 +38,7 @@ class LandGenerator
           p.color = DARK_LAND_COLOR
           p.type = LAND
           p.eroded = false
-          p.erosionDirection = 0
+          p.direction = 0
           p.quality = 1
 
           if type is "Terraced" and p.x < 0 and
@@ -43,6 +47,8 @@ class LandGenerator
             p.isTerrace = true
             p.color = TERRACE_COLOR
             p.stability = 0.01
+          else
+            p.isTerrace = false
 
     @updateSurfacePatches()
 
