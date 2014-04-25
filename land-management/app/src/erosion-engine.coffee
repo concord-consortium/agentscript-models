@@ -149,6 +149,7 @@ class ErosionEngine
       # make sure p becomes sky, whether target exists or not
       p.type = SKY
       p.color = SKY_COLOR
+      @removeLandProperties p
 
       # Now, look UP from the patch p (which is now sky) and see if we left a land patch "hanging"
       # above a sky patch. (All land patches are settled on terra firma after each iteration of
@@ -158,6 +159,10 @@ class ErosionEngine
   swapSkyAndLand: (sky, land) ->
     for property in ['direction', 'eroded', 'type', 'color', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace']
       [land[property], sky[property]] = [sky[property], land[property]]
+    null
+
+  removeLandProperties: (p) ->
+    delete p[property] for property in ['direction', 'eroded', 'zone', 'stability', 'quality', 'isTopsoil', 'isTerrace']
     null
 
   getBoxAroundPoint: (x, y, xStep, yStep) ->
