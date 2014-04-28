@@ -20,7 +20,8 @@
     "jqueryui": "~1.10.4",
     "chosen": "https://github.com/harvesthq/chosen/releases/download/v1.1.0/chosen_v1.1.0.zip",
     "d3": "3.x",
-    "fontawesome": "3.x"
+    "fontawesome": "3.x",
+    "simple-statistics": "^0.8"
   },
   "overrides": {
     "fontawesome": {
