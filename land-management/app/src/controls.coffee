@@ -180,13 +180,28 @@ setupGraphs = ->
         [255,   0, 255]]
     )
 
-$(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
-  $('#date-string').text(model.dateString)
-  if erosionGraph then erosionGraph.addSamples [0,0,0,0,model.zone1ErosionCount, model.zone2ErosionCount]
-  model.resetErosionCounts()
-  if topsoilCountGraph
-    topsoilInZone = model.topsoilInZones()
-    topsoilCountGraph.addSamples [0, 0, 0, 0, topsoilInZone[1], topsoilInZone[2]]
+do ->
+  # simple exponential smoothing with alpha = 0.3
+  makeSmoothed = ->
+    s = null
+    alpha = 0.3
+    (x) -> if s is null then (s = x) else (s = alpha * x + (1 - alpha) * s)
+
+  zone1Smoothed = makeSmoothed()
+  zone2Smoothed = makeSmoothed()
+
+  $(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
+    $('#date-string').text(model.dateString)
+    if erosionGraph
+      erosionGraph.addSamples [
+        0, 0, 0, 0,
+        zone1Smoothed(model.zone1ErosionCount),
+        zone2Smoothed(model.zone2ErosionCount)
+      ]
+    model.resetErosionCounts()
+    if topsoilCountGraph
+      topsoilInZone = model.topsoilInZones()
+      topsoilCountGraph.addSamples [0, 0, 0, 0, topsoilInZone[1], topsoilInZone[2]]
 
 
 $(document).on LandManagementModel.STEP_INTERVAL_ELAPSED, ->
