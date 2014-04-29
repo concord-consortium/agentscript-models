@@ -91,7 +91,23 @@
   globals.require.brunch = true;
 })();
 require.register("src/controls", function(exports, require, module) {
-var $precipitationSlider, $precipitationSliderDiv, $slopeSlidersDiv, $zone1Slider, $zone2Slider, enableZoneSliders, erosionGraph, reset, setupGraphs, topsoilCountGraph, updatePrecipitationBarchart, zone1Planting, zone2Planting;
+var $precipitationSlider, $precipitationSliderDiv, $slopeSlidersDiv, $zone1Slider, $zone2Slider, BLUE, DARK_BLUE, DARK_GREEN, DARK_MAGENTA, DARK_ORANGE, GREEN, MAGENTA, ORANGE, enableZoneSliders, erosionGraph, reset, setupGraphs, topsoilCountGraph, updatePrecipitationBarchart, zone1Planting, zone2Planting;
+
+MAGENTA = [255, 50, 185];
+
+DARK_MAGENTA = [255, 0, 130];
+
+ORANGE = [255, 195, 50];
+
+DARK_ORANGE = [255, 148, 0];
+
+GREEN = [161, 255, 0];
+
+DARK_GREEN = [131, 208, 0];
+
+BLUE = [0, 139, 255];
+
+DARK_BLUE = [0, 114, 208];
 
 $precipitationSlider = $("#precipitation-slider");
 
@@ -301,7 +317,7 @@ setupGraphs = function() {
       sampleInterval: 1 / 60,
       realTime: true,
       fontScaleRelativeToParent: true,
-      dataColors: [[160, 0, 0], [44, 160, 0], [44, 0, 160], [0, 0, 0], [255, 127, 0], [255, 0, 255]]
+      dataColors: [DARK_ORANGE, DARK_MAGENTA]
     });
   }
   if ($('#topsoil-count-graph').length) {
@@ -320,7 +336,7 @@ setupGraphs = function() {
       sampleInterval: 1 / 60,
       realTime: true,
       fontScaleRelativeToParent: true,
-      dataColors: [[160, 0, 0], [44, 160, 0], [44, 0, 160], [0, 0, 0], [255, 127, 0], [255, 0, 255]]
+      dataColors: [DARK_BLUE, DARK_GREEN]
     });
   }
 };
@@ -345,12 +361,12 @@ setupGraphs = function() {
     var topsoilInZone;
     $('#date-string').text(model.dateString);
     if (erosionGraph) {
-      erosionGraph.addSamples([0, 0, 0, 0, zone1Smoothed(model.zone1ErosionCount), zone2Smoothed(model.zone2ErosionCount)]);
+      erosionGraph.addSamples([zone1Smoothed(model.zone1ErosionCount), zone2Smoothed(model.zone2ErosionCount)]);
     }
     model.resetErosionCounts();
     if (topsoilCountGraph) {
       topsoilInZone = model.topsoilInZones();
-      return topsoilCountGraph.addSamples([0, 0, 0, 0, topsoilInZone[1], topsoilInZone[2]]);
+      return topsoilCountGraph.addSamples([topsoilInZone[1], topsoilInZone[2]]);
     }
   });
 })();
@@ -377,9 +393,9 @@ GOOD_SOIL_COLOR = [88, 41, 10];
 
 POOR_SOIL_COLOR = [193, 114, 7];
 
-MAGENTA = [255, 0, 255];
+MAGENTA = [255, 50, 185];
 
-ORANGE = [255, 127, 0];
+ORANGE = [255, 195, 50];
 
 SKY = "sky";
 
