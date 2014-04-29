@@ -97,14 +97,21 @@ label.title {
   margin-left: 47px;
 }
 
+.zone-label {
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+  font-size: 16px;
+}
+
 #zone-1 {
-  top: 221px;
+  top: 215px;
   left: 144px;
+  color: rgb(0, 139, 255);
 }
 
 #zone-2 {
-  top: 221px;
+  top: 215px;
   left: 476px;
+  color: rgb(161, 255, 0);
 }
 
 #slope-sliders {
