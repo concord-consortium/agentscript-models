@@ -325,18 +325,35 @@ setupGraphs = function() {
   }
 };
 
-$(document).on(LandManagementModel.STEP_INTERVAL_ELAPSED, function() {
-  var topsoilInZone;
-  $('#date-string').text(model.dateString);
-  if (erosionGraph) {
-    erosionGraph.addSamples([0, 0, 0, 0, model.zone1ErosionCount, model.zone2ErosionCount]);
-  }
-  model.resetErosionCounts();
-  if (topsoilCountGraph) {
-    topsoilInZone = model.topsoilInZones();
-    return topsoilCountGraph.addSamples([0, 0, 0, 0, topsoilInZone[1], topsoilInZone[2]]);
-  }
-});
+(function() {
+  var makeSmoothed, zone1Smoothed, zone2Smoothed;
+  makeSmoothed = function() {
+    var alpha, s;
+    s = null;
+    alpha = 0.3;
+    return function(x) {
+      if (s === null) {
+        return s = x;
+      } else {
+        return s = alpha * x + (1 - alpha) * s;
+      }
+    };
+  };
+  zone1Smoothed = makeSmoothed();
+  zone2Smoothed = makeSmoothed();
+  return $(document).on(LandManagementModel.STEP_INTERVAL_ELAPSED, function() {
+    var topsoilInZone;
+    $('#date-string').text(model.dateString);
+    if (erosionGraph) {
+      erosionGraph.addSamples([0, 0, 0, 0, zone1Smoothed(model.zone1ErosionCount), zone2Smoothed(model.zone2ErosionCount)]);
+    }
+    model.resetErosionCounts();
+    if (topsoilCountGraph) {
+      topsoilInZone = model.topsoilInZones();
+      return topsoilCountGraph.addSamples([0, 0, 0, 0, topsoilInZone[1], topsoilInZone[2]]);
+    }
+  });
+})();
 
 $(document).on(LandManagementModel.STEP_INTERVAL_ELAPSED, function() {
   $(".inner-bar").removeClass("current-month");
