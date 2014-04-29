@@ -33,8 +33,8 @@ class ErosionEngine
 
   precipitation: 0
 
-  minErosionProbability: 0.2
-  fullyProtectiveVegetationLevel: 2
+  minErosionProbability: 0.1
+  fullyProtectiveVegetationLevel: 1
 
   maxSlope = 2 # necessary?
   showErosion: true
