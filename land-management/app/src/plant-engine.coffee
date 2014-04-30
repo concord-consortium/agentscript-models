@@ -18,7 +18,9 @@ class PlantEngine
     @addImage "tree2", "tree-2-sprite", 29, 80
     @addImage "tree3", "tree-3-sprite", 39, 80
     @addImage "grass1", "grass-1-sprite", 39, 80
-    @addImage "grass2", "grass-1-sprite", 39, 80
+    @addImage "grass2", "grass-2-sprite", 39, 80
+    @addImage "browngrass1", "brown-grass-1-sprite", 39, 80
+    @addImage "browngrass2", "brown-grass-2-sprite", 39, 80
     @addImage "wheat1", "wheat-1-sprite", 39, 80
 
 
@@ -80,6 +82,10 @@ class PlantEngine
   isPrecipitationOptimalFor: (type) ->
     plantData = @plantData[type]
     plantData.minimumPrecipitation <= @precipitation <= plantData.maximumPrecipitation
+
+  isPrecipitationTooLowFor: (type) ->
+    ret = @precipitation < @plantData[type].minimumPrecipitation
+    ret
 
   # returns the number of plants (seeds and plant bodies, but not detached roots) in zone
   plantPopulationInZone: (zone) ->
@@ -164,6 +170,7 @@ class PlantEngine
       a.growthRates = data.growthRates
       a.period = 0
       a.periodAge = 0
+      a.isBrowned = false
 
   runPlants: ->
     killList = []
@@ -172,6 +179,15 @@ class PlantEngine
 
     for a in @agents
       poorWater = not @isPrecipitationOptimalFor a.type
+
+      if @plantData[a.type].hasBrownVariant and not a.isSeed
+        if @isPrecipitationTooLowFor a.type
+          if not a.isBrowned
+            a.shape = "brown" + a.shape
+            a.isBrowned = true
+        else if a.isBrowned
+          a.shape = a.shape.match(/brown(.*)/)[1]
+          a.isBrowned = false
 
       if a.isSeed
         # try to germinate on germination date. If we're annual and there isn't enough
@@ -255,6 +271,7 @@ class PlantEngine
       root.growthRates = @plantData[plant.type].rootGrowthRates
       root.period = plant.period
       root.periodAge = 0
+      root.isBrowned = plant.isBrowned
     plant.isBody = true
     plant.shape = plant.shape + "-body"
 
@@ -310,6 +327,7 @@ class PlantEngine
       isAffectedByPoorWaterAfterPlanting: true
       mortalityInPoorWater: 0.15
       shapes: ["grass1", "grass2"]
+      hasBrownVariant: true
     wheat:
       quantity: 19
       inRows: true
