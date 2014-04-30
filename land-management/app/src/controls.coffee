@@ -156,8 +156,8 @@ setupGraphs = ->
       realTime: true
       fontScaleRelativeToParent: true
       dataColors: [
-        DARK_ORANGE,
-        DARK_MAGENTA
+        DARK_BLUE,
+        DARK_GREEN
       ]
     )
 
