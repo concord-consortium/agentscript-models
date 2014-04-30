@@ -317,7 +317,7 @@ setupGraphs = function() {
       sampleInterval: 1 / 60,
       realTime: true,
       fontScaleRelativeToParent: true,
-      dataColors: [DARK_ORANGE, DARK_MAGENTA]
+      dataColors: [DARK_BLUE, DARK_GREEN]
     });
   }
   if ($('#topsoil-count-graph').length) {
@@ -1228,7 +1228,7 @@ PlantEngine = (function() {
           _results = [];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             p = _ref[_i];
-            _results.push(p + (p * u.randomFloat2(-v, v)));
+            _results.push(p * u.randomFloat2(1 - v, 1 + v));
           }
           return _results;
         })();
