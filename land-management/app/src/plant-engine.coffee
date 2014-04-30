@@ -160,7 +160,7 @@ class PlantEngine
       a.dying = false
       a.germinationDate = u.randomInt2 Math.max(@yearTick()+1, data.minGermination), data.maxGermination
       v = data.periodVariation
-      a.growthPeriods = (p + (p*u.randomFloat2(-v, v)) for p in data.growthPeriods)
+      a.growthPeriods = (p * u.randomFloat2(1-v, 1+v) for p in data.growthPeriods)
       a.growthRates = data.growthRates
       a.period = 0
       a.periodAge = 0
@@ -192,6 +192,9 @@ class PlantEngine
 
           switch a.period
             when 3
+              # plants which don't live indefinitely get split into body and root at period 3, and
+              # these have slightly different growth (decay) trajectories. Indefinitely-lived plants
+              # should only be split (elsewhere) when the body is killed off.
               @splitRoots a unless a.isRoot or a.growthPeriods[a.period] is Infinity
             when 4
               if not @plantData[a.type].annual and not a.isRoot
