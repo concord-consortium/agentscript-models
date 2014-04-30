@@ -1014,7 +1014,9 @@ PlantEngine = (function() {
     this.addImage("tree2", "tree-2-sprite", 29, 80);
     this.addImage("tree3", "tree-3-sprite", 39, 80);
     this.addImage("grass1", "grass-1-sprite", 39, 80);
-    this.addImage("grass2", "grass-1-sprite", 39, 80);
+    this.addImage("grass2", "grass-2-sprite", 39, 80);
+    this.addImage("browngrass1", "brown-grass-1-sprite", 39, 80);
+    this.addImage("browngrass2", "brown-grass-2-sprite", 39, 80);
     return this.addImage("wheat1", "wheat-1-sprite", 39, 80);
   };
 
@@ -1104,6 +1106,12 @@ PlantEngine = (function() {
     var plantData, _ref;
     plantData = this.plantData[type];
     return (plantData.minimumPrecipitation <= (_ref = this.precipitation) && _ref <= plantData.maximumPrecipitation);
+  };
+
+  PlantEngine.prototype.isPrecipitationTooLowFor = function(type) {
+    var ret;
+    ret = this.precipitation < this.plantData[type].minimumPrecipitation;
+    return ret;
   };
 
   PlantEngine.prototype.plantPopulationInZone = function(zone) {
@@ -1234,7 +1242,8 @@ PlantEngine = (function() {
         })();
         a.growthRates = data.growthRates;
         a.period = 0;
-        return a.periodAge = 0;
+        a.periodAge = 0;
+        return a.isBrowned = false;
       };
     })(this));
   };
@@ -1251,6 +1260,17 @@ PlantEngine = (function() {
     for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
       a = _ref1[_j];
       poorWater = !this.isPrecipitationOptimalFor(a.type);
+      if (this.plantData[a.type].hasBrownVariant && !a.isSeed) {
+        if (this.isPrecipitationTooLowFor(a.type)) {
+          if (!a.isBrowned) {
+            a.shape = "brown" + a.shape;
+            a.isBrowned = true;
+          }
+        } else if (a.isBrowned) {
+          a.shape = a.shape.match(/brown(.*)/)[1];
+          a.isBrowned = false;
+        }
+      }
       if (a.isSeed) {
         if (this.yearTick() === a.germinationDate) {
           if (poorWater) {
@@ -1344,7 +1364,8 @@ PlantEngine = (function() {
         root.growthPeriods = plant.growthPeriods;
         root.growthRates = _this.plantData[plant.type].rootGrowthRates;
         root.period = plant.period;
-        return root.periodAge = 0;
+        root.periodAge = 0;
+        return root.isBrowned = plant.isBrowned;
       };
     })(this));
     plant.isBody = true;
@@ -1421,7 +1442,8 @@ PlantEngine = (function() {
       maximumPrecipitation: 450,
       isAffectedByPoorWaterAfterPlanting: true,
       mortalityInPoorWater: 0.15,
-      shapes: ["grass1", "grass2"]
+      shapes: ["grass1", "grass2"],
+      hasBrownVariant: true
     },
     wheat: {
       quantity: 19,
