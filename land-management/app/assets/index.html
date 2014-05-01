@@ -134,7 +134,7 @@
     <span class="model-top zone-label" id="zone-1">Zone 1</span>
     <span class="model-top zone-label" id="zone-2">Zone 2</span>
     <div id='erosion-graph' class="graph"></div>
-    <div id='topsoil-count-graph' class="graph" style="position: absolute; left: 677px; top: 250px"></div>
+    <div id='topsoil-count-graph' class="graph"></div>
 
     <script src="javascripts/vendor.js"></script>
     <script src="javascripts/app.js"></script>
@@ -144,7 +144,7 @@
       (function() {
         require('src/main');
 
-        window.model = new LandManagementModel("layers", 2.9, -114, 114, -40, 40, false);
+        window.model = new LandManagementModel("layers", 2.75, -114, 114, -40, 40, false);
         initControls();
 
         // Will fail if run offline, but that shouldn't be a problem.

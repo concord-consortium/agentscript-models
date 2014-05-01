@@ -12,7 +12,7 @@ body {
 
 #controls {
   position: absolute;
-  top: 241px;
+  top: 225px;
   left: 5px;
 }
 
@@ -67,8 +67,8 @@ label.title {
 
 #date {
   position: absolute;
-  top: 15px;
-  left: 562px;
+  top: 23px;
+  left: 552px;
   width: 90px;
   margin-left: 0 0 0 5px;
   font-size: 20px;
@@ -92,14 +92,14 @@ label.title {
 }
 
 #zone-1 {
-  top: 215px;
-  left: 144px;
+  top: 200px;
+  left: 130px;
   color: rgb(0, 139, 255);
 }
 
 #zone-2 {
-  top: 215px;
-  left: 476px;
+  top: 200px;
+  left: 450px;
   color: rgb(161, 255, 0);
 }
 
@@ -133,9 +133,9 @@ label.title {
 
 #quality-key {
   position: absolute;
-  top: 2px;
+  top: 5px;
   left: 125px;
-  width: 425px;
+  width: 410px;
 }
 
 #quality-key .section-title {
@@ -144,11 +144,11 @@ label.title {
 
 .quality-label {
   display: inline-block;
-  width: 135px;
+  width: 130px;
 }
 
 #quality-key span {
-  padding-left: 60px;
+  padding-left: 55px;
   margin: 0 5px;
 }
 
@@ -347,7 +347,7 @@ span.slider-value {
 }
 
 #erosion-graph {
-  left: 669px;
+  left: 646px;
   top: 10px;
 }
 
