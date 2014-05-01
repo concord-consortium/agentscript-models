@@ -114,6 +114,10 @@ label.title {
   height: 87px;
 }
 
+#zone-planting select {
+  width: 160px;
+}
+
 #climate {
   position: absolute;
   top: 70px;

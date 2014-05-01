@@ -39,9 +39,7 @@ $ ->
   $("button").button()
   $("#playback").buttonset()
   $(".icon-pause").hide()
-  $(".chosen-select").chosen
-    disable_search:true
-    width: 158
+
   $precipitationSlider.slider  min: 0, max: 500, step: 1, value: 166
   $zone1Slider.slider  min: -3, max: 3, step: 0.5, value: 0
   $zone2Slider.slider  min: -3, max: 3, step: 0.5, value: 0
@@ -77,19 +75,19 @@ $('#reset-button').click reset
 
 
 $("#terrain-options").change (evt, ui) ->
-  selection = ui.selected
+  selection = $(this).val()
   model.setLandType selection
   reset()
 
   enableZoneSliders(selection is "Sliders")
 
-$("#zone1-planting-options").change (evt, ui) ->
-  selection = ui.selected
+$("#zone1-planting-options").change ->
+  selection = $(this).val()
   model.setZoneManagement 0, selection
   zone1Planting = selection
 
-$("#zone2-planting-options").change (evt, ui) ->
-  selection = ui.selected
+$("#zone2-planting-options").change ->
+  selection = $(this).val()
   model.setZoneManagement 1, selection
   zone2Planting = selection
 
@@ -98,8 +96,8 @@ $precipitationSlider.on 'slide', (event, ui) ->
   updatePrecipitationBarchart model.getCurrentClimateData()
   $("#precipitation-value").text model.precipitation
 
-$("#climate-options").change (evt, ui) ->
-  selection = ui.selected
+$("#climate-options").change ->
+  selection = $(this).val()
   model.setClimate selection
   enable = selection is "user"
   $precipitationSlider.slider if enable then "enable" else "disable"
