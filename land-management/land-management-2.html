@@ -5,7 +5,6 @@
     <link href="stylesheets/app.css" rel="stylesheet" type="text/css" />
     <!-- Downside of Brunch's simplicity: Bower assets aren't handled especially well, see https://github.com/brunch/brunch/issues/633 -->
     <link href="bower_assets/smoothness/jquery-ui.min.css" rel="stylesheet" type="text/css" />
-    <link href="bower_assets/chosen/chosen.min.css" rel="stylesheet" type="text/css" />
     <link href="bower_assets/fontawesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
@@ -47,7 +46,7 @@
         <div class="section-title">Initial Landscape</div>
         <div id="terrain">
           <label for="terrain-options" class="title">Terrain</label>
-          <select id="terrain-options" class="chosen-select">
+          <select id="terrain-options">
             <option value="Nearly Flat">Nearly Flat</option>
             <option value="Plain" selected>Plain</option>
             <option value="Rolling">Rolling</option>
@@ -68,18 +67,18 @@
         </div>
       </div>
 
-      <div id="zone-planting" class="section" style="left: 281px">
+      <div id="zone-planting" class="section">
         <div class="section-title">Management Plan</div>
         <div class="left">
           <label for="zone1-planting-options" class="title">Zone 1</label>
-          <select id="zone1-planting-options" class="chosen-select">
+          <select id="zone1-planting-options">
             <option value="bare" selected>Bare soil</option>
             <option value="grass">Grass</option>
           </select>
         </div>
         <div class="right">
           <label for="zone2-planting-options" class="title">Zone 2</label>
-          <select id="zone2-planting-options" class="chosen-select">
+          <select id="zone2-planting-options">
             <option value="bare" selected>Bare soil</option>
             <option value="grass">Grass</option>
           </select>
@@ -94,6 +93,7 @@
     <span class="model-top zone-label" id="zone-1">Zone 1</span>
     <span class="model-top zone-label" id="zone-2">Zone 2</span>
     <div id='erosion-graph' class="graph"></div>
+    <div id='topsoil-count-graph' class="graph"></div>
 
     <script src="javascripts/vendor.js"></script>
     <script src="javascripts/app.js"></script>
@@ -103,7 +103,7 @@
       (function() {
         require('src/main');
 
-        window.model = new LandManagementModel("layers", 2.9, -114, 114, -40, 40, false);
+        window.model = new LandManagementModel("layers", 2.75, -114, 114, -40, 40, false);
         window.model.setUserPrecipitation(166);
         window.model.setClimate("user");
         initControls();

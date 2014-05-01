@@ -5,7 +5,6 @@
     <link href="stylesheets/app.css" rel="stylesheet" type="text/css" />
     <!-- Downside of Brunch's simplicity: Bower assets aren't handled especially well, see https://github.com/brunch/brunch/issues/633 -->
     <link href="bower_assets/smoothness/jquery-ui.min.css" rel="stylesheet" type="text/css" />
-    <link href="bower_assets/chosen/chosen.min.css" rel="stylesheet" type="text/css" />
     <link href="bower_assets/fontawesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
@@ -47,7 +46,7 @@
         <div class="section-title">Initial Landscape</div>
         <div id="terrain">
           <label for="terrain-options" class="title">Terrain</label>
-          <select id="terrain-options" class="chosen-select">
+          <select id="terrain-options">
             <option value="Nearly Flat">Nearly Flat</option>
             <option value="Plain" selected>Plain</option>
             <option value="Rolling">Rolling</option>
@@ -68,25 +67,11 @@
         </div>
       </div>
 
-      <div id="erosion-parameters" class="section">
-        <div class="section-title">Erosion Parameters</div>
-        <div id="min-erosion-probability">
-          <label for="min-erosion-probability-slider" class="title">Minimum Erosion-Probability Multiplier</label>
-          <span class="slider-units">0 <div id="min-erosion-probability-slider"></div> 1.0</span>
-          <span class="slider-value">0.00</span>
-        </div>
-        <div id="fully-protective-vegetation-level" class="disabled">
-          <label for="fully-protective-vegetation-level-slider" class="title">Vegetation Level for Full Erosion Protection</label>
-          <span class="slider-units">0 <div id="fully-protective-vegetation-level-slider"></div> 5.0 </span>
-          <span class="slider-value">0.00</span>
-        </div>
-      </div>
-
-      <div id="zone-planting" class="section" style="top: 251px">
+      <div id="zone-planting" class="section">
         <div class="section-title">Management Plan</div>
         <div class="left">
           <label for="zone1-planting-options" class="title">Zone 1</label>
-          <select id="zone1-planting-options" class="chosen-select">
+          <select id="zone1-planting-options">
             <option value="bare" selected>Bare soil</option>
             <option value="grass">Grass</option>
             <option value="wheat">Wheat (conservative tillage)</option>
@@ -96,7 +81,7 @@
         </div>
         <div class="right">
           <label for="zone2-planting-options" class="title">Zone 2</label>
-          <select id="zone2-planting-options" class="chosen-select">
+          <select id="zone2-planting-options">
             <option value="bare" selected>Bare soil</option>
             <option value="grass">Grass</option>
             <option value="wheat">Wheat (conservative tillage)</option>
@@ -109,7 +94,7 @@
       <div id="climate" class="section">
         <div class="section-title">Climate</div>
         <div id = "climate-selection">
-          <select id="climate-options" class="chosen-select">
+          <select id="climate-options">
             <option value="temperate" selected>Humid Continental</option>
             <option value="tropical">Tropical Rainforest</option>
             <option value="arid">Semi-Arid</option>
@@ -148,7 +133,7 @@
     <span class="model-top zone-label" id="zone-1">Zone 1</span>
     <span class="model-top zone-label" id="zone-2">Zone 2</span>
     <div id='erosion-graph' class="graph"></div>
-    <div id='topsoil-count-graph' class="graph" style="position: absolute; left: 677px; top: 250px"></div>
+    <div id='topsoil-count-graph' class="graph"></div>
 
     <script src="javascripts/vendor.js"></script>
     <script src="javascripts/app.js"></script>
@@ -158,7 +143,7 @@
       (function() {
         require('src/main');
 
-        window.model = new LandManagementModel("layers", 2.9, -114, 114, -40, 40, false);
+        window.model = new LandManagementModel("layers", 2.75, -114, 114, -40, 40, false);
         initControls();
 
         // Will fail if run offline, but that shouldn't be a problem.

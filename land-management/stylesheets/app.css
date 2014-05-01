@@ -62,6 +62,10 @@ circle {
     fill: #ff7f0e;
     stroke: #ff7f0e; }
 
+body {
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+}
+
 #model {
   position: absolute;
   top: 5px;
@@ -72,7 +76,7 @@ circle {
 
 #controls {
   position: absolute;
-  top: 241px;
+  top: 225px;
   left: 5px;
 }
 
@@ -119,43 +123,28 @@ label.title {
   color: white;
 }
 
-#percipitation {
-  position: absolute;
-  top: 0;
-  left: 320px;
-  width: 240px;
-}
-
 #show-erosion {
   position: absolute;
-  top: 24px;
-  left: 487px;
+  top: 28px;
+  left: 300px;
 }
 
 #date {
   position: absolute;
-  top: 0;
-  left: 571px;
-  width: 66px;
-  padding: 8px;
-  margin: 7px;
-  border: solid rgb(128, 128, 128) 2px;
+  top: 23px;
+  left: 552px;
+  width: 90px;
+  margin-left: 0 0 0 5px;
+  font-size: 20px;
 }
 
 #initial-landscape {
   position: absolute;
   top: 70px;
   left: 0px;
-  width: 253px;
+  width: 338px;
+  height: 145px;
 }
-
-#erosion-parameters {
-  position: absolute;
-  top: 225px;
-  left: 0px;
-  width: 253px;
-}
-
 
 #terrain {
   margin-left: 47px;
@@ -167,14 +156,14 @@ label.title {
 }
 
 #zone-1 {
-  top: 215px;
-  left: 144px;
+  top: 200px;
+  left: 130px;
   color: rgb(0, 139, 255);
 }
 
 #zone-2 {
-  top: 215px;
-  left: 476px;
+  top: 200px;
+  left: 450px;
   color: rgb(161, 255, 0);
 }
 
@@ -183,16 +172,22 @@ label.title {
 
 #zone-planting {
   position: absolute;
-  top: 70px;
-  left: 556px;
+  top: 239px;
+  left: 0;
   width: 338px;
+  height: 87px;
+}
+
+#zone-planting select {
+  width: 160px;
 }
 
 #climate {
   position: absolute;
   top: 70px;
-  left: 275px;
+  left: 360px;
   width: 260px;
+  height: 256px;
 }
 
 #climate-selection {
@@ -206,20 +201,23 @@ label.title {
 
 #quality-key {
   position: absolute;
-  top: 30px;
-  left: 700px;
-  width: 142px;
+  top: 5px;
+  left: 125px;
+  width: 410px;
 }
 
 #quality-key .section-title {
-  margin-bottom: 15px;
+  margin-bottom: 5px;
+}
+
+.quality-label {
+  display: inline-block;
+  width: 130px;
 }
 
 #quality-key span {
-  padding-left: 50px;
-  margin-left: 10px;
-  margin-right: 10px;
-  border: 1px solid #000;
+  padding-left: 55px;
+  margin: 0 5px;
 }
 
 #quality-key .good {
@@ -249,7 +247,7 @@ label.title {
 }
 
 #zone-1-slider, #zone-2-slider {
-  width:80px;
+  width: 120px;
 }
 
 .left {
@@ -417,7 +415,13 @@ span.slider-value {
 }
 
 #erosion-graph {
-  left: 669px;
+  left: 646px;
+  top: 10px;
+}
+
+#topsoil-count-graph {
+  left: 646px;
+  top: 30px;
 }
 
 

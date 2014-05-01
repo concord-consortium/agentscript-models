@@ -161,10 +161,6 @@ $(function() {
   $("button").button();
   $("#playback").buttonset();
   $(".icon-pause").hide();
-  $(".chosen-select").chosen({
-    disable_search: true,
-    width: 158
-  });
   $precipitationSlider.slider({
     min: 0,
     max: 500,
@@ -183,24 +179,6 @@ $(function() {
     step: 0.5,
     value: 0
   });
-  $('#min-erosion-probability-slider').slider({
-    min: 0,
-    max: 1,
-    step: 0.05,
-    value: model.minErosionProbability
-  }).on('slide', function(event, ui) {
-    model.minErosionProbability = ui.value;
-    return $(this).parent().parent().find('.slider-value').html(ui.value.toFixed(2));
-  }).parent().parent().find('.slider-value').html(model.minErosionProbability.toFixed(2));
-  $('#fully-protective-vegetation-level-slider').slider({
-    min: 0,
-    max: 5,
-    step: 0.25,
-    value: model.fullyProtectiveVegetationLevel
-  }).on('slide', function(event, ui) {
-    model.fullyProtectiveVegetationLevel = ui.value;
-    return $(this).parent().parent().find('.slider-value').html(ui.value.toFixed(2));
-  }).parent().parent().find('.slider-value').html(model.fullyProtectiveVegetationLevel.toFixed(2));
   enableZoneSliders(false);
   return $precipitationSlider.slider("disable");
 });
@@ -240,22 +218,22 @@ $('#reset-button').click(reset);
 
 $("#terrain-options").change(function(evt, ui) {
   var selection;
-  selection = ui.selected;
+  selection = $(this).val();
   model.setLandType(selection);
   reset();
   return enableZoneSliders(selection === "Sliders");
 });
 
-$("#zone1-planting-options").change(function(evt, ui) {
+$("#zone1-planting-options").change(function() {
   var selection;
-  selection = ui.selected;
+  selection = $(this).val();
   model.setZoneManagement(0, selection);
   return zone1Planting = selection;
 });
 
-$("#zone2-planting-options").change(function(evt, ui) {
+$("#zone2-planting-options").change(function() {
   var selection;
-  selection = ui.selected;
+  selection = $(this).val();
   model.setZoneManagement(1, selection);
   return zone2Planting = selection;
 });
@@ -266,9 +244,9 @@ $precipitationSlider.on('slide', function(event, ui) {
   return $("#precipitation-value").text(model.precipitation);
 });
 
-$("#climate-options").change(function(evt, ui) {
+$("#climate-options").change(function() {
   var enable, selection;
-  selection = ui.selected;
+  selection = $(this).val();
   model.setClimate(selection);
   enable = selection === "user";
   $precipitationSlider.slider(enable ? "enable" : "disable");
