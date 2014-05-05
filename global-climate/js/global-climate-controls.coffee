@@ -188,6 +188,16 @@ $('#show-agent-controls input').click ->
 updateTickCounter = ->
   $yearCounter.text(climateModel.getYear())
 
+autoscaleBoth = do ->
+  autoscaling = false
+  ->
+    unless autoscaling
+      autoscaling = true
+      # just autoscale both graphs, since autoscale is (or certainly should be) idempotent
+      temperatureGraph?.autoscale()
+      co2Graph?.autoscale()
+      autoscaling = false
+
 setupGraphs = ->
   if $('#temperature-graph').length
 
@@ -212,6 +222,7 @@ setupGraphs = ->
       sampleInterval: 1/300
       realTime: true
       fontScaleRelativeToParent: true
+      onAutoscale: autoscaleBoth
       dataColors: [
         [160,   0,   0],
         [ 44, 160,   0],
@@ -242,6 +253,7 @@ setupGraphs = ->
         sampleInterval: 1/300
         realTime: true
         fontScaleRelativeToParent: true
+        onAutoscale: autoscaleBoth
         dataColors: [
           [160,   0,   0],
           [ 44, 160,   0],
