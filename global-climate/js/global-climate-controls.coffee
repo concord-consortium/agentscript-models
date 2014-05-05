@@ -150,13 +150,13 @@ $speedSlider.on 'slide', (event, ui) ->
 
 $('#follow-sunray-button').click ->
   $span = $(this).find("span")
-  if $span.text() is "Follow Energy Packet"
+  if $span.text() is "Follow energy packet"
     climateModel.addSunraySpotlight()
     $span.text "Stop following"
     isFollowingAgent = true
   else
     climateModel.removeSpotlight()
-    $span.text "Follow Energy Packet"
+    $span.text "Follow energy packet"
     isFollowingAgent = false
 
 $('#follow-co2-button').click ->
