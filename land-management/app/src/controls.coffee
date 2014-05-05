@@ -121,6 +121,15 @@ $('input.property').click ->
   model[property] = checked
   true
 
+autoscaleBoth = do ->
+  autoscaling = false
+  ->
+    unless autoscaling
+      autoscaling = true
+      erosionGraph?.autoscale()
+      topsoilCountGraph?.autoscale()
+      autoscaling = false
+
 setupGraphs = ->
   if $('#erosion-graph').length
 
@@ -139,6 +148,7 @@ setupGraphs = ->
       sampleInterval: 1/60
       realTime: true
       fontScaleRelativeToParent: true
+      onAutoscale: autoscaleBoth
       dataColors: [
         DARK_BLUE,
         DARK_GREEN
@@ -161,6 +171,7 @@ setupGraphs = ->
       sampleInterval: 1/60
       realTime: true
       fontScaleRelativeToParent: true
+      onAutoscale: autoscaleBoth
       dataColors: [
         DARK_BLUE,
         DARK_GREEN
