@@ -200,7 +200,7 @@ setupGraphs = ->
     temperatureGraph = LabGrapher('#temperature-graph',
       title:  title
       xlabel: "Time (year)"
-      ylabel: "Temperature"
+      ylabel: "Temperature (°C)"
       xmax:   2020
       xmin:   2013
       ymax:   ymax
@@ -223,14 +223,14 @@ setupGraphs = ->
 
   if $('#co2-graph').length
 
-    title = if isOceanModel then "Air CO2 (red), Ocean CO2 (green)" else "CO2 in atmosphere"
+    title = if isOceanModel then "Air CO₂ (red), Ocean CO₂ (green)" else "CO₂ in Atmosphere"
     if climateModel.includeVapor then title += ", Vapor (blue)"
     ymax  = if isOceanModel then 30 else 100
 
     co2Graph = LabGrapher('#co2-graph',
         title:  title
         xlabel: "Time (year)"
-        ylabel: if isOceanModel then "Greenhouse gases" else "CO2"
+        ylabel: "Concentration"
         xmax:   2020
         xmin:   2013
         ymax:   ymax
