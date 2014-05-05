@@ -270,17 +270,11 @@ d3.timer (elapsed) ->
     if isOceanTemperatureModel
       oceanTemperature = climateModel.oceanTemperature
 
-    if not isOceanModel
-      co2Count = climateModel.getCO2Count()
-    else
-      atmosphereCO2Count = climateModel.getAtmosphereCO2Count()
-      oceanCO2Count = climateModel.getOceanCO2Count()
-      vaporCount = climateModel.getVaporCount()
     tick = climateModel.anim.ticks
     ticksElapsed = tick - lastTick
 
     $temperatureOutput.text(temperatureFormatter(temperature))
-    $co2Output.text(countFormatter(co2Count))
+    $co2Output.text(countFormatter(climateModel.getCO2Count()))
 
     if ticksElapsed and not climateModel.animStop
       while ticksElapsed--  # duplicate data if multiple model steps passed
@@ -289,10 +283,14 @@ d3.timer (elapsed) ->
         else
           temperatureGraph.addSamples [temperature-initialTemperature, 0, oceanTemperature-initialTemperature] unless !temperatureGraph?
 
-        if not isOceanModel
-          co2Graph.addSamples [co2Count] unless !co2Graph?
+        samples = []
+        if isOceanModel
+          samples.push climateModel.getAtmosphereCO2Count(), climateModel.getOceanCO2Count()
+          if climateModel.includeVapor then samples.push climateModel.getVaporCount()
         else
-          co2Graph.addSamples [atmosphereCO2Count, oceanCO2Count, vaporCount] unless !co2Graph?
+          samples.push climateModel.getCO2Count()
+
+      co2Graph?.addSamples samples
 
       updateTickCounter()
       lastTick = tick
