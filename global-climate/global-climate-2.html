@@ -25,6 +25,13 @@
 
       $.when(modelLoaded, controlsLoaded).done(function() {
         climateModel = new ClimateModel("layers", 12, -24, 24, -15, 15, true);
+
+        climateModel.restrictKeyLabelsTo = [
+          "solar radiation",
+          "carbon dioxide",
+          "heat"
+        ];
+
         initControls();
       });
     </script>

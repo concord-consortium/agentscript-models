@@ -71,9 +71,14 @@ $(document).ready ->
     ctx.lineWidth = 2
     ctx.translate 0, 30
     for label, i in labels
+      continue if climateModel.restrictKeyLabelsTo? and label.key not in climateModel.restrictKeyLabelsTo
       ctx.fillText label.key, 50, 0
       label.draw ctx
       ctx.translate 0, perLine
+
+  keyHeight = ->
+    nKeys = climateModel.restrictKeyLabelsTo?.length || labels.length
+    170 - 30 * (labels.length - nKeys)
 
   # add a link that, when clicked, pops up a non-modal, draggable canvas element that shows a key
   # for the different agent shapes
@@ -82,7 +87,7 @@ $(document).ready ->
     if ($key = $('#agents-key')).length is 0
       $key = $("<div id='agents-key' class='agents-key'><a class='icon-remove-sign icon-large'></a><canvas></canvas></div>").appendTo($ document.body).draggable()
       canvas = $key.find('canvas')[0]
-      $key.height 170
+      $key.height keyHeight()
       $key.width 200
       canvas.height = $key.outerHeight()
       canvas.width = $key.outerWidth()

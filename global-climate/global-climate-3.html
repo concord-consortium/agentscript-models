@@ -28,6 +28,13 @@
       $.when(modelLoaded, oceanModelLoaded, controlsLoaded).done(function() {
         climateModel = new OceanClimateModel("layers", 12, -24, 24, -15, 15, true);
 
+        climateModel.restrictKeyLabelsTo = [
+          "solar radiation",
+          "infrared radiation",
+          "carbon dioxide",
+          "heat"
+        ];
+
         setup = function() {
           climateModel.setIncludeWaterVapor(false);
           climateModel.setOceanAbsorbtionChangable(true);
