@@ -91,7 +91,7 @@
   globals.require.brunch = true;
 })();
 require.register("src/controls", function(exports, require, module) {
-var $precipitationSlider, $precipitationSliderDiv, $slopeSlidersDiv, $zone1Slider, $zone2Slider, BLUE, DARK_BLUE, DARK_GREEN, DARK_MAGENTA, DARK_ORANGE, GREEN, MAGENTA, ORANGE, enableZoneSliders, erosionGraph, reset, setupGraphs, topsoilCountGraph, updatePrecipitationBarchart, zone1Planting, zone2Planting;
+var $precipitationSlider, $precipitationSliderDiv, $slopeSlidersDiv, $zone1Slider, $zone2Slider, BLUE, DARK_BLUE, DARK_GREEN, DARK_MAGENTA, DARK_ORANGE, GREEN, MAGENTA, ORANGE, autoscaleBoth, enableZoneSliders, erosionGraph, reset, setupGraphs, topsoilCountGraph, updatePrecipitationBarchart, zone1Planting, zone2Planting;
 
 MAGENTA = [255, 50, 185];
 
@@ -278,6 +278,23 @@ $('input.property').click(function() {
   return true;
 });
 
+autoscaleBoth = (function() {
+  var autoscaling;
+  autoscaling = false;
+  return function() {
+    if (!autoscaling) {
+      autoscaling = true;
+      if (erosionGraph != null) {
+        erosionGraph.autoscale();
+      }
+      if (topsoilCountGraph != null) {
+        topsoilCountGraph.autoscale();
+      }
+      return autoscaling = false;
+    }
+  };
+})();
+
 setupGraphs = function() {
   if ($('#erosion-graph').length) {
     erosionGraph = LabGrapher('#erosion-graph', {
@@ -295,6 +312,7 @@ setupGraphs = function() {
       sampleInterval: 1 / 60,
       realTime: true,
       fontScaleRelativeToParent: true,
+      onAutoscale: autoscaleBoth,
       dataColors: [DARK_BLUE, DARK_GREEN]
     });
   }
@@ -314,6 +332,7 @@ setupGraphs = function() {
       sampleInterval: 1 / 60,
       realTime: true,
       fontScaleRelativeToParent: true,
+      onAutoscale: autoscaleBoth,
       dataColors: [DARK_BLUE, DARK_GREEN]
     });
   }

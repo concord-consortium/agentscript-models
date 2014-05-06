@@ -28,6 +28,13 @@
       $.when(modelLoaded, oceanModelLoaded, controlsLoaded).done(function() {
         climateModel = new OceanClimateModel("layers", 12, -24, 24, -15, 15, true);
 
+        climateModel.restrictKeyLabelsTo = [
+          "solar radiation",
+          "infrared radiation",
+          "carbon dioxide",
+          "heat"
+        ];
+
         setup = function() {
           climateModel.setIncludeWaterVapor(false);
           climateModel.setOceanAbsorbtionChangable(true);
@@ -54,6 +61,7 @@
         <div id="layers"></div>
       </div>
       <div id="controls">
+        <p class="show-about-text"><a href="#">About these graphs</a></p>
         <div id='temperature-graph' class="graph" style="height: 187px;"></div>
         <div id='co2-graph' class="graph" style="height: 187px;"></div>
       </div>
@@ -66,7 +74,7 @@
         </ul>
         <ul>
           <li>
-            <button id="follow-sunray-button" class="follow-agent">Follow Energy Packet</button>
+            <button id="follow-sunray-button" class="follow-agent">Follow energy packet</button>
             <button id="follow-co2-button" class="follow-agent">Follow CO<sub>2</sub></button>
           </li>
         </ul>
@@ -81,6 +89,7 @@
             <i class="icon-pause"></i>
           </button>
         </div>
+        <span class="slider-units" title="Change the speed of the model"><img src="img/tortoise.jpg" style="margin-left: -10px;margin-right: -9px;margin-bottom: 4px;width: 36px;"/><div id="speed-slider" style="width:40px;margin:0.7em;margin-left:1em;"></div><img src="img/hare.jpg" style="margin-left: -8px;margin-bottom: 4px;width: 37px;"/></span>
       </div>
       <div id="show-agent-controls">
         Show:

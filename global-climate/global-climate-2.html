@@ -25,6 +25,14 @@
 
       $.when(modelLoaded, controlsLoaded).done(function() {
         climateModel = new ClimateModel("layers", 12, -24, 24, -15, 15, true);
+
+        climateModel.restrictKeyLabelsTo = [
+          "solar radiation",
+          "carbon dioxide",
+          "heat"
+        ];
+        climateModel.aboutText = "<p>These graphs show the relative change in temperature (upper graph) and concentration of greenhouse gases in the atmosphere (lower graph). <p>Together, these graphs show the relationship between the concentrations of greenhouse gases and temperature of the planet. <p>This model is a simplified representation of the climate system, and as such, it does not show the actual concentrations of greenhouse gases in the atmosphere."
+
         initControls();
       });
     </script>
@@ -41,7 +49,8 @@
         <canvas id="canvas" >Your browser does not support HTML5 Canvas.</canvas>
         <div id="layers"></div>
       </div>
-      <div id="graphs" style="position: absolute;top: 10px;left: 610px;">
+      <div id="controls">
+        <p class="show-about-text"><a href="#">About these graphs</a></p>
         <div id='temperature-graph' class="graph" style="height: 187px;"></div>
         <div id='co2-graph' class="graph" style="height: 187px;"></div>
       </div>
@@ -49,12 +58,12 @@
         <ul>
           <li>
             <button id="erupt-button">Erupt!</button>
-            <button id="subtract-co2-button">Subtract CO<sub>2</sub></button>
+            <button id="subtract-co2-button">Remove CO<sub>2</sub></button>
           </li>
         </ul>
         <ul>
           <li>
-            <button id="follow-sunray-button" class="follow-agent">Follow Energy Packet</button>
+            <button id="follow-sunray-button" class="follow-agent">Follow energy packet</button>
             <button id="follow-co2-button" class="follow-agent">Follow CO<sub>2</sub></button>
           </li>
         </ul>
@@ -69,6 +78,7 @@
             <i class="icon-pause"></i>
           </button>
         </div>
+        <span class="slider-units" title="Change the speed of the model"><img src="img/tortoise.jpg" style="margin-left: -10px;margin-right: -9px;margin-bottom: 4px;width: 36px;"/><div id="speed-slider" style="width:40px;margin:0.7em;margin-left:1em;"></div><img src="img/hare.jpg" style="margin-left: -8px;margin-bottom: 4px;width: 37px;"/></span>
       </div>
       <div id="show-agent-controls">
         Show:

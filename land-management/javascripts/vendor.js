@@ -39021,6 +39021,9 @@ module.exports = function Graph(idOrElement, options, message) {
         // Render vertical bars extending up to samples/points
         bars:            false,
 
+        // Callback, called after autoscale button is clicked
+        onAutoscale:     function() {},
+
         // The R, G, and B values to be used to plot samples in each data channel. This default can
         // be overridden at construction time, but the caller must provide colors for each channel.
         // If there are n channels and m < n provided colors, the last n - m channels will be drawn
@@ -39503,7 +39506,7 @@ module.exports = function Graph(idOrElement, options, message) {
             "title": tooltips.autoscale
           })
           .on("click", function() {
-            autoscaleAxes(true);
+            autoscale(true);
             redraw();
           })
           .append("i")
@@ -39985,7 +39988,7 @@ module.exports = function Graph(idOrElement, options, message) {
   function updateOrRescale(samplePoint) {
     setCurrentSample(samplePoint);
 
-    if (autoscaleAxes()) {
+    if (autoscale()) {
       redraw();
     } else {
       update(currentSample);
@@ -40302,25 +40305,37 @@ module.exports = function Graph(idOrElement, options, message) {
 
     However if you pass <true> as an argument, it will enforce scaling of axes so the fit data.
   */
-  function autoscaleAxes(fit) {
+  function autoscale(fit) {
     var maxPointsLen = -Infinity;
+    var domainXChanged;
+    var domainYChanged;
+    var ret;
+
     pointArray.forEach(function (arr) {
       if (arr.length > maxPointsLen) maxPointsLen = arr.length;
     });
-    if (maxPointsLen < 1) return;
 
-    var domainXChanged;
-    var domainYChanged;
+    if (maxPointsLen >= 0) {
+      if (options.autoScaleX || fit) {
+        var xPadding = fit ? 0.05 : options.autoScalePadding;
+        domainXChanged = scaleAxis("x", pointsXMin, pointsXMax, xPadding, fit);
+      }
+      if (options.autoScaleY || fit) {
+        var yPadding = fit ? 0.05 : options.autoScalePadding;
+        domainYChanged = scaleAxis("y", pointsYMin, pointsYMax, yPadding, fit);
+      }
+      ret = domainXChanged || domainYChanged;
+    } else {
+      ret = undefined;
+    }
 
-    if (options.autoScaleX || fit) {
-      var xPadding = fit ? 0.05 : options.autoScalePadding;
-      domainXChanged = scaleAxis("x", pointsXMin, pointsXMax, xPadding, fit);
+    // Only call callback if there's what we think of as an "autoscale was clicked" event, which
+    // specifically means the case that fit == true
+    if (fit) {
+      options.onAutoscale.call(null);
     }
-    if (options.autoScaleY || fit) {
-      var yPadding = fit ? 0.05 : options.autoScalePadding;
-      domainYChanged = scaleAxis("y", pointsYMin, pointsYMax, yPadding, fit);
-    }
-    return domainXChanged || domainYChanged;
+
+    return ret;
   }
 
   function scaleAxis(axis, minVal, maxVal, padding, fit) {
@@ -41008,7 +41023,7 @@ module.exports = function Graph(idOrElement, options, message) {
     }
     points = pointArray[0];
 
-    autoscaleAxes();
+    autoscale();
     setCurrentSample("last");
   }
 
@@ -41325,6 +41340,12 @@ module.exports = function Graph(idOrElement, options, message) {
     resetAnnotations: function() {
       annotations.length = 0;
       redraw();
+    },
+
+    // Programmatically the same actions as clicking the autoscale button. Note that we sometimes
+    // use autoscale internally with its 'fit' argument set to false.
+    autoscale: function() {
+      autoscale(true);
     },
 
     // Point data consist of an array (or arrays) of [x,y] arrays.

@@ -45,11 +45,12 @@
         <div id="layers"></div>
       </div>
       <div id="controls">
+        <p class="show-about-text"><a href="#">About these graphs</a></p>
         <div id='temperature-graph' class="graph" style="height: 187px;"></div>
         <div id='co2-graph' class="graph" style="height: 187px;"></div>
         <ul>
           <li>
-            <button id="follow-sunray-button" class="follow-agent">Follow Energy Packet</button>
+            <button id="follow-sunray-button" class="follow-agent">Follow energy packet</button>
             <button id="follow-co2-button" class="follow-agent">Follow CO<sub>2</sub></button>
           </li>
         </ul>
@@ -57,8 +58,8 @@
       <div id="model-bottom">
         <ul style="padding: 0.5em;padding-top:1em;">
           <li>
-            <button id="add-clouds-button">Add Cloud</button>
-            <button id="subtract-clouds-button">Subtract Cloud</button>
+            <button id="add-clouds-button">Add cloud</button>
+            <button id="subtract-clouds-button">Remove cloud</button>
           </li>
         </ul>
       </div>
@@ -72,6 +73,7 @@
             <i class="icon-pause"></i>
           </button>
         </div>
+        <span class="slider-units" title="Change the speed of the model"><img src="img/tortoise.jpg" style="margin-left: -10px;margin-right: -9px;margin-bottom: 4px;width: 36px;"/><div id="speed-slider" style="width:40px;margin:0.7em;margin-left:1em;"></div><img src="img/hare.jpg" style="margin-left: -8px;margin-bottom: 4px;width: 37px;"/></span>
       </div>
       <div id="show-agent-controls">
         Show:

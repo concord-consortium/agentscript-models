@@ -66,13 +66,14 @@
         <div id="layers"></div>
       </div>
       <div id="controls">
+        <p class="show-about-text"><a href="#">About these graphs</a></p>
         <div id='temperature-graph' class="graph" style="height: 187px;"></div>
         <div id='co2-graph' class="graph" style="height: 187px;"></div>
       </div>
       <div id="model-bottom">
         <ul style="padding: 0.5em;padding-top:1em;">
           <li>
-            <div style="margin-bottom: 1em;">Human Emissions (% of 2010 levels):</div>
+            <div style="margin-bottom: 1em;">Human emissions (% of 2010 levels):</div>
             <span class="slider-units">0 <div id="human-emissions-slider"></div> 200%</span>
           </li>
         </ul>
@@ -87,6 +88,7 @@
             <i class="icon-pause"></i>
           </button>
         </div>
+        <span class="slider-units" title="Change the speed of the model"><img src="img/tortoise.jpg" style="margin-left: -10px;margin-right: -9px;margin-bottom: 4px;width: 36px;"/><div id="speed-slider" style="width:40px;margin:0.7em;margin-left:1em;"></div><img src="img/hare.jpg" style="margin-left: -8px;margin-bottom: 4px;width: 37px;"/></span>
       </div>
       <div id="show-agent-controls">
         Show:
