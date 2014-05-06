@@ -31,6 +31,7 @@
           "carbon dioxide",
           "heat"
         ];
+        climateModel.aboutText = "<p>These graphs show the relative change in temperature (upper graph) and concentration of greenhouse gases in the atmosphere (lower graph). <p>Together, these graphs show the relationship between the concentrations of greenhouse gases and temperature of the planet. <p>This model is a simplified representation of the climate system, and as such, it does not show the actual concentrations of greenhouse gases in the atmosphere."
 
         initControls();
       });
@@ -48,7 +49,8 @@
         <canvas id="canvas" >Your browser does not support HTML5 Canvas.</canvas>
         <div id="layers"></div>
       </div>
-      <div id="graphs" style="position: absolute;top: 10px;left: 610px;">
+      <div id="controls">
+        <p class="show-about-text"><a href="#">About these graphs</a></p>
         <div id='temperature-graph' class="graph" style="height: 187px;"></div>
         <div id='co2-graph' class="graph" style="height: 187px;"></div>
       </div>

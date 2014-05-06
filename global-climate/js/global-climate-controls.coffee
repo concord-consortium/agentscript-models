@@ -50,6 +50,8 @@ $(document).ready ->
     { key: "heat", draw: (ctx) -> drawShape ctx, "rgb(255, 63, 63)", "circle", 0.8 }
   ]
 
+  defaultAboutText = "<p>These graphs show the relative change in temperature (upper graph) and concentration of greenhouse gases in the atmosphere and ocean (lower graph). <p>Together, these graphs show the relationship between the concentrations of greenhouse gases and temperature of the planet. <p>This model is a simplified representation of the climate system, and as such, it does not show the actual concentrations of greenhouse gases in the atmosphere and ocean."
+
   drawShape = (ctx, fillStyle, shapeName, scale=1) ->
     ctx.save()
     ctx.translate 20, -6
@@ -82,10 +84,10 @@ $(document).ready ->
 
   # add a link that, when clicked, pops up a non-modal, draggable canvas element that shows a key
   # for the different agent shapes
-  $showKey = $('<a href="#" class="show-agents-key">show key</a>').appendTo $ '#content'
+  $showKey = $('<a href="#" class="show-agents-key">Show key</a>').appendTo $ '#content'
   $showKey.click ->
     if ($key = $('#agents-key')).length is 0
-      $key = $("<div id='agents-key' class='agents-key'><a class='icon-remove-sign icon-large'></a><canvas></canvas></div>").appendTo($ document.body).draggable()
+      $key = $("<div id='agents-key' class='popup'><a class='icon-remove-sign icon-large'></a><canvas></canvas></div>").appendTo($ document.body).draggable()
       canvas = $key.find('canvas')[0]
       $key.height keyHeight()
       $key.width 200
@@ -96,6 +98,21 @@ $(document).ready ->
     $key.css
       left: '5em'
       top: '5em'
+    .show()
+    .on 'click', 'a', -> $(this).parent().hide()
+
+  $('.show-about-text a').click ->
+    if ($about = $('#about-text')).length is 0
+      text = climateModel.aboutText || defaultAboutText
+      $about = $("<div id='about-text' class='popup'><a class='icon-remove-sign icon-large'></a>" + text + "</div>")
+        .appendTo($ document.body)
+        .draggable()
+      #$about.height 250
+      $about.width 400
+
+    $about.css
+      left: '8em'
+      top: '6em'
     .show()
     .on 'click', 'a', -> $(this).parent().hide()
 
