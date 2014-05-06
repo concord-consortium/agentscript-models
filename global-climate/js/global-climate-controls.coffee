@@ -224,7 +224,7 @@ setupGraphs = ->
   if $('#temperature-graph').length
 
     title = "Temperature Change"
-    if isOceanTemperatureModel then title += " (red), Ocean change (blue)"
+    if isOceanTemperatureModel then title += " in Air (red) and Ocean (blue)"
 
     ymax = if isOceanTemperatureModel then 12 else 12
     ymin = if isOceanTemperatureModel then -12 else -6
