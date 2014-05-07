@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>4-agentsets.coffee</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page">
+            
+              
+              <a class="source" href="1-util.html">
+                1-util.coffee
+              </a>
+            
+              
+              <a class="source" href="2-shapes.html">
+                2-shapes.coffee
+              </a>
+            
+              
+              <a class="source" href="3-agentset.html">
+                3-agentset.coffee
+              </a>
+            
+              
+              <a class="source" href="4-agentsets.html">
+                4-agentsets.coffee
+              </a>
+            
+              
+              <a class="source" href="5-model.html">
+                5-model.coffee
+              </a>
+            
+              
+              <a class="source" href="6-template.html">
+                6-template.coffee
+              </a>
+            
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>4-agentsets.coffee</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <p>There are three agentsets and their corresponding
+agents: Patches/Patch, Agents/Agent, and Links/Link.</p>
+<h3>Patch and Patches</h3>
+<p>Class Patch instances represent a rectangle on a grid with:</p>
+<ul>
+<li>id: installed by Patches agentset</li>
+<li>x,y: the x,y position within the grid</li>
+<li>color: the color of the patch as an RGBA array, A optional.</li>
+<li>hidden: whether or not to draw this patch</li>
+<li>label: text for the patch</li>
+<li>n/n4: adjacent neighbors: n: 8 patches [SW, S , SE, W, E, NW, N, NE], n4: 4 patches [S, W, E, N].</li>
+<li>breed: the agentset this patch belongs to</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="class"><span class="keyword">class</span> <span class="title">ABM</span>.<span class="title">Patch</span></span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Patches may not need their neighbors, thus we use a default
+of none.  n and n4 are promoted by the Patches agent set
+if world.neighbors is true, the default.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  n: <span class="literal">null</span>
+  n4: <span class="literal">null</span>
+  color: [<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>]
+  hidden: <span class="literal">false</span>
+  label: <span class="literal">null</span>
+  breed: <span class="literal">null</span> <span class="comment"># set by the agentSet owning this patch</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>New Patch: Just set x,y. Neighbors set by Patches constructor if needed.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  constructor: (<span class="property">@x</span>, <span class="property">@y</span>) -&gt;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Return a string representation of the patch.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  toString: -&gt;
+    <span class="string">"{id:<span class="subst">#{@id}</span> xy:<span class="subst">#{[@x,@y]}</span> c:<span class="subst">#{@color}</span>}"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Set patch color to <code>c</code> scaled by <code>s</code>. Usage:</p>
+<pre><code>p.scaleColor p.color, .8 # reduce patch color by .8
+p.scaleColor @foodColor, p.foodPheromone # ants model</code></pre>
+<p>Promotes color if currently using the default.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  scaleColor: (c, s) -&gt;
+    <span class="property">@color</span> = u.clone <span class="property">@color</span> <span class="keyword">if</span> <span class="keyword">not</span> @.hasOwnProperty(<span class="string">"color"</span>)
+    u.scaleColor c, s, <span class="property">@color</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Draw the patch and its text label if there is one.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  draw: (ctx) -&gt;
+    ctx.fillStyle = u.colorStr <span class="property">@color</span>
+    ctx.fillRect <span class="property">@x</span>-<span class="number">.5</span>, <span class="property">@y</span>-<span class="number">.5</span>, <span class="number">1</span>, <span class="number">1</span>
+    <span class="property">@drawLabel</span>(ctx)
+
+  drawLabel: (ctx)-&gt;
+    <span class="keyword">if</span> <span class="property">@label</span>? <span class="comment"># REMIND: should be 2nd pass.</span>
+      [x,y] = ctx.labelXY
+      ctx.save() <span class="comment"># bug: fonts don't scale for size &lt; 1</span>
+      ctx.translate <span class="property">@x</span>, <span class="property">@y</span>
+      ctx.scale <span class="number">1</span><span class="regexp">/ABM.patches.size, -1/</span>ABM.patches.size <span class="comment"># revert to identity for text use</span>
+      u.ctxDrawText ctx, <span class="property">@label</span>, [x,y], ctx.labelColor
+      ctx.restore()</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>Return an array of the agents on this patch.
+If patches.cacheAgentsHere has created an @agents instance
+variable for the patches, agents will add/remove themselves
+as they move from patch to patch.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  agentsHere: -&gt;
+    <span class="property">@agents</span> ? (a <span class="keyword">for</span> a <span class="keyword">in</span> ABM.agents <span class="keyword">when</span> a.p <span class="keyword">is</span> @)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Returns true if this patch is on the edge of the grid.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  isOnEdge: -&gt;
+    <span class="property">@x</span> <span class="keyword">is</span> ABM.patches.minX <span class="keyword">or</span> <span class="property">@x</span> <span class="keyword">is</span> ABM.patches.maxX <span class="keyword">or</span> \
+    <span class="property">@y</span> <span class="keyword">is</span> ABM.patches.minY <span class="keyword">or</span> <span class="property">@y</span> <span class="keyword">is</span> ABM.patches.maxY</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Factory: Create num new agents on this patch. The optional init
+proc is called on the new agent after inserting in its agentSet.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  sprout: (num = <span class="number">1</span>, breed = ABM.agents, <span class="function"><span class="title">init</span></span> = -&gt;) -&gt;
+    breed.create num, (a) =&gt; <span class="comment"># fat arrow so that @ = this patch</span>
+      a.setXY <span class="property">@x</span>, <span class="property">@y</span>; init(a); a</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>Class Patches is a singleton 2D matrix of Patch instances, each patch
+representing a 1x1 square in patch coordinates (via 2D coord transforms).</p>
+<p>From ABM.world, set in Model:</p>
+<ul>
+<li>size: pixel h/w of each patch.</li>
+<li>minX/maxX: min/max x coord in patch coords</li>
+<li>minY/maxY: min/max y coord in patch coords</li>
+<li>numX/numY: width/height of grid.</li>
+<li>isTorus: true if coord system wraps around at edges</li>
+<li>hasNeighbors: true if each patch caches its neighbors</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="class"><span class="keyword">class</span> <span class="title">ABM</span>.<span class="title">Patches</span> <span class="keyword">extends</span> <span class="title">ABM</span>.<span class="title">AgentSet</span></span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Constructor: super creates the empty AgentSet instance and installs
+the agentClass (breed) variable shared by all the Patches in this set.
+Patches are created from top-left to bottom-right to match data sets.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  constructor: -&gt; <span class="comment"># agentClass, name, mainSet</span>
+    <span class="keyword">super</span> <span class="comment"># call super with all the args I was called with</span>
+    @[k] = v <span class="keyword">for</span> own k,v <span class="keyword">of</span> ABM.world <span class="comment"># add world items to patches</span>
+    <span class="keyword">for</span> y <span class="keyword">in</span> [<span class="property">@maxY</span>..<span class="property">@minY</span>] <span class="keyword">by</span> -<span class="number">1</span>
+      <span class="keyword">for</span> x <span class="keyword">in</span> [<span class="property">@minX</span>..<span class="property">@maxX</span>] <span class="keyword">by</span> <span class="number">1</span>
+        <span class="property">@add</span> <span class="keyword">new</span> ABM.Patch x, y
+    <span class="property">@setNeighbors</span>() <span class="keyword">if</span> <span class="property">@hasNeighbors</span>
+    <span class="property">@setPixels</span>()
+    <span class="property">@drawWithPixels</span> = <span class="property">@size</span> <span class="keyword">is</span> <span class="number">1</span> <span class="comment"># if size is 1, default to true, otherwise false</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Set the default color for new Patch instances.
+Note coffeescript :: which refers to the Patch prototype.
+This is the usual way to modify class variables.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  setDefaultColor: (color) -&gt; ABM.Patch::color = color</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Have patches cache the agents currently on them.
+Optimizes p.agentsHere method.
+Call before first agent is created.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  cacheAgentsHere: -&gt; p.agents = [] <span class="keyword">for</span> p <span class="keyword">in</span> @; <span class="literal">null</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Draw patches using scaled image of colors. Note anti-aliasing may occur
+if browser does not support these flags.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  usePixels: (usePix=<span class="literal">true</span>) -&gt;
+    ctx = ABM.contexts.patches
+    ctx.imageSmoothingEnabled = <span class="keyword">not</span> usePix
+    ctx.mozImageSmoothingEnabled = <span class="keyword">not</span> usePix
+    ctx.webkitImageSmoothingEnabled = <span class="keyword">not</span> usePix
+    u.setIdentity ctx
+    <span class="property">@drawWithPixels</span> = usePix</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>Optimization: Cache a single set by modeler for use by patchRect,
+inCone, inRect, inRadius.  Ex: flock demo model&#39;s vision rect.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  cacheRect: (radius, meToo=<span class="literal">false</span>) -&gt;
+    <span class="keyword">for</span> p <span class="keyword">in</span> @
+      p.pRect = <span class="property">@patchRect</span> p, radius, radius, meToo
+      p.pRect.radius = radius; p.pRect.meToo = meToo</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>Install neighborhoods in patches</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  setNeighbors: -&gt;
+    <span class="keyword">for</span> p <span class="keyword">in</span> @
+      p.n =  <span class="property">@patchRect</span> p, <span class="number">1</span>, <span class="number">1</span> <span class="comment"># p.n =  p.patchRect 1, 1</span>
+      p.n4 = [ p.n[<span class="number">1</span>], p.n[<span class="number">3</span>], p.n[<span class="number">4</span>], p.n[<span class="number">6</span>] ]</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>Setup pixels used for <code>drawScaledPixels</code> and <code>importColors</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  setPixels: -&gt;
+    <span class="keyword">if</span> <span class="property">@size</span> <span class="keyword">is</span> <span class="number">1</span>
+      <span class="property">@pixelsCtx</span> = ABM.contexts.patches
+    <span class="keyword">else</span>
+      can = document.createElement <span class="string">'canvas'</span>  <span class="comment"># small pixel grid for patch colors</span>
+      can.width = <span class="property">@numX</span>; can.height = <span class="property">@numY</span>
+      <span class="property">@pixelsCtx</span> = can.getContext <span class="string">"2d"</span>
+    <span class="property">@pixelsImageData</span> = <span class="property">@pixelsCtx</span>.getImageData(<span class="number">0</span>, <span class="number">0</span>, <span class="property">@numX</span>, <span class="property">@numY</span>)
+    <span class="property">@pixelsData</span> = <span class="property">@pixelsImageData</span>.data
+    <span class="keyword">if</span> <span class="property">@pixelsData</span> <span class="keyword">instanceof</span> Uint8Array <span class="comment"># Check for typed arrays</span>
+      <span class="property">@pixelsData32</span> = <span class="keyword">new</span> Uint32Array <span class="property">@pixelsData</span>.buffer
+      <span class="property">@pixelsAreLittleEndian</span> = u.isLittleEndian()</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>If using scaled pixels, use pixel manipulation below, or use default agentSet
+draw which iterates over the patches, drawing rectangles.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  draw: (ctx) -&gt; <span class="keyword">if</span> <span class="property">@drawWithPixels</span> <span class="keyword">then</span> <span class="property">@drawScaledPixels</span> ctx <span class="keyword">else</span> <span class="keyword">super</span> ctx</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h4">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <h4>Patch grid coord system utilities:</h4>
+<p>Return the patch id/index given integer x,y in patch coords</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  patchIndex: (x,y) -&gt; x-<span class="property">@minX</span> + <span class="property">@numX</span>*(<span class="property">@maxY</span>-y)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>Return the patch at matrix position x,y where
+x &amp; y are both valid integer patch coordinates.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  patchXY: (x,y) -&gt; @[<span class="property">@patchIndex</span> x,y]</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>Return x,y float values to be between min/max patch coord values</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  clamp: (x,y) -&gt; [u.clamp(x, <span class="property">@minX</span>-<span class="number">.5</span>, <span class="property">@maxX</span>+<span class="number">.5</span>), u.clamp(y, <span class="property">@minY</span>-<span class="number">.5</span>, <span class="property">@maxY</span>+<span class="number">.5</span>)]</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>Return x,y float values to be modulo min/max patch coord values.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  wrap: (x,y)  -&gt; [u.wrap(x, <span class="property">@minX</span>-<span class="number">.5</span>, <span class="property">@maxX</span>+<span class="number">.5</span>),  u.wrap(y, <span class="property">@minY</span>-<span class="number">.5</span>, <span class="property">@maxY</span>+<span class="number">.5</span>)]</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>Return x,y float values to be between min/max patch values
+using either clamp/wrap above according to isTorus topology.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  coord: (x,y) -&gt; <span class="comment">#returns a valid world coord (real, not int)</span>
+    <span class="keyword">if</span> <span class="property">@isTorus</span> <span class="keyword">then</span> <span class="property">@wrap</span> x,y <span class="keyword">else</span> <span class="property">@clamp</span> x,y</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>Return patch at x,y float values according to topology.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  patch: (x,y) -&gt;
+    [x,y]=<span class="property">@coord</span> x,y
+    x = u.clamp Math.round(x), <span class="property">@minX</span>, <span class="property">@maxX</span>
+    y = u.clamp Math.round(y), <span class="property">@minY</span>, <span class="property">@maxY</span>
+    <span class="property">@patchXY</span> x, y</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>Return the patch at the pixel location indicated.
+x/y are screen coordinates (ie 0,0 is top left of the canvas, and values
+increase positively downward and to the right).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  patchAtPixel: (x,y)-&gt;
+    x = Math.floor(x/<span class="property">@size</span>) + <span class="property">@minX</span>
+    y = <span class="property">@maxY</span> - Math.floor(y/<span class="property">@size</span>)
+    x = u.clamp x, <span class="property">@minX</span>, <span class="property">@maxX</span>
+    y = u.clamp y, <span class="property">@minY</span>, <span class="property">@maxY</span>
+    <span class="keyword">return</span> <span class="property">@patchXY</span> x, y</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>Return a random valid float x,y point in patch space</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  randomPt: -&gt; [u.randomFloat2(<span class="property">@minX</span>-<span class="number">.5</span>,<span class="property">@maxX</span>+<span class="number">.5</span>), u.randomFloat2(<span class="property">@minY</span>-<span class="number">.5</span>,<span class="property">@maxY</span>+<span class="number">.5</span>)]</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h4">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <h4>Patch metrics</h4>
+<p>Convert patch measure to pixels</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  toBits: (p) -&gt; p*<span class="property">@size</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>Convert bit measure to patches</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  fromBits: (b) -&gt; b/<span class="property">@size</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h4">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <h4>Patch utilities</h4>
+<p>Return an array of patches in a rectangle centered on the given
+patch <code>p</code>, dx, dy units to the right/left and up/down.
+Exclude <code>p</code> unless meToo is true, default false.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  patchRect: (p, dx, dy, meToo=<span class="literal">false</span>) -&gt;
+    <span class="keyword">if</span> p.pRect? <span class="keyword">and</span> p.pRect.radius <span class="keyword">is</span> dx <span class="comment"># and p.pRect.radius is dy</span>
+      <span class="keyword">return</span> p.pRect
+    rect = []; <span class="comment"># REMIND: optimize if no wrapping, rect inside patch boundaries</span>
+    <span class="keyword">for</span> y <span class="keyword">in</span> [p.y-dy..p.y+dy] <span class="keyword">by</span> <span class="number">1</span> <span class="comment"># by 1: perf: avoid bidir JS for loop</span>
+      <span class="keyword">for</span> x <span class="keyword">in</span> [p.x-dx..p.x+dx] <span class="keyword">by</span> <span class="number">1</span>
+        <span class="keyword">if</span> <span class="property">@isTorus</span> <span class="keyword">or</span> (<span class="property">@minX</span>&lt;=x&lt;=<span class="property">@maxX</span> <span class="keyword">and</span> <span class="property">@minY</span>&lt;=y&lt;=<span class="property">@maxY</span>)
+          <span class="keyword">if</span> <span class="property">@isTorus</span>
+            x+=<span class="property">@numX</span> <span class="keyword">if</span> x&lt;<span class="property">@minX</span>; x-=<span class="property">@numX</span> <span class="keyword">if</span> x&gt;<span class="property">@maxX</span>
+            y+=<span class="property">@numY</span> <span class="keyword">if</span> y&lt;<span class="property">@minY</span>; y-=<span class="property">@numY</span> <span class="keyword">if</span> y&gt;<span class="property">@maxY</span>
+          pnext = <span class="property">@patchXY</span> x, y <span class="comment"># much faster than coord()</span>
+          <span class="keyword">if</span> <span class="keyword">not</span> pnext?
+            u.error <span class="string">"patchRect: x,y out of bounds, see console.log"</span>
+            console.log <span class="string">"x <span class="subst">#{x}</span> y <span class="subst">#{y}</span> p.x <span class="subst">#{p.x}</span> p.y <span class="subst">#{p.y}</span> dx <span class="subst">#{dx}</span> dy <span class="subst">#{dy}</span>"</span>
+        <span class="keyword">else</span>
+          pnext = <span class="literal">null</span>
+        rect.push pnext <span class="keyword">if</span> (meToo <span class="keyword">or</span> p <span class="keyword">isnt</span> pnext)
+    <span class="property">@asSet</span> rect</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p>Draws, or &quot;imports&quot; an image URL into the drawing layer.
+The image is scaled to fit the drawing layer.</p>
+<p>This is an async load, see this
+<a href="http://javascript.mfields.org/2011/creating-an-image-in-javascript/">new Image()</a>
+tutorial.  We draw the image into the drawing layer as
+soon as the onload callback executes.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  installDrawing: (img, ctx=ABM.contexts.drawing) -&gt;
+    u.setIdentity ctx
+    ctx.drawImage img, <span class="number">0</span>, <span class="number">0</span>, ctx.canvas.width, ctx.canvas.height
+    ctx.restore() <span class="comment"># restore patch transform</span>
+  importDrawing: (imageSrc, f) -&gt;
+    u.importImage imageSrc, (img) -&gt;
+      ctx = ABM.drawing
+      u.setIdentity ctx
+      ctx.drawImage img, <span class="number">0</span>, <span class="number">0</span>, ctx.canvas.width, ctx.canvas.height
+      ctx.restore() <span class="comment"># restore patch transform</span>
+      f() <span class="keyword">if</span> f?</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>Utility function for pixel manipulation.  Given a patch, returns the
+native canvas index i into the pixel data.
+The top-left order simplifies finding pixels in data sets</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  pixelByteIndex: (p) -&gt; <span class="number">4</span>*p.id <span class="comment"># Uint8</span>
+  pixelWordIndex: (p) -&gt; p.id   <span class="comment"># Uint32</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>Draws, or &quot;imports&quot; an image URL into the patches as their color property.
+The drawing is scaled to the number of x,y patches, thus one pixel
+per patch.  The colors are then transferred to the patches.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  installColors: (img) -&gt;
+    <span class="property">@pixelsCtx</span>.drawImage img, <span class="number">0</span>, <span class="number">0</span>, <span class="property">@numX</span>, <span class="property">@numY</span> <span class="comment"># scale if needed</span>
+    data = <span class="property">@pixelsCtx</span>.getImageData(<span class="number">0</span>, <span class="number">0</span>, <span class="property">@numX</span>, <span class="property">@numY</span>).data
+    <span class="keyword">for</span> p <span class="keyword">in</span> @
+      i = <span class="property">@pixelByteIndex</span> p
+      p.color = [data[i++], data[i++], data[i]] <span class="comment"># promote initial default</span>
+  importColors: (imageSrc, f) -&gt;
+    u.importImage imageSrc, (img) =&gt; <span class="comment"># fat arrow, this context</span>
+      <span class="property">@installColors</span>(img)
+      f() <span class="keyword">if</span> f?</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>Draw the patches via pixel manipulation rather than 2D drawRect.
+See Mozilla pixel <a href="http://goo.gl/Lxliq">manipulation article</a></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  drawScaledPixels: (ctx, pSet=@) -&gt;
+    <span class="keyword">if</span> <span class="property">@pixelsData32</span>?
+      <span class="property">@drawScaledPixels32</span> ctx, pSet
+    <span class="keyword">else</span>
+      <span class="property">@drawScaledPixels8</span> ctx, pSet</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <p>The 8-bit version for drawScaledPixels.  Used for systems w/o typed arrays</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  drawScaledPixels8: (ctx, pSet) -&gt;
+    data = <span class="property">@pixelsData</span>
+    <span class="keyword">for</span> p <span class="keyword">in</span> pSet
+      i = <span class="property">@pixelByteIndex</span> p
+      c = p.color
+      data[i+j] = c[j] <span class="keyword">for</span> j <span class="keyword">in</span> [<span class="number">0.</span><span class="number">.2</span>]
+      data[i+<span class="number">3</span>] = <span class="keyword">if</span> c.length <span class="keyword">is</span> <span class="number">4</span> <span class="keyword">then</span> c[<span class="number">3</span>] <span class="keyword">else</span> <span class="number">255</span>
+    <span class="property">@pixelsCtx</span>.putImageData(<span class="property">@pixelsImageData</span>, <span class="number">0</span>, <span class="number">0</span>)
+    <span class="keyword">return</span> <span class="keyword">if</span> <span class="property">@size</span> <span class="keyword">is</span> <span class="number">1</span>
+    ctx.drawImage <span class="property">@pixelsCtx</span>.canvas, <span class="number">0</span>, <span class="number">0</span>, ctx.canvas.width, ctx.canvas.height</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>The 32-bit version of drawScaledPixels, with both little and big endian hardware.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  drawScaledPixels32: (ctx, pSet) -&gt;
+    data = <span class="property">@pixelsData32</span>
+    <span class="keyword">for</span> p <span class="keyword">in</span> pSet
+      i = <span class="property">@pixelWordIndex</span> p
+      c = p.color
+      a = <span class="keyword">if</span> c.length <span class="keyword">is</span> <span class="number">4</span> <span class="keyword">then</span> c[<span class="number">3</span>] <span class="keyword">else</span> <span class="number">255</span>
+      <span class="keyword">if</span> <span class="property">@pixelsAreLittleEndian</span>
+        data[i] =
+          (a    &lt;&lt; <span class="number">24</span>) |  <span class="comment"># alpha</span>
+          (c[<span class="number">2</span>] &lt;&lt; <span class="number">16</span>) |  <span class="comment"># blue</span>
+          (c[<span class="number">1</span>] &lt;&lt; <span class="number">8</span>)  |  <span class="comment"># green</span>
+          c[<span class="number">0</span>];           <span class="comment"># red</span>
+      <span class="keyword">else</span>
+        data[i] =
+          (c[<span class="number">0</span>] &lt;&lt; <span class="number">24</span>) |  <span class="comment"># red</span>
+          (c[<span class="number">1</span>] &lt;&lt; <span class="number">16</span>) |  <span class="comment"># green</span>
+          (c[<span class="number">2</span>] &lt;&lt; <span class="number">8</span>)  |  <span class="comment"># blue</span>
+          a;              <span class="comment"># alpha</span>
+    <span class="property">@pixelsCtx</span>.putImageData(<span class="property">@pixelsImageData</span>, <span class="number">0</span>, <span class="number">0</span>)
+    <span class="keyword">return</span> <span class="keyword">if</span> <span class="property">@size</span> <span class="keyword">is</span> <span class="number">1</span>
+    ctx.drawImage <span class="property">@pixelsCtx</span>.canvas, <span class="number">0</span>, <span class="number">0</span>, ctx.canvas.width, ctx.canvas.height</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>Diffuse the value of patch variable <code>p.v</code> by distributing <code>rate</code> percent
+of each patch&#39;s value of <code>v</code> to its neighbors. If a color <code>c</code> is given,
+scale the patch&#39;s color to be <code>p.v</code> of <code>c</code>. If the patch has
+less than 8 neighbors, return the extra to the patch.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  diffuse: (v, rate, c) -&gt; <span class="comment"># variable name, diffusion rate, max color (optional)</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>zero temp variable if not yet set</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">if</span> <span class="keyword">not</span> @[<span class="number">0</span>]._diffuseNext?
+      p._diffuseNext = <span class="number">0</span> <span class="keyword">for</span> p <span class="keyword">in</span> @</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <p>pass 1: calculate contribution of all patches to themselves and neighbors</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">for</span> p <span class="keyword">in</span> @
+      dv = p[v]*rate; dv8 = dv/<span class="number">8</span>; nn = p.n.length
+      p._diffuseNext += p[v] - dv + (<span class="number">8</span>-nn)*dv8
+      n._diffuseNext += dv8 <span class="keyword">for</span> n <span class="keyword">in</span> p.n</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <p>pass 2: set new value for all patches, zero temp, modify color if c given</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">for</span> p <span class="keyword">in</span> @
+      p[v] = p._diffuseNext
+      p._diffuseNext = <span class="number">0</span>
+      p.scaleColor c, p[v] <span class="keyword">if</span> c
+    <span class="literal">null</span> <span class="comment"># avoid returning copy of @</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-40">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h3">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <h3>Agent &amp; Agents</h3>
+<p>Class Agent instances represent the dynamic, behavioral element of ABM.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="class"><span class="keyword">class</span> <span class="title">ABM</span>.<span class="title">Agent</span></span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <p>Constructor &amp; Class Variables:</p>
+<ul>
+<li>x,y: position on the patch grid, in patch coordinates, default: 0,0</li>
+<li>color: the color of the agent, default: randomColor</li>
+<li>shape: the shape name of the agent, default: &quot;default&quot;</li>
+<li>heading: direction of the agent, in radians, from x-axis</li>
+<li>hidden: whether or not to draw this agent</li>
+<li>size: size of agent, in patch coords, default: 1</li>
+<li>p: patch at current x,y location</li>
+<li>penDown: true if agent pen is drawing</li>
+<li>penSize: size in pixels of the pen, default: 1 pixel</li>
+<li>breed: the agentset this agent belongs to</li>
+<li>sprite: an image of the agent if non null</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  color: <span class="literal">null</span>  <span class="comment"># default color, overrides random color if set</span>
+  shape: <span class="string">"default"</span>
+  breed: <span class="literal">null</span> <span class="comment"># set by the agentSet owning this agent</span>
+  hidden: <span class="literal">false</span>
+  size: <span class="number">1</span>
+  penDown: <span class="literal">false</span>
+  penSize: <span class="number">1</span> <span class="comment"># pixels</span>
+  heading: <span class="literal">null</span>
+  sprite: <span class="literal">null</span> <span class="comment"># default sprite, none</span>
+  cacheLinks: <span class="literal">false</span>
+  constructor: -&gt; <span class="comment"># called by agentSets create factory, not user</span>
+    <span class="property">@x</span> = <span class="property">@y</span> = <span class="number">0</span>
+    <span class="property">@color</span> = u.randomColor() <span class="keyword">if</span> <span class="keyword">not</span> <span class="property">@color</span>? <span class="comment"># promote color if default not set</span>
+    <span class="property">@heading</span> = u.randomFloat(Math.PI*<span class="number">2</span>) <span class="keyword">if</span> <span class="keyword">not</span> <span class="property">@heading</span>?
+    <span class="property">@p</span> = ABM.patches.patch <span class="property">@x</span>, <span class="property">@y</span>
+    <span class="property">@p</span>.agents.push @ <span class="keyword">if</span> <span class="property">@p</span>.agents? <span class="comment"># ABM.patches.cacheAgentsHere</span>
+    <span class="property">@links</span> = [] <span class="keyword">if</span> <span class="property">@cacheLinks</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <p>Move agent to different breed agentSet.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  changeBreed: (newBreed) -&gt;
+    u.error <span class="string">"changeBreed: not in agentSet"</span> <span class="keyword">if</span> <span class="keyword">not</span> <span class="property">@id</span>?
+    u.error <span class="string">"changeBreed: breed illegally set"</span> <span class="keyword">if</span> <span class="property">@hasOwnProperty</span> <span class="string">"breed"</span>
+    u.error <span class="string">"changeBreed: breed==newBreed"</span> <span class="keyword">if</span> <span class="property">@breed</span> <span class="keyword">is</span> newBreed
+    <span class="property">@die</span>(); newBreed.create <span class="number">1</span>, (a) =&gt; a.setXY <span class="property">@x</span>, <span class="property">@y</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>Set agent color to <code>c</code> scaled by <code>s</code>. Usage: see patch.scaleColor</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  scaleColor: (c, s) -&gt;
+    <span class="property">@color</span> = u.clone <span class="property">@color</span> <span class="keyword">if</span> <span class="keyword">not</span> <span class="property">@hasOwnProperty</span> <span class="string">"color"</span> <span class="comment"># promote color to inst var</span>
+    u.scaleColor c, s, <span class="property">@color</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
+              </div>
+              <p>Return a string representation of the agent.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  toString: -&gt;
+    <span class="string">"{id:<span class="subst">#{@id}</span> xy:<span class="subst">#{u.aToFixed [@x,@y]}</span> c:<span class="subst">#{@color}</span> h: <span class="subst">#{@heading.toFixed <span class="number">2</span>}</span>}"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-45">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <p>Place the agent at the given x,y (floats) in patch coords
+using patch topology (isTorus)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  setXY: (x, y) -&gt; <span class="comment"># REMIND GC problem, 2 arrays</span>
+    [x0, y0] = [<span class="property">@x</span>, <span class="property">@y</span>] <span class="keyword">if</span> <span class="property">@penDown</span>
+    [<span class="property">@x</span>, <span class="property">@y</span>] = ABM.patches.coord x, y
+    p = <span class="property">@p</span>
+    <span class="property">@p</span> = ABM.patches.patch <span class="property">@x</span>, <span class="property">@y</span>
+    <span class="keyword">if</span> p.agents? <span class="keyword">and</span> p <span class="keyword">isnt</span> <span class="property">@p</span> <span class="comment"># ABM.patches.cacheAgentsHere</span>
+      u.removeItem p.agents, @
+      <span class="property">@p</span>.agents.push @
+    <span class="keyword">if</span> <span class="property">@penDown</span>
+      drawing = ABM.drawing
+      drawing.strokeStyle = u.colorStr <span class="property">@color</span>
+      drawing.lineWidth = ABM.patches.fromBits <span class="property">@penSize</span>
+      drawing.beginPath()
+      drawing.moveTo x0, y0; drawing.lineTo x, y <span class="comment"># REMIND: euclidean</span>
+      drawing.stroke()</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-46">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <p>Place the agent at the given patch/agent location</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  moveTo: (a) -&gt; <span class="property">@setXY</span> a.x, a.y</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-47">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <p>Move forward (along heading) d units (patch coords),
+using patch topology (isTorus)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  forward: (d) -&gt;
+    <span class="property">@setXY</span> <span class="property">@x</span> + d*Math.cos(<span class="property">@heading</span>), <span class="property">@y</span> + d*Math.sin(<span class="property">@heading</span>)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-48">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+              <p>Change current heading by rad radians which can be + (left) or - (right)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  rotate: (rad) -&gt; <span class="property">@heading</span> = u.wrap <span class="property">@heading</span> + rad, <span class="number">0</span>, Math.PI*<span class="number">2</span> <span class="comment"># returns new h</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-49">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-49">&#182;</a>
+              </div>
+              <p>Draw the agent, instanciating a sprite if required</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  draw: (ctx) -&gt;
+    shape = ABM.shapes[<span class="property">@shape</span>]
+    rad = <span class="keyword">if</span> shape.rotate <span class="keyword">then</span> <span class="property">@heading</span> <span class="keyword">else</span> <span class="number">0</span> <span class="comment"># radians</span>
+    <span class="keyword">if</span> <span class="property">@sprite</span>? <span class="keyword">or</span> <span class="property">@breed</span>.useSprites
+      <span class="property">@setSprite</span>() <span class="keyword">if</span> <span class="keyword">not</span> <span class="property">@sprite</span>? <span class="comment"># lazy evaluation of useSprites</span>
+      ABM.shapes.drawSprite ctx, <span class="property">@sprite</span>, <span class="property">@x</span>, <span class="property">@y</span>, <span class="property">@size</span>, rad
+    <span class="keyword">else</span>
+      ABM.shapes.draw ctx, shape, <span class="property">@x</span>, <span class="property">@y</span>, <span class="property">@size</span>, rad, <span class="property">@color</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-50">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-50">&#182;</a>
+              </div>
+              <p>Set an individual agent&#39;s sprite, synching its color, shape, size</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  setSprite: (sprite)-&gt;
+    <span class="keyword">if</span> (s=sprite)?
+      <span class="property">@sprite</span> = s; <span class="property">@color</span> = s.color; <span class="property">@shape</span> = s.shape; <span class="property">@size</span> = s.size
+    <span class="keyword">else</span>
+      <span class="property">@color</span> = u.randomColor <span class="keyword">if</span> <span class="keyword">not</span> <span class="property">@color</span>?
+      <span class="property">@sprite</span> = ABM.shapes.shapeToSprite <span class="property">@shape</span>, <span class="property">@color</span>, <span class="property">@size</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-51">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-51">&#182;</a>
+              </div>
+              <p>Draw the agent on the drawing layer, leaving permanent image.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  stamp: -&gt; <span class="property">@draw</span> ABM.drawing</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-52">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-52">&#182;</a>
+              </div>
+              <p>Return distance in patch coords from me to x,y
+using patch topology (isTorus)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  distanceXY: (x,y) -&gt;
+    <span class="keyword">if</span> ABM.patches.isTorus
+    <span class="keyword">then</span> u.torusDistance <span class="property">@x</span>, <span class="property">@y</span>, x, y, ABM.patches.numX, ABM.patches.numY
+    <span class="keyword">else</span> u.distance <span class="property">@x</span>, <span class="property">@y</span>, x, y</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-53">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-53">&#182;</a>
+              </div>
+              <p>Return distance in patch coords from me to given agent/patch using patch topology.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  distance: (o) -&gt; <span class="comment"># o any object w/ x,y, patch or agent</span>
+    <span class="property">@distanceXY</span> o.x, o.y</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-54">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-54">&#182;</a>
+              </div>
+              <p>Return the closest torus topology point of given x,y relative to myself.
+See util.torusPt.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  torusPtXY: (x, y) -&gt;
+    u.torusPt <span class="property">@x</span>, <span class="property">@y</span>, x, y, ABM.patches.numX, ABM.patches.numY</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-55">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-55">&#182;</a>
+              </div>
+              <p>Return the closest torus topology point of given agent/patch
+relative to myself. See util.torusPt.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  torusPt: (o) -&gt;
+    <span class="property">@torusPtXY</span> o.x, o.y</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-56">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-56">&#182;</a>
+              </div>
+              <p>Set my heading towards given agent/patch using patch topology.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  face: (o) -&gt; <span class="property">@heading</span> = <span class="property">@towards</span> o</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-57">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-57">&#182;</a>
+              </div>
+              <p>Return heading towards x,y using patch topology.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  towardsXY: (x, y) -&gt;
+    <span class="keyword">if</span> ABM.patches.isTorus
+    <span class="keyword">then</span> u.torusRadsToward <span class="property">@x</span>, <span class="property">@y</span>, x, y, ABM.patches.numX, ABM.patches.numY
+    <span class="keyword">else</span> u.radsToward <span class="property">@x</span>, <span class="property">@y</span>, x, y</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-58">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-58">&#182;</a>
+              </div>
+              <p>Return heading towards given agent/patch using patch topology.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  towards: (o) -&gt; <span class="property">@towardsXY</span> o.x, o.y</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-59">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-59">&#182;</a>
+              </div>
+              <p>Remove myself from the model.  Includes removing myself from the agents
+agentset and removing any links I may have.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  die: -&gt;
+    <span class="property">@breed</span>.remove @
+    l.die() <span class="keyword">for</span> l <span class="keyword">in</span> <span class="property">@myLinks</span>()
+    u.removeItem <span class="property">@p</span>.agents, @ <span class="keyword">if</span> <span class="property">@p</span>.agents?
+    <span class="literal">null</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-60">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-60">&#182;</a>
+              </div>
+              <p>Factory: create num new agents at this agents location. The optional init
+proc is called on the new agent after inserting in its agentSet.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  hatch: (num = <span class="number">1</span>, breed = ABM.agents, <span class="function"><span class="title">init</span></span> = -&gt;) -&gt;
+    breed.create num, (a) =&gt; <span class="comment"># fat arrow so that @ = this agent</span>
+      a.setXY <span class="property">@x</span>, <span class="property">@y</span> <span class="comment"># for side effects like patches.agentsHere</span>
+      a[k] = v <span class="keyword">for</span> own k, v <span class="keyword">of</span> @ <span class="keyword">when</span> k <span class="keyword">isnt</span> <span class="string">"id"</span>
+      init(a); a <span class="comment"># Important: init called after object inserted in agent set</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-61">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-61">&#182;</a>
+              </div>
+              <p>Return the members of the given agentset that are within radius distance
+from me, and within cone radians of my heading using patch topology</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  inCone: (aset, cone, radius, meToo=<span class="literal">false</span>) -&gt;
+    aset.inCone <span class="property">@p</span>, <span class="property">@heading</span>, cone, radius, meToo <span class="comment"># REMIND: @p vs @?</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-62">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-62">&#182;</a>
+              </div>
+              <p>Return other end of link from me</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  otherEnd: (l) -&gt; <span class="keyword">if</span> l.end1 <span class="keyword">is</span> @ <span class="keyword">then</span> l.end2 <span class="keyword">else</span> l.end1</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-63">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-63">&#182;</a>
+              </div>
+              <p>Return all links linked to me</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  myLinks: -&gt;
+    <span class="property">@links</span> ? (l <span class="keyword">for</span> l <span class="keyword">in</span> ABM.links <span class="keyword">when</span> (l.end1 <span class="keyword">is</span> @) <span class="keyword">or</span> (l.end2 <span class="keyword">is</span> @))</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-64">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-64">&#182;</a>
+              </div>
+              <p>Return all agents linked to me.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  linkNeighbors: -&gt; <span class="comment"># return all agents linked to me</span>
+    <span class="property">@otherEnd</span> l <span class="keyword">for</span> l <span class="keyword">in</span> <span class="property">@myLinks</span>()</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-65">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-65">&#182;</a>
+              </div>
+              <p>Return links where I am the &quot;to&quot; agent in links.create</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  myInLinks: -&gt;
+    l <span class="keyword">for</span> l <span class="keyword">in</span> <span class="property">@myLinks</span>() <span class="keyword">when</span> l.end2 <span class="keyword">is</span> @</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-66">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-66">&#182;</a>
+              </div>
+              <p>Return other end of myInLinks</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  inLinkNeighbors: -&gt;
+    l.end1 <span class="keyword">for</span> l <span class="keyword">in</span> <span class="property">@myLinks</span>() <span class="keyword">when</span> l.end2 <span class="keyword">is</span> @</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-67">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-67">&#182;</a>
+              </div>
+              <p>Return links where I am the &quot;from&quot; agent in links.create</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  myOutLinks: -&gt;
+    l <span class="keyword">for</span> l <span class="keyword">in</span> <span class="property">@myLinks</span>() <span class="keyword">when</span> l.end1 <span class="keyword">is</span> @</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-68">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-68">&#182;</a>
+              </div>
+              <p>Return other end of myOutinks</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  outLinkNeighbors: -&gt;
+    l.end2 <span class="keyword">for</span> l <span class="keyword">in</span> <span class="property">@myLinks</span>() <span class="keyword">when</span> l.end1 <span class="keyword">is</span> @</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-69">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-69">&#182;</a>
+              </div>
+              <p>Class Agents is a subclass of AgentSet which stores instances of Agent or
+Breeds, which are subclasses of Agent</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="class"><span class="keyword">class</span> <span class="title">ABM</span>.<span class="title">Agents</span> <span class="keyword">extends</span> <span class="title">ABM</span>.<span class="title">AgentSet</span></span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-70">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-70">&#182;</a>
+              </div>
+              <p>Constructor creates the empty AgentSet instance and installs
+the agentClass (breed) variable shared by all the Agents in this set.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  constructor: -&gt; <span class="comment"># agentClass, name, mainSet</span>
+    <span class="keyword">super</span> <span class="comment"># call super with all the args I was called with</span>
+    <span class="property">@useSprites</span> = <span class="literal">false</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-71">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-71">&#182;</a>
+              </div>
+              <p>Have agents cache the links with them as a node.
+Optimizes Agent a.myLinks method. Call before any agents created.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  cacheLinks: -&gt; ABM.Agent::cacheLinks = <span class="literal">true</span> <span class="comment"># all agents, not individual breeds</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-72">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-72">&#182;</a>
+              </div>
+              <p>Methods to change the default Agent class variables.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  setDefaultColor:  (color) -&gt; <span class="property">@agentClass</span>::color = color
+  setDefaultShape:  (shape) -&gt; <span class="property">@agentClass</span>::shape = shape
+  setDefaultSize:   (size)  -&gt; <span class="property">@agentClass</span>::size = size
+  setDefaultHeading:(heading)-&gt; <span class="property">@agentClass</span>::heading = heading
+  setDefaultHidden: (hidden)-&gt; <span class="property">@agentClass</span>::hidden = hidden
+  setDefaultSprite: (sprite)-&gt;
+    <span class="property">@setDefaultColor</span> sprite.color; <span class="property">@setDefaultShape</span> sprite.shape; <span class="property">@setDefaultSize</span> sprite.size
+    <span class="property">@agentClass</span>::sprite = sprite
+  setDefaultPen:   (size, down=<span class="literal">false</span>) -&gt;
+    <span class="property">@agentClass</span>::penSize = size
+    <span class="property">@agentClass</span>::penDown = down</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-73">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-73">&#182;</a>
+              </div>
+              <p>Use sprites rather than drawing</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  setUseSprites: (<span class="property">@useSprites</span>=<span class="literal">true</span>) -&gt;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-74">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-74">&#182;</a>
+              </div>
+              <p>Filter to return all instances of this breed.  Note: if used by
+the mainSet, returns just the agents that are not subclassed breeds.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">in</span>: (array) -&gt; <span class="property">@asSet</span> (o <span class="keyword">for</span> o <span class="keyword">in</span> array <span class="keyword">when</span> o.breed <span class="keyword">is</span> @)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-75">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-75">&#182;</a>
+              </div>
+              <p>Factory: create num new agents stored in this agentset.The optional init
+proc is called on the new agent after inserting in its agentSet.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  create: (num, <span class="function"><span class="title">init</span></span> = -&gt;) -&gt; <span class="comment"># returns list too</span>
+    ((o) -&gt; init(o); o) <span class="property">@add</span> <span class="keyword">new</span> <span class="property">@agentClass</span> <span class="keyword">for</span> i <span class="keyword">in</span> [<span class="number">1.</span>.num] <span class="keyword">by</span> <span class="number">1</span> <span class="comment"># too tricky?</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-76">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-76">&#182;</a>
+              </div>
+              <p>Remove all agents from set via agent.die()
+Note call in reverse order to optimize list restructuring.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  clear: -&gt; <span class="property">@last</span>().die() <span class="keyword">while</span> <span class="property">@any</span>(); <span class="literal">null</span> <span class="comment"># tricky, each die modifies list</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-77">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-77">&#182;</a>
+              </div>
+              <p>Return an agentset of agents within the patch array</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  inPatches: (patches) -&gt;
+    array = []
+    array.push p.agentsHere()... <span class="keyword">for</span> p <span class="keyword">in</span> patches <span class="comment"># concat measured slower</span>
+    <span class="keyword">if</span> <span class="property">@mainSet</span>? <span class="keyword">then</span> <span class="property">@in</span> array <span class="keyword">else</span> <span class="property">@asSet</span> array</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-78">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-78">&#182;</a>
+              </div>
+              <p>Return an agentset of agents within the patchRect</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  inRect: (a, dx, dy, meToo=<span class="literal">false</span>) -&gt;
+    rect = ABM.patches.patchRect a.p, dx, dy, <span class="literal">true</span>
+    rect = <span class="property">@inPatches</span> rect
+    u.removeItem rect, a <span class="keyword">if</span> <span class="keyword">not</span> meToo
+    rect</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-79">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-79">&#182;</a>
+              </div>
+              <p>Return the members of this agentset that are within radius distance
+from me, and within cone radians of my heading using patch topology</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  inCone: (a, heading, cone, radius, meToo=<span class="literal">false</span>) -&gt; <span class="comment"># heading? .. so p ok?</span>
+    as = <span class="property">@inRect</span> a, radius, radius, <span class="literal">true</span>
+    as.inCone a, heading, cone, radius, meToo</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-80">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-80">&#182;</a>
+              </div>
+              <p>Return the members of this agentset that are within radius distance
+from me, using patch topology</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  inRadius: (a, radius, meToo=<span class="literal">false</span>)-&gt;
+    as = <span class="property">@inRect</span> a, radius, radius, <span class="literal">true</span>
+    as.inRadius a, radius, meToo</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-81">
+            <div class="annotation">
+              
+              <div class="pilwrap for-h3">
+                <a class="pilcrow" href="#section-81">&#182;</a>
+              </div>
+              <h3>Link and Links</h3>
+<p>Class Link connects two agent endpoints for graph modeling.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="class"><span class="keyword">class</span> <span class="title">ABM</span>.<span class="title">Link</span></span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-82">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-82">&#182;</a>
+              </div>
+              <p>Constructor initializes instance variables:</p>
+<ul>
+<li>breed: the agentset this link belongs to</li>
+<li>end1, end2: two agents being connected</li>
+<li>color: defaults to light gray</li>
+<li>thickness: thickness in pixels of the link, default 2</li>
+<li>hidden: whether or not to draw this link</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  breed: <span class="literal">null</span> <span class="comment"># set by the agentSet owning this link</span>
+  color: [<span class="number">130</span>, <span class="number">130</span>, <span class="number">130</span>]
+  thickness: <span class="number">2</span>
+  hidden: <span class="literal">false</span>
+  constructor: (<span class="property">@end1</span>, <span class="property">@end2</span>) -&gt;
+    <span class="keyword">if</span> <span class="property">@end1</span>.links?
+      <span class="property">@end1</span>.links.push @
+      <span class="property">@end2</span>.links.push @</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-83">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-83">&#182;</a>
+              </div>
+              <p>Draw a line between the two endpoints.  Draws &quot;around&quot; the
+torus if appropriate using two lines. As with Agent.draw,
+is called with patch coordinate transform installed.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  draw: (ctx) -&gt;
+    ctx.save()
+    ctx.strokeStyle = u.colorStr <span class="property">@color</span>
+    ctx.lineWidth = ABM.patches.fromBits <span class="property">@thickness</span>
+    ctx.beginPath()
+    <span class="keyword">if</span> !ABM.patches.isTorus
+      ctx.moveTo <span class="property">@end1</span>.x, <span class="property">@end1</span>.y
+      ctx.lineTo <span class="property">@end2</span>.x, <span class="property">@end2</span>.y
+    <span class="keyword">else</span>
+      pt = <span class="property">@end1</span>.torusPt <span class="property">@end2</span>
+      ctx.moveTo <span class="property">@end1</span>.x, <span class="property">@end1</span>.y
+      ctx.lineTo pt...
+      <span class="keyword">if</span> pt[<span class="number">0</span>] <span class="keyword">isnt</span> <span class="property">@end2</span>.x <span class="keyword">or</span> pt[<span class="number">1</span>] <span class="keyword">isnt</span> <span class="property">@end2</span>.y
+        pt = <span class="property">@end2</span>.torusPt <span class="property">@end1</span>
+        ctx.moveTo <span class="property">@end2</span>.x, <span class="property">@end2</span>.y
+        ctx.lineTo pt...
+    ctx.closePath()
+    ctx.stroke()
+    ctx.restore()</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-84">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-84">&#182;</a>
+              </div>
+              <p>Remove this link from the agent set</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  die: -&gt;
+    <span class="property">@breed</span>.remove @
+    u.removeItem <span class="property">@end1</span>.links, @ <span class="keyword">if</span> <span class="property">@end1</span>.links?
+    u.removeItem <span class="property">@end2</span>.links, @ <span class="keyword">if</span> <span class="property">@end2</span>.links?
+    <span class="literal">null</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-85">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-85">&#182;</a>
+              </div>
+              <p>Return the two endpoints of this link</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  bothEnds: -&gt; [<span class="property">@end1</span>, <span class="property">@end2</span>]</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-86">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-86">&#182;</a>
+              </div>
+              <p>Return the distance between the endpoints with the current topology.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  length: -&gt; <span class="property">@end1</span>.distance <span class="property">@end2</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-87">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-87">&#182;</a>
+              </div>
+              <p>Return the other end of the link, given an endpoint agent.
+Assumes the given input <em>is</em> one of the link endpoint pairs!</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  otherEnd: (a) -&gt; <span class="keyword">if</span> <span class="property">@end1</span> <span class="keyword">is</span> a <span class="keyword">then</span> <span class="property">@end2</span> <span class="keyword">else</span> <span class="property">@end1</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-88">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-88">&#182;</a>
+              </div>
+              <p>Class Links is a subclass of AgentSet which stores instances of Link
+or subclasses of Link</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="class"><span class="keyword">class</span> <span class="title">ABM</span>.<span class="title">Links</span> <span class="keyword">extends</span> <span class="title">ABM</span>.<span class="title">AgentSet</span></span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-89">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-89">&#182;</a>
+              </div>
+              <p>Constructor: super creates the empty AgentSet instance and installs
+the agentClass (breed) variable shared by all the Links in this set.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  constructor: -&gt; <span class="comment"># agentClass, name, mainSet</span>
+    <span class="keyword">super</span> <span class="comment"># call super with all the args I was called with</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-90">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-90">&#182;</a>
+              </div>
+              <p>Methods to change the default Link class variables.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  setDefaultColor:     (color)      -&gt; <span class="property">@agentClass</span>::color = color
+  setDefaultThickness: (thickness)  -&gt; <span class="property">@agentClass</span>::thickness = thickness
+  setDefaultHidden:    (hidden)     -&gt; <span class="property">@agentClass</span>::hidden = hidden</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-91">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-91">&#182;</a>
+              </div>
+              <p>Factory: Add 1 or more links from the from agent to the to agent(s) which
+can be a single agent or an array of agents. The optional init
+proc is called on the new link after inserting in the agentSet.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  create: (from, to, <span class="function"><span class="title">init</span></span> = -&gt;) -&gt; <span class="comment"># returns list too</span>
+    to = [to] <span class="keyword">if</span> <span class="keyword">not</span> to.length?
+    ((o) -&gt; init(o); o) <span class="property">@add</span> <span class="keyword">new</span> <span class="property">@agentClass</span> from, a <span class="keyword">for</span> a <span class="keyword">in</span> to <span class="comment"># too tricky?</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-92">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-92">&#182;</a>
+              </div>
+              <p>Remove all links from set via link.die()
+Note call in reverse order to optimize list restructuring.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  clear: -&gt; <span class="property">@last</span>().die() <span class="keyword">while</span> <span class="property">@any</span>(); <span class="literal">null</span> <span class="comment"># tricky, each die modifies list</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-93">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-93">&#182;</a>
+              </div>
+              <p>Return the subset of this set with the given breed value.
+breed: (breed) -&gt; @getPropWith &quot;breed&quot;, breed</p>
+<p>Return all the nodes in this agentset, with duplicates
+included.  If 4 links have the same endpoint, it will
+appear 4 times.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  allEnds: -&gt; <span class="comment"># all link ends, w/ dups</span>
+    n = <span class="property">@asSet</span> []
+    n.push l.end1, l.end2 <span class="keyword">for</span> l <span class="keyword">in</span> @
+    n</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-94">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-94">&#182;</a>
+              </div>
+              <p>Returns all the nodes in this agentset sorted by ID and with
+duplicates removed.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  nodes: -&gt; <span class="comment"># allEnds without dups</span>
+    <span class="property">@allEnds</span>().sortById().uniq()</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-95">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-95">&#182;</a>
+              </div>
+              <p>Circle Layout: position the agents in the list in an equally
+spaced circle of the given radius, with the initial agent
+at the given start angle (default to pi/2 or &quot;up&quot;) and in the
++1 or -1 direction (counder clockwise or clockwise)
+defaulting to -1 (clockwise).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  layoutCircle: (list, radius, startAngle = Math.PI/<span class="number">2</span>, direction = -<span class="number">1</span>) -&gt;
+    dTheta = <span class="number">2</span>*Math.PI/list.length
+    <span class="keyword">for</span> a, i <span class="keyword">in</span> list
+      a.setXY <span class="number">0</span>, <span class="number">0</span>
+      a.heading = startAngle + direction*dTheta*i
+      a.forward radius
+    <span class="literal">null</span></pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

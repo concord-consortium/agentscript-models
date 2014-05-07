@@ -1,4 +1,4 @@
-body { font: 13px sans-serif; }
+body { font: 13px "Helvetica Neue", Helvetica, sans-serif; }
 #content {
   margin: 0em;
   padding: 0em; }
@@ -148,7 +148,7 @@ a.show-agents-key:active {
   text-decoration: underline;
 }
 
-.agents-key {
+.popup {
   width: 12em;
   position: absolute;
   border: none;
@@ -156,6 +156,32 @@ a.show-agents-key:active {
   /* need to be higher than div#mouse-catcher */
   z-index: 5;
   background-color: white;
+}
+
+.popup p {
+  font-size: 16px;
+}
+
+.show-about-text {
+  margin: 6px 0;
+  font-size: 13px;
+  text-align: right;
+}
+
+.show-about-text a {
+  color: #1d6dcf;
+}
+.show-about-text a:link {
+  text-decoration: none;
+}
+.show-about-text a:visited {
+  text-decoration: none;
+}
+.show-about-text a:hover {
+  text-decoration: underline;
+}
+.show-about-text a:active {
+  text-decoration: underline;
 }
 
 .icon-remove-sign {
