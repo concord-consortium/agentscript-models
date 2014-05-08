@@ -162,7 +162,7 @@ class ErosionEngine
       localSlope = @getLocalSlope p.x, p.y
       slopeContribution = Math.min(1, 2 * Math.abs localSlope)
 
-      vegetation = @getLocalVegetation p.x, p.y
+      vegetation = @getLocalVegetation p.x
       totalVegetationSize = 0
       totalVegetationSize += (if a.isBody then a.size/3 else if a.isRoot then a.size*2/3 else a.size) for a in vegetation
       vegetationContribution = @minErosionProbability + 0.8 * (1 - Math.min(1, totalVegetationSize / Math.max(@fullyProtectiveVegetationLevel, 0.01)))
@@ -274,16 +274,50 @@ class ErosionEngine
 
     slope = (rightHeight - leftHeight) / (rightEdge - leftEdge)
 
-  getLocalVegetation: (x, y) ->
-    [leftEdge, rightEdge, top, bottom] = @getBoxAroundPoint x, y, 5, 5
 
-    vegetation = []
+  # Returns all the vegetation agents (unsplit plants, roots, and bodies) with x-values between
+  # x-5 and x+5. Note that it makes specific assumptions about calling patterns:
+  #
+  #   We'll make a very specific assumption for efficient searching: we're always called in "sweeps"
+  #   of increasing x-order, so that when called with a smaller x value than the previous call, we
+  #   know we're starting a new sweep.
+  #   NOTE: agents must not be added between sweeps.
+  #
+  getLocalVegetation: do ->
 
-    for x in [leftEdge..rightEdge]
-      for y in [bottom..top]
-        vegetation.push.apply vegetation, @patches.patch(x,y).agents
+    # we'll search for vegetation within SEARCH_HALF_WIDTH of either side of x
+    SEARCH_HALF_WIDTH = 5
 
-    vegetation
+    # previous x value, used to identify new "sweeps"
+    lastX = null
+
+    # Agents sorted by increasing x coordinate. (The agents === the vegetation)
+    sortedAgents = null
+
+    # index (into sortedAgents) of the leftmost agent in the "search region"
+    lastIndex = null
+
+    (x) ->
+      if not lastX? or x < lastX
+        sortedAgents = (a for a in @agents).sort (a, b) -> a.x - b.x
+        lastIndex = 0
+
+      lastX = x
+
+      # Find the leftmost agent in the search window
+      length = sortedAgents.length
+      lastIndex++ while lastIndex < length and sortedAgents[lastIndex].x < x - SEARCH_HALF_WIDTH
+
+      return [] if lastIndex is length
+
+      # return array with all the vegetation between the left and right sides of the search window
+      vegetation = []
+      i = lastIndex
+      while i < length and sortedAgents[i].x < x + SEARCH_HALF_WIDTH
+        vegetation.push sortedAgents[i]
+        i++
+
+      vegetation
 
   resetErosionCounts: ->
     @zone1ErosionCount = 0
