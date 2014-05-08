@@ -555,7 +555,7 @@ ErosionEngine = (function() {
       p = this.surfaceLand[i];
       localSlope = this.getLocalSlope(p.x, p.y);
       slopeContribution = Math.min(1, 2 * Math.abs(localSlope));
-      vegetation = this.getLocalVegetation(p.x, p.y);
+      vegetation = this.getLocalVegetation(p.x);
       totalVegetationSize = 0;
       for (_j = 0, _len = vegetation.length; _j < _len; _j++) {
         a = vegetation[_j];
@@ -668,17 +668,46 @@ ErosionEngine = (function() {
     return slope = (rightHeight - leftHeight) / (rightEdge - leftEdge);
   };
 
-  ErosionEngine.prototype.getLocalVegetation = function(x, y) {
-    var bottom, leftEdge, rightEdge, top, vegetation, _i, _j, _ref;
-    _ref = this.getBoxAroundPoint(x, y, 5, 5), leftEdge = _ref[0], rightEdge = _ref[1], top = _ref[2], bottom = _ref[3];
-    vegetation = [];
-    for (x = _i = leftEdge; leftEdge <= rightEdge ? _i <= rightEdge : _i >= rightEdge; x = leftEdge <= rightEdge ? ++_i : --_i) {
-      for (y = _j = bottom; bottom <= top ? _j <= top : _j >= top; y = bottom <= top ? ++_j : --_j) {
-        vegetation.push.apply(vegetation, this.patches.patch(x, y).agents);
+  ErosionEngine.prototype.getLocalVegetation = (function() {
+    var SEARCH_HALF_WIDTH, lastIndex, lastX, sortedAgents;
+    SEARCH_HALF_WIDTH = 5;
+    lastX = null;
+    sortedAgents = null;
+    lastIndex = null;
+    return function(x) {
+      var a, i, length, vegetation;
+      if ((lastX == null) || x < lastX) {
+        sortedAgents = ((function() {
+          var _i, _len, _ref, _results;
+          _ref = this.agents;
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            a = _ref[_i];
+            _results.push(a);
+          }
+          return _results;
+        }).call(this)).sort(function(a, b) {
+          return a.x - b.x;
+        });
+        lastIndex = 0;
       }
-    }
-    return vegetation;
-  };
+      lastX = x;
+      length = sortedAgents.length;
+      while (lastIndex < length && sortedAgents[lastIndex].x < x - SEARCH_HALF_WIDTH) {
+        lastIndex++;
+      }
+      if (lastIndex === length) {
+        return [];
+      }
+      vegetation = [];
+      i = lastIndex;
+      while (i < length && sortedAgents[i].x < x + SEARCH_HALF_WIDTH) {
+        vegetation.push(sortedAgents[i]);
+        i++;
+      }
+      return vegetation;
+    };
+  })();
 
   ErosionEngine.prototype.resetErosionCounts = function() {
     this.zone1ErosionCount = 0;
@@ -1025,7 +1054,6 @@ PlantEngine = (function() {
         ctx.scale(-0.1, 0.1);
         ctx.translate(width, height);
         ctx.rotate(Math.PI);
-        ctx.globalAlpha = 0.3;
         return ctx.drawImage(image, 0, 0);
       };
     })(this));
@@ -1034,7 +1062,6 @@ PlantEngine = (function() {
         ctx.scale(-0.1, 0.1);
         ctx.translate(width, height);
         ctx.rotate(Math.PI);
-        ctx.globalAlpha = 0.3;
         return ctx.drawImage(image, 0, -height, width * 2, height * 2, 0, -height, width * 2, height * 2);
       };
     })(this));
@@ -1043,7 +1070,6 @@ PlantEngine = (function() {
         ctx.scale(-0.1, 0.1);
         ctx.translate(width, height);
         ctx.rotate(Math.PI);
-        ctx.globalAlpha = 0.3;
         return ctx.drawImage(image, 0, height, width * 2, height * 2, 0, height, width * 2, height * 2);
       };
     })(this));
@@ -1087,7 +1113,6 @@ PlantEngine = (function() {
       a = _ref[_i];
       zone = ((_ref1 = a.p) != null ? _ref1.x : void 0) <= 0 ? 0 : 1;
       if (!a.isRoot && !((_ref2 = this.plantData[a.type]) != null ? _ref2.annual : void 0) && a.type !== managementPlan[zone]) {
-        console.log("killing off:", a);
         killList.push(a);
       }
     }
@@ -1142,7 +1167,6 @@ PlantEngine = (function() {
         for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
           a = _ref1[_i];
           if (this.isAgentAPlantInZone(a, zone) && u.randomFloat(1) < this.plantData[plantType].mortalityInPoorWater) {
-            console.log("killing off (poor water):", a);
             killList.push(a);
           }
         }
@@ -1197,7 +1221,6 @@ PlantEngine = (function() {
     } else if (!inRows) {
       _results1 = [];
       for (i = _j = actualPopulation; actualPopulation <= desiredPopulation ? _j < desiredPopulation : _j > desiredPopulation; i = actualPopulation <= desiredPopulation ? ++_j : --_j) {
-        console.log("planting");
         _results1.push(plantAt(sign * u.randomInt(zoneWidth)));
       }
       return _results1;
