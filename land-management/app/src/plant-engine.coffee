@@ -74,7 +74,6 @@ class PlantEngine
     for a in @agents
       zone = if a.p?.x <= 0 then 0 else 1
       if not a.isRoot and not @plantData[a.type]?.annual and a.type isnt managementPlan[zone]
-        console.log "killing off:", a
         killList.push a
 
     a.die() for a in killList
@@ -108,7 +107,6 @@ class PlantEngine
         # need to kill off some plants
         for a in @agents
           if @isAgentAPlantInZone(a, zone) and u.randomFloat(1) < @plantData[plantType].mortalityInPoorWater
-            console.log "killing off (poor water):", a
             killList.push(a)
 
     for a in killList
@@ -149,7 +147,6 @@ class PlantEngine
         plantAt sign * Math.floor (i + 1) * zoneWidth / (desiredPopulation+1)
     else if not inRows
       for i in [actualPopulation...desiredPopulation]
-        console.log "planting"
         plantAt sign * u.randomInt zoneWidth
 
   plantPlants: ->
