@@ -2,21 +2,9 @@
 <html>
   <head>
     <title>Air Pollution Model</title>
-    <link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
-    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-    <script src="http://lab.concord.org/vendor/d3/d3.js"></script>
-    <script src="../lib/lab.grapher.js"></script>
-    <script src="../lib/agentscript/agentscript.js"></script>
-    <script src="../lib/agentscript/coffee-script.js"></script>
-
-    <link href="css/air-pollution.css" rel="stylesheet" type="text/css" />
-    <link href="css/graph.css" rel="stylesheet" type="text/css" />
-    <script src="js/air-pollution-model.coffee" type="text/coffeescript"></script>
-    <script src="js/air-pollution-controls.coffee" type="text/coffeescript"></script>
-    <script src="http://shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
-    <script type="text/javascript">new Shutterbug('body', '', null, null);</script>
+    <link href="stylesheets/app.css" rel="stylesheet" type="text/css" />
+    <link href="bower_assets/smoothness/jquery-ui.min.css" rel="stylesheet" type="text/css" />
+    <link href="bower_assets/fontawesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
   </head>
   <body>
     <div id="sprites">
@@ -133,23 +121,19 @@
     <div id='output-graphs'>
       <div id='pollution-graph' class="graph"></div>
     </div>
+
+    <script src="javascripts/vendor.js"></script>
+    <script src="javascripts/app.js"></script>
+    <script src="http://shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
+
     <script>
-      var modelReady = false, controls = null;
-      $(document).one('air-pollution-model-loaded', function() {
-        APP=new AirPollutionModel("layers", 1, 0, 572, 0, 349, true);
-      });
-      $(document).on('model-ready', function() {
-        if (controls !== null) {
-          controls.setup();
-        }
-        modelReady = true;
-      });
-      $(document).one('air-pollution-controls-loaded', function() {
-        controls = new AirPollutionControls();
-        if (modelReady) {
-          controls.setup();
-        }
-      });
+      require('src/main');
+
+      var APP=new AirPollutionModel("layers", 1, 0, 572, 0, 349, true);
+      var controls = new AirPollutionControls();
+      controls.setup();
+
+      new Shutterbug('body', '', null, null);
     </script>
   </body>
 </html>

@@ -1,0 +1,286 @@
+body {
+  font-family: "Helvetica Neue", Helvetica, sans-serif;
+}
+
+#sprites {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: none;
+}
+
+#model-viewport {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 820px;
+  height: 355px;
+  overflow: auto;
+}
+
+#model {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 572px;
+  height: 349px;
+}
+
+#mouse-catcher {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+}
+
+#controls {
+  display: none;
+  position: absolute;
+  top: 360px;
+  left: 5px;
+}
+
+#playback {
+  vertical-align: top;
+  display: block;
+}
+
+.button-set {
+  display: inline-block;
+  margin-left: 20px;
+  vertical-align: middle;
+}
+
+.button-label-left {
+  display: inline-block;
+  margin-right: 10px;
+  position: relative;
+  top: -3px;
+  font-size: 1em;
+  min-width: 120px;
+}
+
+.wide-labels .button-label-left {
+  min-width: 160px;
+}
+
+.button-label-top {
+  margin-bottom: -5px;
+  position: relative;
+  width: 385px;
+  height: 1em;
+  font-size: 0.7em;
+}
+
+.wide-labels .button-label-top {
+  width: 425px;
+}
+
+.top-labels .button-title-top {
+  position: relative;
+  height: 1em;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.top-labels div {
+  left: 50px;
+}
+
+.top-labels .button-label-top {
+  left: -82px;
+}
+
+#wind-top-labels {
+  font-size: 1.5em;
+}
+
+#wind-top-labels .center {
+  font-size: 0.5em;
+  top: 5px;
+}
+
+#controls i {
+  color: #939598;
+  font-size: 1.25em;
+  vertical-align: middle;
+}
+
+#reset-button {
+  border-bottom-left-radius: 0.7em;
+}
+
+#play-pause-button {
+  min-width: 3.2em;
+  border-bottom-right-radius: 0.7em;
+}
+
+.horizontal-slider {
+  width: 250px;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.button-label-top .center {
+  position: absolute;
+  left: 248px;
+}
+
+.wide-labels .button-label-top .center {
+  left: 288px;
+}
+
+.button-label-top .left {
+  position: absolute;
+  left: 135px;
+}
+
+.wide-labels .button-label-top .left {
+  position: absolute;
+  left: 175px;
+}
+
+.button-label-top .right {
+  position: absolute;
+  right: 0px;
+}
+
+.raw-label {
+  width: 80px;
+  display: inline-block;
+}
+
+.raw-number {
+  width: 50px;
+  text-align: right;
+  display: inline-block;
+}
+
+#air-temperature {
+  position: absolute;
+  left: 587px;
+  top: 5px;
+}
+
+#lower-air-temperature {
+  position: relative;
+  background: rgb(242,46,49);
+  width: 27px;
+  height: 184px;
+  margin-left: auto;
+  margin-right: auto;
+  top: -184px;
+}
+
+#air-temperature p {
+  position: relative;
+  top: -186px;
+  width: 44px;
+  margin-top: 5px;
+  text-align: center;
+}
+
+#temperature-scale {
+  width: 27px;
+  height: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  background: rgb(50,181,252);
+  background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzMyYjVmYyIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjQyJSIgc3RvcC1jb2xvcj0iI2YyMmUzMSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjU2JSIgc3RvcC1jb2xvcj0iIzIwN2NjYSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM3ZGI5ZTgiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+  background: -moz-linear-gradient(top,  rgb(50,181,252) 0%, rgb(242,46,49) 42%, rgb(32,124,202) 56%, rgb(125,185,232) 100%);
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgb(50,181,252)), color-stop(42%,rgb(242,46,49)), color-stop(56%,rgb(32,124,202)), color-stop(100%,rgb(125,185,232)));
+  background: -webkit-linear-gradient(top,  rgb(50,181,252) 0%,rgb(242,46,49) 42%,rgb(32,124,202) 56%,rgb(125,185,232) 100%);
+  background: -o-linear-gradient(top,  rgb(50,181,252) 0%,rgb(242,46,49) 42%,rgb(32,124,202) 56%,rgb(125,185,232) 100%);
+  background: -ms-linear-gradient(top,  rgb(50,181,252) 0%,rgb(242,46,49) 42%,rgb(32,124,202) 56%,rgb(125,185,232) 100%);
+  background: linear-gradient(to bottom,  rgb(50,181,252) 0%,rgb(242,46,49) 42%,rgb(32,124,202) 56%,rgb(125,185,232) 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#32b5fc', endColorstr='#7db9e8',GradientType=0 );
+
+}
+#output-graphs {
+  position: absolute;
+  top: 6px;
+  left: 598px;
+  width: 346px;
+  height: 380px;
+  overflow: auto;
+}
+
+#output-graphs.pushed-right {
+  left: 637px;
+  width: 309px;
+}
+
+div.graph {
+   background-color: #ddf2ff;
+   border-radius: 0.25em;
+   width: 345px;
+   height: 350px;
+   margin-bottom: 10px;
+}
+
+#output-graphs.pushed-right .graph {
+  width: 308px;
+}
+
+.graph {
+  position: relative;
+  background: rgba(255, 255, 255, 0); }
+  .graph:focus {
+    outline: #76d2b8 solid 0.2em; }
+  .graph div.background {
+    position: absolute;
+    background-repeat: repeat-x;
+    background-position: left top;
+    background-size: contain;
+  }
+  .graph div.button-layer {
+    position: absolute;
+    text-align: right; }
+    .graph div.button-layer a {
+      opacity: 0.3;
+      color: black;
+      font-size: 120%; }
+    .graph div.button-layer a:hover {
+      opacity: 1; }
+  .graph canvas.overlay {
+    position: absolute;
+    background: rgba(0, 255, 0, 0.05); }
+
+svg.graph:focus {
+  outline: #76d2b8 solid 0.2em; }
+svg.graph text.title {
+  font-size: 0.9em; }
+svg.graph text.ylabel {
+  font-size: 0.8em; }
+svg.graph text.xlabel {
+  font-size: 0.8em; }
+svg.graph text.axis {
+  font-size: 0.8em; }
+  svg.graph text.axis:focus {
+    outline: #76d2b8 solid 0.2em; }
+svg.graph rect.draggable-axis {
+  fill: rgba(255, 255, 255, 0); }
+  svg.graph rect.draggable-axis:hover {
+    fill: rgba(196, 196, 196, 0.2); }
+
+circle, .line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px; }
+circle {
+  fill: white;
+  fill-opacity: 0.2;
+  cursor: move; }
+  circle.selected {
+    fill: #ff7f0e;
+    stroke: #ff7f0e; }
+  circle:hover {
+    fill: #ff7f0e;
+    stroke: #707f0e; }
+  circle.selected:hover {
+    fill: #ff7f0e;
+    stroke: #ff7f0e; }
+
+/*# sourceMappingURL=app.css.map*/
