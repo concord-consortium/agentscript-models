@@ -33,9 +33,9 @@ With the exception of the Land Management model, most models can be viewed by si
 
 Alternately, you can use the Ruby Rackup server in `local-server/` but this requires installing gems and is hardly necessary.
 
-## Building the Land Management model
+## Building Land Management and Air Pollution Models with Brunch
 
-To view the Land Management model, you first need to build it using [Brunch](http://brunch.io/). First. `cd` to `land-management/` and run `brunch build`, then serve files from the directory `land-management/public`. You can use `brunch watch` in the Land Management directory to rerun the build step automatically whenever changes are made to the source files. You may want to ignore the `land-management/public` directory in your text editor so that you don't inadvertently edit built files instead of source files.
+To view any of the individual Land Management or Air Pollution models, you first need to build the model using [Brunch](http://brunch.io/). First. `cd` to the root directory for the specific model type -- `land-management/` or `air-pollution/` -- and run `brunch build`, then serve files from the `public` directory _under_ the root directory for the specific model type -- _e.g._, `land-management/public/`. You can use `brunch watch` when in the root directory for the specific model to rerun the build step automatically whenever changes are made to the source files. You may want to ignore the public directories in your text editor so that you don't inadvertently edit built files instead of source files.
 
 ## Deploying
 
@@ -56,7 +56,7 @@ $ git remote add dev git@github.com:concord-consortium/agentscript-models-dev.gi
 $ git fetch dev
 $ git checkout -b dev-gh-pages --track dev/gh-pages
 ```
-* When you want to update gh-pages, run this script in the root of the repository (not in the `public` directory made in 
+* When you want to update gh-pages, run this script in the root of the repository (not in the `public` directory made in
 the previous step):
 ```
 $ ./update-public.sh
