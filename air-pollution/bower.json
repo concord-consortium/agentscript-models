@@ -1,0 +1,29 @@
+{
+  "name": "air-pollution",
+  "version": "0.1.0",
+  "homepage": "",
+  "authors": [
+    ""
+  ],
+  "description": "Air Pollution model",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "1.x",
+    "jqueryui": "~1.10.4",
+    "d3": "3.x",
+    "fontawesome": "3.x"
+  },
+  "overrides": {
+    "fontawesome": {
+      "main": []
+    }
+  }
+}
