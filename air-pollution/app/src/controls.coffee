@@ -212,4 +212,3 @@ class AirPollutionControls
     , 10
 
 window.AirPollutionControls = AirPollutionControls
-$(document).trigger 'air-pollution-controls-loaded'

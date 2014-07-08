@@ -458,4 +458,3 @@ class AirPollutionModel extends ABM.Model
     return if @windSpeed < 0 then Math.floor(speed) else Math.ceil(speed)
 
 window.AirPollutionModel = AirPollutionModel
-$(document).trigger 'air-pollution-model-loaded'
