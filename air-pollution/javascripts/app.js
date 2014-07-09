@@ -793,14 +793,19 @@ AirPollutionModel = (function(_super) {
   AirPollutionModel.prototype._movePollutionAgent = function(a) {
     var speed, trapProb, u, _ref, _ref1;
     u = ABM.util;
-    a.baseHeading += u.randomCentered(Math.PI / 9);
-    a.heading = (a.heading + a.baseHeading) / 2;
+    a.heading += u.randomCentered(Math.PI / 9);
+    if (a.heading > Math.PI) {
+      a.heading -= 2 * Math.PI;
+    }
+    if (a.heading < -Math.PI) {
+      a.heading += 2 * Math.PI;
+    }
     if (this.includeInversionLayer) {
       if (((this.inversionY - 10) < (_ref = a.p.y) && _ref <= this.inversionY)) {
         if ((0 < (_ref1 = a.heading) && _ref1 < Math.PI)) {
           trapProb = this.inversionStrength - (this.inversionY - a.p.y) * (this.inversionStrength / 10);
           if (Math.random() < trapProb) {
-            a.heading += Math.PI;
+            a.heading -= Math.PI;
           }
         }
       }
@@ -811,30 +816,25 @@ AirPollutionModel = (function(_super) {
       return true;
     }
     if (this.windSpeed < 0) {
-      a.heading = this.LEFT;
-      speed = Math.abs(this.windSpeed / 100);
-    } else if (a.x < this.mountainsX && this.windSpeed > 0) {
-      a.heading = this.RIGHT;
-      speed = Math.abs(this.windSpeed / 100);
+      a.setXY(a.x - Math.abs(this.windSpeed / 100), a.y);
+    } else if (this.windSpeed > 0) {
+      a.setXY(a.x + Math.abs(this.windSpeed / 100), a.y);
     }
-    a.forward(speed);
     if (this._shouldRemovePollution(a)) {
       return true;
     }
     if (!this.includeInversionLayer) {
-      a.heading = this.UP;
-      speed = Math.pow(2, (this.temperature - 130) / 20);
-      a.forward(speed);
-      this._resetBaseHeading(a);
+      a.setXY(a.x, a.y + Math.pow(2, (this.temperature - 130) / 20));
+      this._resetHeading(a);
     }
     return false;
   };
 
-  AirPollutionModel.prototype._resetBaseHeading = function(a) {
+  AirPollutionModel.prototype._resetHeading = function(a) {
     if (a.y <= 20) {
-      return a.baseHeading = u.randomFloat2(Math.PI / 4, Math.PI * 3 / 4);
+      return a.heading = u.randomFloat2(Math.PI / 4, Math.PI * 3 / 4);
     } else if (a.y >= 340) {
-      return a.baseHeading = u.randomFloat2(-Math.PI / 4, -Math.PI * 3 / 4);
+      return a.heading = u.randomFloat2(-Math.PI / 4, -Math.PI * 3 / 4);
     }
   };
 
@@ -946,11 +946,11 @@ AirPollutionModel = (function(_super) {
       if ((a != null) && a.breed === this.primary) {
         if (u.randomInt(4) === 0) {
           p.sprout(1, this.secondary, function(_a) {
-            return _a.baseHeading = Math.PI / 2;
+            return _a.heading = Math.PI / 2;
           });
         } else {
           newA = a.changeBreed(this.secondary)[0];
-          newA.baseHeading = a.baseHeading;
+          newA.heading = a.heading;
         }
         converted = true;
       }
@@ -1021,7 +1021,6 @@ AirPollutionModel = (function(_super) {
           this.primary.create(1, (function(_this) {
             return function(p) {
               var x;
-              p.baseHeading = p.heading;
               x = c.heading === 0 ? c.x - 37 : c.x + 37;
               return p.moveTo(_this.patches.patchXY(x, c.y - 10));
             };
@@ -1038,7 +1037,6 @@ AirPollutionModel = (function(_super) {
           _results.push(this.primary.create(1, (function(_this) {
             return function(p) {
               var offset;
-              p.baseHeading = p.heading;
               offset = _this.FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(_this.FACTORY_POLLUTION_SPAWN_OFFSETS.length)];
               return p.moveTo(_this.patches.patchXY(f.x + Math.round(offset.x * f.size), f.y + Math.round(offset.y * f.size)));
             };
