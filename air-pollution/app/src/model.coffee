@@ -287,6 +287,12 @@ class AirPollutionModel extends ABM.Model
     # First, do a basic movement based on a randomly drifting base heading,
     # with speed determined by the turbulence of the model.
     a.baseHeading += u.randomCentered(Math.PI/9)
+
+    # since we're about to divide baseHeading by 2, we need to be sure it's in the range
+    # [-pi, pi]
+    a.baseHeading -= (2 * Math.PI) if a.baseHeading > Math.PI
+    a.baseHeading += (2 * Math.PI) if a.baseHeading < -Math.PI
+
     a.heading = (a.heading + a.baseHeading)/2
     if @includeInversionLayer
       if (@inversionY-10) < a.p.y <= @inversionY
@@ -302,20 +308,18 @@ class AirPollutionModel extends ABM.Model
     # Now move horizontally based on wind speed
     if @windSpeed < 0
       a.heading = @LEFT
-      speed = Math.abs(@windSpeed / 100)
-    else if a.x < @mountainsX and @windSpeed > 0
+      a.forward Math.abs(@windSpeed / 100)
+    else if @windSpeed > 0
       a.heading = @RIGHT
-      speed = Math.abs(@windSpeed / 100)
-    a.forward speed
+      a.forward Math.abs(@windSpeed / 100)
+
     return true if @_shouldRemovePollution a
 
     # Now move vertically based on temperature. The higher the temp, the more upward motion.
     if not @includeInversionLayer
-      a.heading = @UP
-      speed = Math.pow(2, (@temperature-130)/20)
-      a.forward speed
-
+      a.setXY a.x, a.y + Math.pow(2, (@temperature-130)/20)
       @_resetBaseHeading a
+
     return false
 
   _resetBaseHeading: (a)->
