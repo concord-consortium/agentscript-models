@@ -285,21 +285,17 @@ class AirPollutionModel extends ABM.Model
     u = ABM.util
 
     # First, do a basic movement based on a randomly drifting base heading,
-    # with speed determined by the turbulence of the model.
-    a.baseHeading += u.randomCentered(Math.PI/9)
+    # with speed determined by the turbulence of the model. Keep a.heading in range [-pi, pi]
+    a.heading += u.randomCentered(Math.PI/9)
+    a.heading -= (2 * Math.PI) if a.heading > Math.PI
+    a.heading += (2 * Math.PI) if a.heading < -Math.PI
 
-    # since we're about to divide baseHeading by 2, we need to be sure it's in the range
-    # [-pi, pi]
-    a.baseHeading -= (2 * Math.PI) if a.baseHeading > Math.PI
-    a.baseHeading += (2 * Math.PI) if a.baseHeading < -Math.PI
-
-    a.heading = (a.heading + a.baseHeading)/2
     if @includeInversionLayer
       if (@inversionY-10) < a.p.y <= @inversionY
         if 0 < a.heading < Math.PI
           trapProb = @inversionStrength - (@inversionY - a.p.y) * (@inversionStrength/10)
           if Math.random() < trapProb
-            a.heading += Math.PI
+            a.heading -= Math.PI
 
     speed = (@temperature+1)/250 # TODO Base this on some turbulence factor!
     a.forward speed
@@ -307,26 +303,24 @@ class AirPollutionModel extends ABM.Model
 
     # Now move horizontally based on wind speed
     if @windSpeed < 0
-      a.heading = @LEFT
-      a.forward Math.abs(@windSpeed / 100)
+      a.setXY a.x - Math.abs(@windSpeed / 100), a.y
     else if @windSpeed > 0
-      a.heading = @RIGHT
-      a.forward Math.abs(@windSpeed / 100)
+      a.setXY a.x + Math.abs(@windSpeed / 100), a.y
 
     return true if @_shouldRemovePollution a
 
     # Now move vertically based on temperature. The higher the temp, the more upward motion.
     if not @includeInversionLayer
       a.setXY a.x, a.y + Math.pow(2, (@temperature-130)/20)
-      @_resetBaseHeading a
+      @_resetHeading a
 
     return false
 
-  _resetBaseHeading: (a)->
+  _resetHeading: (a)->
     if a.y <= 20
-      a.baseHeading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
+      a.heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
     else if a.y >= 340
-      a.baseHeading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
+      a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
 
   _shouldRemovePollution: (a)->
     return (a.x < @world.minX + 1 or a.x > @world.maxX - 1 or a.y < @world.minY + 1 or a.y > @world.maxX - 1)
@@ -385,10 +379,10 @@ class AirPollutionModel extends ABM.Model
       if a? and a.breed is @primary
         if u.randomInt(4) is 0             # 25% of the time generate a new secondary
           p.sprout 1, @secondary, (_a)->
-            _a.baseHeading = Math.PI/2
+            _a.heading = Math.PI/2
         else                              # else simply convert to secondary
           newA = a.changeBreed(@secondary)[0]
-          newA.baseHeading = a.baseHeading
+          newA.heading = a.heading
         converted = true
     return converted
 
@@ -429,7 +423,6 @@ class AirPollutionModel extends ABM.Model
       if c? and !c.hidden
         if ABM.util.randomInt(3000) < @carPollutionRate and ABM.util.randomInt(100) > @electricCarPercentage
             @primary.create 1, (p)=>
-              p.baseHeading = p.heading
               x = if c.heading is 0 then c.x-37 else c.x+37
               p.moveTo @patches.patchXY x, c.y-10
 
@@ -437,7 +430,6 @@ class AirPollutionModel extends ABM.Model
       if f? and !f.hidden
         if ABM.util.randomInt(2500) < @factoryPollutionRate
           @primary.create 1, (p)=>
-            p.baseHeading = p.heading
             offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(@FACTORY_POLLUTION_SPAWN_OFFSETS.length)]
             p.moveTo @patches.patchXY f.x + Math.round(offset.x * f.size), f.y + Math.round(offset.y * f.size)
 
