@@ -114,8 +114,6 @@ class AirPollutionModel extends ABM.Model
     @draw()
     @refreshPatches = false
 
-    $(document).trigger 'model-ready'
-
   reset: ->
     super
     @setup()
