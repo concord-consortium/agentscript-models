@@ -2,4 +2,4 @@ deploy
 node_modules/
 .DS_Store
 **/.DS_Store
-land-management/bower_assets
+*/bower_assets/**/*.html
