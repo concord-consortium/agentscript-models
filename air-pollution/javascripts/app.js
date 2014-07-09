@@ -473,7 +473,6 @@ AirPollutionModel = (function(_super) {
     this.setLabelParams({
       name: "drawing"
     }, [255, 255, 255], [0, -20]);
-    this.patches.importColors("img/air-pollution-bg-mask.png");
     this.patches.importDrawing("img/air-pollution-bg.png");
     this.setCacheAgentsHere();
     carImg = document.getElementById('car-sprite');
@@ -551,8 +550,7 @@ AirPollutionModel = (function(_super) {
     this.nextRainEnd = 0;
     this.raining = false;
     this.draw();
-    this.refreshPatches = false;
-    return $(document).trigger('model-ready');
+    return this.refreshPatches = false;
   };
 
   AirPollutionModel.prototype.reset = function() {

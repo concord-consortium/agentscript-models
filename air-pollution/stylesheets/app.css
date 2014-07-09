@@ -201,10 +201,10 @@ body {
 #output-graphs {
   position: absolute;
   top: 6px;
-  left: 598px;
-  width: 346px;
+  left: 610px;
+  width: 334px;
   height: 380px;
-  overflow: auto;
+  overflow: none;
 }
 
 #output-graphs.pushed-right {
