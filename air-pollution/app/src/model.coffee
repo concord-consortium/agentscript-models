@@ -61,6 +61,7 @@ class AirPollutionModel extends ABM.Model
     @setTextParams {name: "drawing"}, "10px sans-serif"
     @setLabelParams {name: "drawing"}, [255,255,255], [0,-20]
 
+    @patches.importColors "img/air-pollution-bg-mask.png"
     @patches.importDrawing "img/air-pollution-bg.png"
 
     @setCacheAgentsHere()
@@ -301,11 +302,9 @@ class AirPollutionModel extends ABM.Model
     a.forward speed
     return true if @_shouldRemovePollution a
 
-    # Now move horizontally based on wind speed
-    if @windSpeed < 0
-      a.setXY a.x - Math.abs(@windSpeed / 100), a.y
-    else if @windSpeed > 0
-      a.setXY a.x + Math.abs(@windSpeed / 100), a.y
+    # Now move horizontally based on wind speed, which can be reduced by the mask
+    distance = (@windSpeed / 100) * (a.p.color[0] / 255)
+    a.setXY a.x + distance, a.y
 
     return true if @_shouldRemovePollution a
 
