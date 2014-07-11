@@ -816,7 +816,7 @@ AirPollutionModel = (function(_super) {
     if (this._shouldRemovePollution(a)) {
       return true;
     }
-    distance = (this.windSpeed / 100) * (a.p.color[0] / 255);
+    distance = (this.windSpeed / 100) * Math.pow(a.p.color[0] / 255, 4);
     a.setXY(a.x + distance, a.y);
     if (this._shouldRemovePollution(a)) {
       return true;
