@@ -303,7 +303,7 @@ class AirPollutionModel extends ABM.Model
     return true if @_shouldRemovePollution a
 
     # Now move horizontally based on wind speed, which can be reduced by the mask
-    distance = (@windSpeed / 100) * (a.p.color[0] / 255)
+    distance = (@windSpeed / 100) * Math.pow(a.p.color[0] / 255, 4)
     a.setXY a.x + distance, a.y
 
     return true if @_shouldRemovePollution a
