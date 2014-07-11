@@ -473,6 +473,7 @@ AirPollutionModel = (function(_super) {
     this.setLabelParams({
       name: "drawing"
     }, [255, 255, 255], [0, -20]);
+    this.patches.importColors("img/air-pollution-bg-mask.png");
     this.patches.importDrawing("img/air-pollution-bg.png");
     this.setCacheAgentsHere();
     carImg = document.getElementById('car-sprite');
@@ -791,7 +792,7 @@ AirPollutionModel = (function(_super) {
   };
 
   AirPollutionModel.prototype._movePollutionAgent = function(a) {
-    var speed, trapProb, u, _ref, _ref1;
+    var distance, speed, trapProb, u, _ref, _ref1;
     u = ABM.util;
     a.heading += u.randomCentered(Math.PI / 9);
     if (a.heading > Math.PI) {
@@ -815,11 +816,8 @@ AirPollutionModel = (function(_super) {
     if (this._shouldRemovePollution(a)) {
       return true;
     }
-    if (this.windSpeed < 0) {
-      a.setXY(a.x - Math.abs(this.windSpeed / 100), a.y);
-    } else if (this.windSpeed > 0) {
-      a.setXY(a.x + Math.abs(this.windSpeed / 100), a.y);
-    }
+    distance = (this.windSpeed / 100) * (a.p.color[0] / 255);
+    a.setXY(a.x + distance, a.y);
     if (this._shouldRemovePollution(a)) {
       return true;
     }
