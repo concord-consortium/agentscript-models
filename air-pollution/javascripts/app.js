@@ -113,10 +113,53 @@ AirPollutionControls = (function() {
   AirPollutionControls.prototype.pollutionGraph = null;
 
   AirPollutionControls.prototype.setupGraph = function() {
-    var defaultOptions;
+    var appendKeyToGraph, defaultOptions, drawKey, labelInfo;
     if ($("#output-graphs").length === 0) {
       return;
     }
+    appendKeyToGraph = function(graphId, top, labelInfo) {
+      var $graph;
+      $graph = $("#" + graphId);
+      $graph.append('<a href="#" class="show-key">show key</a>');
+      return $graph.find('.show-key').click(function() {
+        var $key, canvas;
+        if (!($("#" + graphId + "-key").length > 0)) {
+          $key = $("<div id=\"" + graphId + "-key\" class=\"key\"><a class=\"icon-remove-sign icon-large\"></a><canvas></canvas></div>").appendTo($(document.body)).draggable();
+          canvas = $key.find('canvas')[0];
+          $key.height(18 * (labelInfo.length + 1));
+          canvas.height = $key.outerHeight();
+          canvas.width = $key.outerWidth();
+          drawKey($key.find('canvas')[0], labelInfo);
+        }
+        $key = $("#" + graphId + "-key");
+        return $key.css({
+          left: '370px',
+          top: "" + top + "px"
+        }).show().on('click', 'a', function() {
+          return $(this).parent().hide();
+        });
+      });
+    };
+    drawKey = function(canvas, labelInfo) {
+      var ctx, label, y, _i, _len, _results;
+      y = 0.5 * (canvas.height - 20 * (labelInfo.length - 1));
+      ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'black';
+      ctx.font = '12px "Helvetica Neue", Helvetica, sans-serif';
+      ctx.lineWidth = 2;
+      _results = [];
+      for (_i = 0, _len = labelInfo.length; _i < _len; _i++) {
+        label = labelInfo[_i];
+        ctx.strokeStyle = "rgb(" + (label.color.join(',')) + ")";
+        ctx.beginPath();
+        ctx.moveTo(10, y);
+        ctx.lineTo(60, y);
+        ctx.stroke();
+        ctx.fillText(label.label, 70, y + 3);
+        _results.push(y += 20);
+      }
+      return _results;
+    };
     ABM.model.graphSampleInterval = 10;
     defaultOptions = {
       title: "Primary (brown), Secondary (orange) Pollutants",
@@ -133,9 +176,19 @@ AirPollutionControls = (function() {
       sample: 10,
       realTime: true,
       fontScaleRelativeToParent: true,
-      dataColors: [[102, 73, 53], [244, 121, 33]]
+      dataColors: [AirPollutionModel.pollutantColors.primary, AirPollutionModel.pollutantColors.secondary]
     };
     this.pollutionGraph = LabGrapher('#pollution-graph', defaultOptions);
+    labelInfo = [
+      {
+        color: AirPollutionModel.pollutantColors.primary,
+        label: "Primary Pollutants"
+      }, {
+        color: AirPollutionModel.pollutantColors.secondary,
+        label: "Secondary Pollutants"
+      }
+    ];
+    appendKeyToGraph('pollution-graph', 20, labelInfo);
     this.pollutionGraph.addSamples([[0], [0]]);
     $(".draggable-axis[x=24]").css("cursor", "default").attr("pointer-events", "none");
     $(".y text").css("cursor", "default");
@@ -361,6 +414,11 @@ AirPollutionModel = (function(_super) {
   __extends(AirPollutionModel, _super);
 
   AirPollutionModel.GRAPH_INTERVAL_ELAPSED = 'graph-interval-lapsed';
+
+  AirPollutionModel.pollutantColors = {
+    primary: [102, 73, 53],
+    secondary: [244, 121, 33]
+  };
 
   AirPollutionModel.prototype.LEFT = ABM.util.degToRad(180);
 
@@ -634,12 +692,12 @@ AirPollutionModel = (function(_super) {
     this.primary.setDefaultSize(3);
     this.primary.setDefaultHeading(this.UP);
     this.primary.setDefaultShape("circle");
-    this.primary.setDefaultColor([102, 73, 53]);
+    this.primary.setDefaultColor(AirPollutionModel.pollutantColors.primary);
     this.primary.setDefaultHidden(false);
     this.secondary.setDefaultSize(3);
     this.secondary.setDefaultHeading(this.UP);
     this.secondary.setDefaultShape("circle");
-    this.secondary.setDefaultColor([244, 121, 33]);
+    this.secondary.setDefaultColor(AirPollutionModel.pollutantColors.secondary);
     return this.secondary.setDefaultHidden(false);
   };
 
