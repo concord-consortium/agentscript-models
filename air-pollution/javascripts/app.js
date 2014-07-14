@@ -119,7 +119,7 @@ AirPollutionControls = (function() {
     }
     ABM.model.graphSampleInterval = 10;
     defaultOptions = {
-      title: "Primary (red), Secondary (black) Pollutants",
+      title: "Primary (brown), Secondary (orange) Pollutants",
       xlabel: "Time (ticks)",
       ylabel: "AQI",
       xmax: 2100,
@@ -128,14 +128,15 @@ AirPollutionControls = (function() {
       ymin: 0,
       xTickCount: 7,
       yTickCount: 10,
-      xFormatter: "3.3r",
+      xFormatter: "0f",
+      yFormatter: "0f",
       sample: 10,
       realTime: true,
       fontScaleRelativeToParent: true,
-      dataColors: [[160, 0, 0], [44, 160, 0], [44, 0, 160], [0, 0, 0], [255, 127, 0], [255, 0, 255]]
+      dataColors: [[102, 73, 53], [244, 121, 33]]
     };
     this.pollutionGraph = LabGrapher('#pollution-graph', defaultOptions);
-    this.pollutionGraph.addSamples([[0], [0], [0], [0]]);
+    this.pollutionGraph.addSamples([[0], [0]]);
     $(".draggable-axis[x=24]").css("cursor", "default").attr("pointer-events", "none");
     $(".y text").css("cursor", "default");
     return $(document).on(AirPollutionModel.GRAPH_INTERVAL_ELAPSED, (function(_this) {
@@ -143,7 +144,7 @@ AirPollutionControls = (function() {
         var p, s;
         p = ABM.model.primaryAQI();
         s = ABM.model.secondaryAQI();
-        _this.pollutionGraph.addSamples([[p], [0], [0], [s]]);
+        _this.pollutionGraph.addSamples([[p], [s]]);
         $("#raw-primary").text(ABM.model.primary.length);
         $("#raw-secondary").text(ABM.model.secondary.length);
         $("#aqi-primary").text(p);
@@ -633,12 +634,12 @@ AirPollutionModel = (function(_super) {
     this.primary.setDefaultSize(3);
     this.primary.setDefaultHeading(this.UP);
     this.primary.setDefaultShape("circle");
-    this.primary.setDefaultColor([100, 100, 100]);
+    this.primary.setDefaultColor([102, 73, 53]);
     this.primary.setDefaultHidden(false);
     this.secondary.setDefaultSize(3);
     this.secondary.setDefaultHeading(this.UP);
     this.secondary.setDefaultShape("circle");
-    this.secondary.setDefaultColor([160, 130, 50]);
+    this.secondary.setDefaultColor([244, 121, 33]);
     return this.secondary.setDefaultHidden(false);
   };
 
