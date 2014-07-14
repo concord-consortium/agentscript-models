@@ -82,3 +82,54 @@ circle {
   circle.selected:hover {
     fill: #ff7f0e;
     stroke: #ff7f0e; }
+
+/** begin styles for "show key" link */
+.graph a {
+  color: #4599D3
+}
+.graph a.show-key {
+  font-size: 0.7em;
+  position: absolute;
+  top: 2.8em;
+  left: 4.5em;
+  z-index: 4;
+}
+.graph a:link {
+  text-decoration: none;
+}
+.graph a:visited {
+  text-decoration: none;
+}
+.graph a:hover {
+  text-decoration: underline;
+  color: #1B7FC3;
+}
+.graph a:active {
+  text-decoration: underline;
+  color: #1B7FC3;
+}
+
+.key {
+  width: 14em;
+  position: absolute;
+  border: none;
+  border-radius: 0.4em;
+  /* need to be higher than div#mouse-catcher */
+  z-index: 11;
+  background-color: white;
+}
+
+.icon-remove-sign {
+  color: #666;
+  position: absolute;
+  right: 0.2em;
+  top: 0.2em;
+}
+
+.icon-remove-sign:hover {
+  color: black;
+}
+.icon-remove-sign:active {
+  color: black;
+}
+/** end styles for "show key" link */

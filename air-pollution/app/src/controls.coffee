@@ -16,6 +16,49 @@ class AirPollutionControls
   setupGraph: ->
     if $("#output-graphs").length == 0 then return
 
+
+    # ### begin copy/pasted block; how to modularize?
+
+    appendKeyToGraph = (graphId, top, labelInfo) ->
+      $graph = $ "##{graphId}"
+      $graph.append '<a href="#" class="show-key">show key</a>'
+      $graph.find('.show-key').click ->
+        unless $("##{graphId}-key").length > 0
+          $key = $("<div id=\"#{graphId}-key\" class=\"key\"><a class=\"icon-remove-sign icon-large\"></a><canvas></canvas></div>").appendTo($(document.body)).draggable()
+          canvas = $key.find('canvas')[0]
+          $key.height 18 * (labelInfo.length + 1)
+          canvas.height = $key.outerHeight()
+          canvas.width = $key.outerWidth()
+          drawKey $key.find('canvas')[0], labelInfo
+
+        $key = $ "##{graphId}-key"
+        $key.css
+          left: '370px',
+          top: "#{top}px"
+        .show()
+        .on 'click', 'a', ->
+          $(this).parent().hide()
+
+    # Called by appendKeyToGraph to draw the actual lines
+    drawKey = (canvas, labelInfo) ->
+      # center the lines verticaly
+      y = 0.5 * (canvas.height - 20 * (labelInfo.length - 1))
+      ctx = canvas.getContext '2d'
+      ctx.fillStyle = 'black'
+      ctx.font = '12px "Helvetica Neue", Helvetica, sans-serif'
+      ctx.lineWidth = 2
+      for label in labelInfo
+        ctx.strokeStyle = "rgb(#{label.color.join(',')})"
+        ctx.beginPath()
+        ctx.moveTo 10, y
+        ctx.lineTo 60, y
+        ctx.stroke()
+        ctx.fillText label.label, 70, y + 3
+        y += 20
+
+    # ### end copy/pasted block
+
+
     ABM.model.graphSampleInterval = 10
     defaultOptions =
       title:  "Primary (brown), Secondary (orange) Pollutants"
@@ -33,11 +76,18 @@ class AirPollutionControls
       realTime: true
       fontScaleRelativeToParent: true
       dataColors: [
-        [102,  73,  53],
-        [244, 121,  33]
+         AirPollutionModel.pollutantColors.primary,
+         AirPollutionModel.pollutantColors.secondary
       ]
 
     @pollutionGraph = LabGrapher '#pollution-graph', defaultOptions
+
+    labelInfo = [
+      { color: AirPollutionModel.pollutantColors.primary, label: "Primary Pollutants" },
+      { color: AirPollutionModel.pollutantColors.secondary, label: "Secondary Pollutants" }
+    ]
+
+    appendKeyToGraph 'pollution-graph', 20, labelInfo
 
     # start the graph at 0,0
     @pollutionGraph.addSamples [[0],[0]]

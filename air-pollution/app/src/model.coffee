@@ -1,6 +1,10 @@
 class AirPollutionModel extends ABM.Model
   @GRAPH_INTERVAL_ELAPSED: 'graph-interval-lapsed'
 
+  @pollutantColors =
+    primary: [102, 73, 53]
+    secondary: [244, 121, 33]
+
   LEFT: ABM.util.degToRad 180
   RIGHT: 0
   UP: ABM.util.degToRad 90
@@ -181,13 +185,13 @@ class AirPollutionModel extends ABM.Model
     @primary.setDefaultSize 3
     @primary.setDefaultHeading @UP
     @primary.setDefaultShape "circle"
-    @primary.setDefaultColor [102, 73, 53]
+    @primary.setDefaultColor AirPollutionModel.pollutantColors.primary
     @primary.setDefaultHidden false
 
     @secondary.setDefaultSize 3
     @secondary.setDefaultHeading @UP
     @secondary.setDefaultShape "circle"
-    @secondary.setDefaultColor [244, 121, 33]
+    @secondary.setDefaultColor AirPollutionModel.pollutantColors.secondary
     @secondary.setDefaultHidden false
 
   setupRain: ->
