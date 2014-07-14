@@ -18,7 +18,7 @@ class AirPollutionControls
 
     ABM.model.graphSampleInterval = 10
     defaultOptions =
-      title:  "Primary (red), Secondary (black) Pollutants"
+      title:  "Primary (brown), Secondary (orange) Pollutants"
       xlabel: "Time (ticks)"
       ylabel: "AQI"
       xmax:   2100
@@ -33,17 +33,14 @@ class AirPollutionControls
       realTime: true
       fontScaleRelativeToParent: true
       dataColors: [
-        [160,   0,   0],
-        [ 44, 160,   0],
-        [ 44,   0, 160],
-        [  0,   0,   0],
-        [255, 127,   0],
-        [255,   0, 255]]
+        [102,  73,  53],
+        [244, 121,  33]
+      ]
 
     @pollutionGraph = LabGrapher '#pollution-graph', defaultOptions
 
     # start the graph at 0,0
-    @pollutionGraph.addSamples [[0],[0],[0],[0]]
+    @pollutionGraph.addSamples [[0],[0]]
 
     # hack (for now) to make y-axis non-draggable
     $(".draggable-axis[x=24]").css("cursor","default").attr("pointer-events", "none")
@@ -52,7 +49,7 @@ class AirPollutionControls
     $(document).on AirPollutionModel.GRAPH_INTERVAL_ELAPSED, =>
       p = ABM.model.primaryAQI()
       s = ABM.model.secondaryAQI()
-      @pollutionGraph.addSamples [[p], [0], [0], [s]]
+      @pollutionGraph.addSamples [[p], [s]]
       $("#raw-primary").text(ABM.model.primary.length)
       $("#raw-secondary").text(ABM.model.secondary.length)
       $("#aqi-primary").text(p)
