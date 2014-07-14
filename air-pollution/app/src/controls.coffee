@@ -27,7 +27,8 @@ class AirPollutionControls
       ymin:   0
       xTickCount: 7
       yTickCount: 10
-      xFormatter: "3.3r"
+      xFormatter: "0f"
+      yFormatter: "0f"
       sample: 10
       realTime: true
       fontScaleRelativeToParent: true
