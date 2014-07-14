@@ -302,7 +302,8 @@ class AirPollutionModel extends ABM.Model
     a.forward speed
     return true if @_shouldRemovePollution a
 
-    # Now move horizontally based on wind speed, which can be reduced by the mask
+    # Now move horizontally based on wind speed, which can be reduced by the patch color (derived
+    # from the mask image.) The mask is used to simulate blockage of the airflow by the mountains.
     distance = (@windSpeed / 100) * Math.pow(a.p.color[0] / 255, 4)
     a.setXY a.x + distance, a.y
 
