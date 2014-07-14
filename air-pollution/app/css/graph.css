@@ -13,7 +13,7 @@
 }
 
 div.graph {
-   background-color: #ddf2ff;
+   background-color: #fff;
    border-radius: 0.25em;
    width: 345px;
    height: 350px;
@@ -46,7 +46,7 @@ div.graph {
       opacity: 1; }
   .graph canvas.overlay {
     position: absolute;
-    background: rgba(0, 255, 0, 0.05); }
+   }
 
 svg.graph:focus {
   outline: #76d2b8 solid 0.2em; }
