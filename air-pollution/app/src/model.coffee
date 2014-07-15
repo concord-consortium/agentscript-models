@@ -54,8 +54,7 @@ class AirPollutionModel extends ABM.Model
 
   constructor: ->
     super
-    @setNumCars 1
-    @setNumFactories 1
+    @setNumFactories 0
     @setRootVars()
 
   setup: ->
@@ -65,21 +64,26 @@ class AirPollutionModel extends ABM.Model
     @setTextParams {name: "drawing"}, "10px sans-serif"
     @setLabelParams {name: "drawing"}, [255,255,255], [0,-20]
 
-    @patches.importColors "img/air-pollution-bg-mask.png"
+    @patches.importColors "img/air-pollution-bg-mask.png", => @setupCars()
     @patches.importDrawing "img/air-pollution-bg.png"
 
     @setCacheAgentsHere()
 
-    carImg = document.getElementById('car-sprite')
+    ['sedan-left-side', 'sedan-right-side',
+     'sedan-front-quarter', 'sedan-rear-quarter',
+     'sedan-front', 'sedan-rear'].forEach (shapeName) ->
+
+      img = document.getElementById shapeName.replace /-.*-side/, '-side'
+      flip = (shapeName.indexOf('-right-side') > 0) or (shapeName.indexOf('-front-quarter') > 0)
+
+      ABM.shapes.add shapeName, false, (ctx) ->
+        ctx.scale (if flip then -1 else 1), -1
+        ctx.translate 0, -img.height
+        if flip then ctx.translate -img.width, 0
+        ctx.drawImage img, 0, 0
+
     factoryImg = document.getElementById('factory-sprite')
 
-    ABM.shapes.add "left-car", false, (ctx)=>
-      ctx.scale(-1, 1) # if heading leftward...
-      ctx.rotate @LEFT
-      ctx.drawImage(carImg, 0, 0)
-    ABM.shapes.add "right-car", false, (ctx)=>
-      ctx.rotate @LEFT
-      ctx.drawImage(carImg, 0, 0)
     ABM.shapes.add "factory", false, (ctx)=>
       ctx.scale(-1, 1)
       ctx.rotate @LEFT
@@ -90,24 +94,10 @@ class AirPollutionModel extends ABM.Model
       ctx.arc 0, 0.5, 0.5, 0, @PI2, false
       ctx.fill()
 
-    @CAR_SPAWN = [
-      {x: @world.maxX -  45, heading: @LEFT},
-      {x: @world.maxX - 404, heading: @RIGHT},
-      {x: @world.maxX - 223, heading: @LEFT},
-      {x: @world.maxX - 226, heading: @RIGHT},
-      {x: @world.maxX - 134, heading: @LEFT},
-      {x: @world.maxX - 315, heading: @RIGHT},
-      {x: @world.maxX - 312, heading: @LEFT},
-      {x: @world.maxX - 137, heading: @RIGHT},
-      {x: @world.maxX - 401, heading: @LEFT},
-      {x: @world.maxX -  48, heading: @RIGHT}
-    ]
-
     @agentBreeds "wind cars factories primary secondary rain sunlight"
 
     @setupFactories()
     @setupWind()
-    @setupCars()
     @setupPollution()
     @setupRain()
     @setupSunlight() if @includeSunlight
@@ -150,21 +140,83 @@ class AirPollutionModel extends ABM.Model
       y = row * 30 + 10
       w.moveTo @patches.patchXY(x,y)
 
+
   setupCars: ->
     @cars.setDefaultSize 1
-    @cars.setDefaultHeading @LEFT
-    @cars.setDefaultShape "left-car"
-    @cars.setDefaultColor [0,0,0]
-    @cars.setDefaultHidden true
+    tracks = []
 
-    @cars.create @maxNumCars, (c)=>
-      pos = @CAR_SPAWN[@cars.length - 1]
-      c.moveTo @patches.patchXY pos.x, 40
-      c.heading = pos.heading
-      c.shape = if pos.heading is 0 then 'right-car' else 'left-car'
-      c.createTick = @anim.ticks || 0
+    p = ABM.patches.patchXY ABM.patches.maxX, ABM.patches.maxY
 
-    @setNumCars 1
+    for i in [0..1]
+      until p.color[0] ==  255 and p.color[1] == 0
+        p = p.n[1]
+        break if p.y < 1
+
+      tracks[i] = @followTrack p
+      p = p.n[1]
+
+    # The first track (track[0]) "starts" at the edge and proceeds to the city.
+    # Reverse the second track, so it "starts" at the city and proceeds to the edge.
+    tracks[1].reverse()
+
+    @tracks = tracks.map (track, i) ->
+      headingLeft = i is 0
+      [yMin, yMax] = [track[0].y, track[track.length-1].y].sort (a, b) -> a - b
+
+      track.map (p) ->
+        dist = (p.y - yMin) / (yMax - yMin)
+        distsq = dist*dist
+
+        {
+          patch:
+            p
+          dwellTime:
+            1 + Math.ceil 5 * distsq
+          scale:
+            1 - 0.9 * distsq
+          shapeSuffix:
+            if p.color[1] > 100
+              if headingLeft then 'rear-quarter' else 'front-quarter'
+            else if p.color[2] > 100
+              if headingLeft then 'rear' else 'front'
+            else
+              if headingLeft then 'left-side' else 'right-side'
+        }
+
+    @cars.create 1, (car) =>
+      car.track = @tracks[0]
+      car.moveTo car.track[0].patch
+
+    @cars.create 1, (car) =>
+      car.track = @tracks[1]
+      car.moveTo car.track[0].patch
+
+
+  followTrack: (p) ->
+    track = []
+    reversed = false
+
+    while p.color[0] > 50
+      track.push p
+
+      # Basic line following. We have a 1-px, non-aliased colored line to follow.
+      #
+      # Search "forward leading" neighbors if we haven't gone around the bend, "backwards leading"
+      # neighbors if we have. Never search both sets at the same time or we could get stuck in an
+      # infinite loop taking one step forward, then one step back.
+
+      neighbors = if reversed then [4, 7, 6, 5] else [3, 5, 6, 7]
+      patches = (p.n[i] for i in neighbors)
+      reds = patches.map (p) -> p.color[0]
+      indexOfReddest = reds.indexOf Math.max.apply(null, reds)
+      p = patches[indexOfReddest]
+
+      # The line is such that the first time we follow a pixel into the northeast quadrant, that
+      # means we've gone around the bend and only travel to the right until the end of the road.
+      if indexOfReddest == 3 and not reversed then reversed = true
+
+    track
+
 
   setupFactories: ->
     @factories.setDefaultSize 1
@@ -229,12 +281,7 @@ class AirPollutionModel extends ABM.Model
       @inversionStrength = speed*4.5 / 100
     @draw() if @anim.animStop
 
-  setNumCars: (n)->
-    for i in [0...(@cars.length)]
-      c = @cars[i]
-      c.hidden = (i >= n)
-
-    @draw() if @anim.animStop
+  setNumCars: (n) ->
 
   getNumVisible: (xs) -> xs.filter((x) -> not x.hidden).length
 
@@ -261,16 +308,20 @@ class AirPollutionModel extends ABM.Model
       w.moveTo @patches.patchXY x, y
 
   moveCars: ->
-    for c in @cars
-      if (c.x-1) < @oceanX
-        c.heading = @RIGHT
-        c.shape = "right-car"
-        c.x += 37
-      else if (c.x+1) >= (@world.maxX-5)
-        c.heading = @LEFT
-        c.shape = "left-car"
-        c.x -= 37
-      c.forward 1
+    for car in @cars
+      car.trackIndex ?= 0
+      car.ttlAtPatch ?= 1
+
+      continue unless --car.ttlAtPatch is 0
+
+      if ++car.trackIndex is car.track.length then car.trackIndex = 0
+      patchInfo = car.track[car.trackIndex]
+
+      car.moveTo patchInfo.patch
+      car.ttlAtPatch = patchInfo.dwellTime
+      car.size = patchInfo.scale
+      car.shape = 'sedan-' + patchInfo.shapeSuffix
+    null
 
   movePollution: ->
     pollutionToRemove = []
