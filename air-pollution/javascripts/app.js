@@ -516,13 +516,12 @@ AirPollutionModel = (function(_super) {
 
   function AirPollutionModel() {
     AirPollutionModel.__super__.constructor.apply(this, arguments);
-    this.setNumCars(1);
-    this.setNumFactories(1);
+    this.setNumFactories(0);
     this.setRootVars();
   }
 
   AirPollutionModel.prototype.setup = function() {
-    var carImg, factoryImg;
+    var factoryImg;
     this.anim.setRate(50, false);
     this.setFastPatches();
     this.patches.usePixels(true);
@@ -532,24 +531,27 @@ AirPollutionModel = (function(_super) {
     this.setLabelParams({
       name: "drawing"
     }, [255, 255, 255], [0, -20]);
-    this.patches.importColors("img/air-pollution-bg-mask.png");
+    this.patches.importColors("img/air-pollution-bg-mask.png", (function(_this) {
+      return function() {
+        return _this.setupCars();
+      };
+    })(this));
     this.patches.importDrawing("img/air-pollution-bg.png");
     this.setCacheAgentsHere();
-    carImg = document.getElementById('car-sprite');
+    ['sedan-left-side', 'sedan-right-side', 'sedan-front-quarter', 'sedan-rear-quarter', 'sedan-front', 'sedan-rear'].forEach(function(shapeName) {
+      var flip, img;
+      img = document.getElementById(shapeName.replace(/-.*-side/, '-side'));
+      flip = (shapeName.indexOf('-right-side') > 0) || (shapeName.indexOf('-front-quarter') > 0);
+      return ABM.shapes.add(shapeName, false, function(ctx) {
+        ctx.scale((flip ? -1 : 1), -1);
+        ctx.translate(0, -img.height);
+        if (flip) {
+          ctx.translate(-img.width, 0);
+        }
+        return ctx.drawImage(img, 0, 0);
+      });
+    });
     factoryImg = document.getElementById('factory-sprite');
-    ABM.shapes.add("left-car", false, (function(_this) {
-      return function(ctx) {
-        ctx.scale(-1, 1);
-        ctx.rotate(_this.LEFT);
-        return ctx.drawImage(carImg, 0, 0);
-      };
-    })(this));
-    ABM.shapes.add("right-car", false, (function(_this) {
-      return function(ctx) {
-        ctx.rotate(_this.LEFT);
-        return ctx.drawImage(carImg, 0, 0);
-      };
-    })(this));
     ABM.shapes.add("factory", false, (function(_this) {
       return function(ctx) {
         ctx.scale(-1, 1);
@@ -565,43 +567,9 @@ AirPollutionModel = (function(_super) {
         return ctx.fill();
       };
     })(this));
-    this.CAR_SPAWN = [
-      {
-        x: this.world.maxX - 45,
-        heading: this.LEFT
-      }, {
-        x: this.world.maxX - 404,
-        heading: this.RIGHT
-      }, {
-        x: this.world.maxX - 223,
-        heading: this.LEFT
-      }, {
-        x: this.world.maxX - 226,
-        heading: this.RIGHT
-      }, {
-        x: this.world.maxX - 134,
-        heading: this.LEFT
-      }, {
-        x: this.world.maxX - 315,
-        heading: this.RIGHT
-      }, {
-        x: this.world.maxX - 312,
-        heading: this.LEFT
-      }, {
-        x: this.world.maxX - 137,
-        heading: this.RIGHT
-      }, {
-        x: this.world.maxX - 401,
-        heading: this.LEFT
-      }, {
-        x: this.world.maxX - 48,
-        heading: this.RIGHT
-      }
-    ];
     this.agentBreeds("wind cars factories primary secondary rain sunlight");
     this.setupFactories();
     this.setupWind();
-    this.setupCars();
     this.setupPollution();
     this.setupRain();
     if (this.includeSunlight) {
@@ -652,22 +620,79 @@ AirPollutionModel = (function(_super) {
   };
 
   AirPollutionModel.prototype.setupCars = function() {
+    var i, p, tracks, _i;
     this.cars.setDefaultSize(1);
-    this.cars.setDefaultHeading(this.LEFT);
-    this.cars.setDefaultShape("left-car");
-    this.cars.setDefaultColor([0, 0, 0]);
-    this.cars.setDefaultHidden(true);
-    this.cars.create(this.maxNumCars, (function(_this) {
-      return function(c) {
-        var pos;
-        pos = _this.CAR_SPAWN[_this.cars.length - 1];
-        c.moveTo(_this.patches.patchXY(pos.x, 40));
-        c.heading = pos.heading;
-        c.shape = pos.heading === 0 ? 'right-car' : 'left-car';
-        return c.createTick = _this.anim.ticks || 0;
+    tracks = [];
+    p = ABM.patches.patchXY(ABM.patches.maxX, ABM.patches.maxY);
+    for (i = _i = 0; _i <= 1; i = ++_i) {
+      while (!(p.color[0] === 255 && p.color[1] === 0)) {
+        p = p.n[1];
+        if (p.y < 1) {
+          break;
+        }
+      }
+      tracks[i] = this.followTrack(p);
+      p = p.n[1];
+    }
+    tracks[1].reverse();
+    this.tracks = tracks.map(function(track, i) {
+      var headingLeft, yMax, yMin, _ref;
+      headingLeft = i === 0;
+      _ref = [track[0].y, track[track.length - 1].y].sort(function(a, b) {
+        return a - b;
+      }), yMin = _ref[0], yMax = _ref[1];
+      return track.map(function(p) {
+        var dist, distsq;
+        dist = (p.y - yMin) / (yMax - yMin);
+        distsq = dist * dist;
+        return {
+          patch: p,
+          dwellTime: 1 + Math.ceil(5 * distsq),
+          scale: 1 - 0.9 * distsq,
+          shapeSuffix: p.color[1] > 100 ? headingLeft ? 'rear-quarter' : 'front-quarter' : p.color[2] > 100 ? headingLeft ? 'rear' : 'front' : headingLeft ? 'left-side' : 'right-side'
+        };
+      });
+    });
+    this.cars.create(1, (function(_this) {
+      return function(car) {
+        car.track = _this.tracks[0];
+        return car.moveTo(car.track[0].patch);
       };
     })(this));
-    return this.setNumCars(1);
+    return this.cars.create(1, (function(_this) {
+      return function(car) {
+        car.track = _this.tracks[1];
+        return car.moveTo(car.track[0].patch);
+      };
+    })(this));
+  };
+
+  AirPollutionModel.prototype.followTrack = function(p) {
+    var i, indexOfReddest, neighbors, patches, reds, reversed, track;
+    track = [];
+    reversed = false;
+    while (p.color[0] > 50) {
+      track.push(p);
+      neighbors = reversed ? [4, 7, 6, 5] : [3, 5, 6, 7];
+      patches = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = neighbors.length; _i < _len; _i++) {
+          i = neighbors[_i];
+          _results.push(p.n[i]);
+        }
+        return _results;
+      })();
+      reds = patches.map(function(p) {
+        return p.color[0];
+      });
+      indexOfReddest = reds.indexOf(Math.max.apply(null, reds));
+      p = patches[indexOfReddest];
+      if (indexOfReddest === 3 && !reversed) {
+        reversed = true;
+      }
+    }
+    return track;
   };
 
   AirPollutionModel.prototype.setupFactories = function() {
@@ -750,16 +775,7 @@ AirPollutionModel = (function(_super) {
     }
   };
 
-  AirPollutionModel.prototype.setNumCars = function(n) {
-    var c, i, _i, _ref;
-    for (i = _i = 0, _ref = this.cars.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
-      c = this.cars[i];
-      c.hidden = i >= n;
-    }
-    if (this.anim.animStop) {
-      return this.draw();
-    }
-  };
+  AirPollutionModel.prototype.setNumCars = function(n) {};
 
   AirPollutionModel.prototype.getNumVisible = function(xs) {
     return xs.filter(function(x) {
@@ -806,23 +822,29 @@ AirPollutionModel = (function(_super) {
   };
 
   AirPollutionModel.prototype.moveCars = function() {
-    var c, _i, _len, _ref, _results;
+    var car, patchInfo, _i, _len, _ref;
     _ref = this.cars;
-    _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      c = _ref[_i];
-      if ((c.x - 1) < this.oceanX) {
-        c.heading = this.RIGHT;
-        c.shape = "right-car";
-        c.x += 37;
-      } else if ((c.x + 1) >= (this.world.maxX - 5)) {
-        c.heading = this.LEFT;
-        c.shape = "left-car";
-        c.x -= 37;
+      car = _ref[_i];
+      if (car.trackIndex == null) {
+        car.trackIndex = 0;
       }
-      _results.push(c.forward(1));
+      if (car.ttlAtPatch == null) {
+        car.ttlAtPatch = 1;
+      }
+      if (--car.ttlAtPatch !== 0) {
+        continue;
+      }
+      if (++car.trackIndex === car.track.length) {
+        car.trackIndex = 0;
+      }
+      patchInfo = car.track[car.trackIndex];
+      car.moveTo(patchInfo.patch);
+      car.ttlAtPatch = patchInfo.dwellTime;
+      car.size = patchInfo.scale;
+      car.shape = 'sedan-' + patchInfo.shapeSuffix;
     }
-    return _results;
+    return null;
   };
 
   AirPollutionModel.prototype.movePollution = function() {
@@ -875,7 +897,7 @@ AirPollutionModel = (function(_super) {
     if (this._shouldRemovePollution(a)) {
       return true;
     }
-    distance = (this.windSpeed / 100) * Math.pow(a.p.color[0] / 255, 4);
+    distance = (this.windSpeed / 100) * (1 - a.p.color[0] / 255);
     a.setXY(a.x + distance, a.y);
     if (this._shouldRemovePollution(a)) {
       return true;
