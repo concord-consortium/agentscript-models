@@ -166,6 +166,8 @@ class AirPollutionModel extends ABM.Model
       track.map (p) ->
         dist = (p.y - yMin) / (yMax - yMin)
         distsq = dist*dist
+        greenChannelHigh = p.color[1] > 100
+        blueChannelHigh  = p.color[2] > 100
 
         {
           patch:
@@ -173,11 +175,13 @@ class AirPollutionModel extends ABM.Model
           dwellTime:
             1 + Math.ceil 5 * distsq
           scale:
-            1 - 0.9 * distsq
+            do ->
+              scale = 1 - 0.9 * distsq
+              if blueChannelHigh then scale * 0.8 else scale
           shapeSuffix:
-            if p.color[1] > 100
+            if greenChannelHigh
               if headingLeft then 'rear-quarter' else 'front-quarter'
-            else if p.color[2] > 100
+            else if blueChannelHigh
               if headingLeft then 'rear' else 'front'
             else
               if headingLeft then 'left-side' else 'right-side'
