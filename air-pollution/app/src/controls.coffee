@@ -137,7 +137,7 @@ class AirPollutionControls
       min: 0
       max: 10
       step: 1
-      value: ABM.model.getNumCars()
+      value: ABM.model.numCars
       slide: (evt, ui)->
         ABM.model.setNumCars ui.value
 
@@ -188,7 +188,7 @@ class AirPollutionControls
       step: 10
       value: ABM.model.electricCarPercentage
       slide: (evt, ui)->
-        ABM.model.electricCarPercentage = ui.value
+        ABM.model.setElectricCarPercentage ui.value
 
     $("#factories-slider").slider
       orientation: 'horizontal'

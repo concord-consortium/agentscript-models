@@ -37,7 +37,7 @@ class AirPollutionModel extends ABM.Model
   graphSampleInterval: 10
 
   windSpeed: 0
-  maxNumCars: 10
+  numCars: 2
   maxNumFactories: 5
   factoryDensity: 5
   carPollutionRate: 60
@@ -64,23 +64,10 @@ class AirPollutionModel extends ABM.Model
     @setTextParams {name: "drawing"}, "10px sans-serif"
     @setLabelParams {name: "drawing"}, [255,255,255], [0,-20]
 
-    @patches.importColors "img/air-pollution-bg-mask.png", => @setupCars()
+    @patches.importColors "img/air-pollution-bg-mask.png", => @setupTracks()
     @patches.importDrawing "img/air-pollution-bg.png"
 
     @setCacheAgentsHere()
-
-    ['sedan-left-side', 'sedan-right-side',
-     'sedan-front-quarter', 'sedan-rear-quarter',
-     'sedan-front', 'sedan-rear'].forEach (shapeName) ->
-
-      img = document.getElementById shapeName.replace /-.*-side/, '-side'
-      flip = (shapeName.indexOf('-right-side') > 0) or (shapeName.indexOf('-front-quarter') > 0)
-
-      ABM.shapes.add shapeName, false, (ctx) ->
-        ctx.scale (if flip then -1 else 1), -1
-        ctx.translate 0, -img.height
-        if flip then ctx.translate -img.width, 0
-        ctx.drawImage img, 0, 0
 
     factoryImg = document.getElementById('factory-sprite')
 
@@ -96,6 +83,8 @@ class AirPollutionModel extends ABM.Model
 
     @agentBreeds "wind cars factories primary secondary rain sunlight"
 
+    @cars.setDefaultSize 1
+    @_loadCarShapes()
     @setupFactories()
     @setupWind()
     @setupPollution()
@@ -107,6 +96,38 @@ class AirPollutionModel extends ABM.Model
 
     @draw()
     @refreshPatches = false
+
+    # Methods of car agents (ISO a better place to declare these methods; note that the car class
+    # doesn't exist until @agentBreeds() has been called, so these can't be declared "statically")
+
+    # Call this every tick to advance the car. This method handles the possibility that the car may
+    # be at a given patch for several ticks, as when the car is far away from the viewer.
+    ABM.agentBreeds.classes.carsClass.prototype.forward = ->
+      return true  if --@ttlAtPatch > 0
+      return false if @trackPosition + 1 is @track.length
+      @setTrackPosition @trackPosition + 1
+      true
+
+    # Pick which lane the car should follow. "track" is an array of objects that contain the patches
+    # the car should follow to "drive" down the lane.
+    ABM.agentBreeds.classes.carsClass.prototype.setTrack = (@track) ->
+
+    # Move to a given patch in the track. Patches are numbered sequentially.
+    ABM.agentBreeds.classes.carsClass.prototype.setTrackPosition = (@trackPosition) ->
+      patchInfo = @track[@trackPosition]
+
+      @moveTo patchInfo.patch
+      @ttlAtPatch = patchInfo.dwellTime
+      @size = patchInfo.scale
+      @updateShape()
+
+    # choose 'sedan' or 'suv' type randomly; may be overridden if this is an electric car
+    ABM.agentBreeds.classes.carsClass.prototype.chooseTypeRandomly = ->
+      @type = if Math.random() < 0.5 then 'sedan' else 'suv'
+
+    ABM.agentBreeds.classes.carsClass.prototype.updateShape = ->
+      @shape = this.type + '-' + @track[@trackPosition].shapeSuffix
+
 
   reset: ->
     super
@@ -141,8 +162,29 @@ class AirPollutionModel extends ABM.Model
       w.moveTo @patches.patchXY(x,y)
 
 
-  setupCars: ->
-    @cars.setDefaultSize 1
+  _loadCarShapes: ->
+    return if _carShapesLoaded
+    _carShapesLoaded = true
+
+    ['sedan', 'suv', 'electric'].forEach (type) =>
+      ['-left-side', '-right-side', '-front-quarter', '-rear-quarter', '-front', '-rear'].forEach (suffix) =>
+
+        shapeName = type + suffix
+        img = new Image()
+        img.src = 'img/' + (shapeName.replace /-.*-side/, '-side') + '.png'
+        img.onload = => @anim.draw()
+        flip = (shapeName.indexOf('-right-side') > 0)
+
+        ABM.shapes.add shapeName, false, (ctx) ->
+          ctx.scale (if flip then -0.5 else 0.5), -0.5
+          ctx.translate 0, -img.height
+          if flip then ctx.translate -img.width, 0
+
+          ctx.drawImage img, 0, 0
+
+  setupTracks: ->
+    return if @tracks?
+
     tracks = []
 
     p = ABM.patches.patchXY ABM.patches.maxX, ABM.patches.maxY
@@ -187,13 +229,7 @@ class AirPollutionModel extends ABM.Model
               if headingLeft then 'left-side' else 'right-side'
         }
 
-    @cars.create 1, (car) =>
-      car.track = @tracks[0]
-      car.moveTo car.track[0].patch
-
-    @cars.create 1, (car) =>
-      car.track = @tracks[1]
-      car.moveTo car.track[0].patch
+    @_addCarsToTracks()
 
 
   followTrack: (p) ->
@@ -285,11 +321,70 @@ class AirPollutionModel extends ABM.Model
       @inversionStrength = speed*4.5 / 100
     @draw() if @anim.animStop
 
-  setNumCars: (n) ->
+
+  setNumCars: (numCars) ->
+    return if numCars is @numCars
+    @numCars = numCars
+
+    if @tracks?
+      @_addCarsToTracks()
+      @anim.draw()
+
+  setElectricCarPercentage: (electricCarPercentage) ->
+    return if electricCarPercentage is @electricCarPercentage
+    @electricCarPercentage = electricCarPercentage
+    @_transmogrifySomeCarsToElectric()
+
+  _addCarsToTracks: ->
+    # @cars mutates when you kill off the cars in it, so it's standard to copy to an array
+    toKill = (car for car in @cars)
+    toKill.forEach (car) -> car.die()
+
+    num = [Math.floor(@numCars / 2), @numCars - Math.floor(@numCars / 2)]
+
+    # create cars and distribute them equally along the 2 tracks
+    for i in [0..1]
+      stride = Math.floor(@tracks[i].length / (1+num[i]))
+      trackPosition = 0
+      k = 0
+      while k < num[i]
+        k++
+        @cars.create 1, (car) =>
+          car.setTrack @tracks[i]
+          car.chooseTypeRandomly()
+          car.setTrackPosition stride * k
+
+    @_transmogrifySomeCarsToElectric()
+
+  _transmogrifySomeCarsToElectric: ->
+    # fisher-yates via coffeescript cookbook. Not using the broken Agentscript shuffle.
+    shuffle = (a) ->
+      return a if a.length < 2
+      for i in [a.length-1..1]
+        j = Math.floor Math.random() * (i + 1)
+        [a[i], a[j]] = [a[j], a[i]]
+      a
+
+    electricCars = @cars.filter (car) -> car.type is 'electric'
+    desiredNumElectricCars = Math.round @electricCarPercentage / 100 * @numCars
+
+    if desiredNumElectricCars > electricCars.length
+      n = desiredNumElectricCars - electricCars.length
+      carsToTransmogrify = shuffle(@cars.filter (car) -> car.type isnt 'electric')
+      transmogrify = (car) -> car.type = 'electric'
+    else
+      n = electricCars.length - desiredNumElectricCars
+      carsToTransmogrify = shuffle electricCars
+      transmogrify = (car) -> car.chooseTypeRandomly()
+
+    for i in [0...n]
+      car = carsToTransmogrify[i]
+      transmogrify car
+      car.updateShape()
+
+    null
 
   getNumVisible: (xs) -> xs.filter((x) -> not x.hidden).length
-
-  getNumCars: -> @getNumVisible @cars
 
   setNumFactories: (n)->
     for i in [0...(@factories.length)]
@@ -312,19 +407,19 @@ class AirPollutionModel extends ABM.Model
       w.moveTo @patches.patchXY x, y
 
   moveCars: ->
+    toKill = []
     for car in @cars
-      car.trackIndex ?= 0
-      car.ttlAtPatch ?= 1
+      if car.forward() is false then toKill.push car
 
-      continue unless --car.ttlAtPatch is 0
+    toKill.forEach (oldCar) =>
+      track = oldCar.track
+      isElectric = oldCar.type is 'electric'
 
-      if ++car.trackIndex is car.track.length then car.trackIndex = 0
-      patchInfo = car.track[car.trackIndex]
-
-      car.moveTo patchInfo.patch
-      car.ttlAtPatch = patchInfo.dwellTime
-      car.size = patchInfo.scale
-      car.shape = 'sedan-' + patchInfo.shapeSuffix
+      oldCar.die()
+      @cars.create 1, (newCar) ->
+        newCar.setTrack track
+        if isElectric then newCar.type = 'electric' else newCar.chooseTypeRandomly()
+        newCar.setTrackPosition 0
     null
 
   movePollution: ->
