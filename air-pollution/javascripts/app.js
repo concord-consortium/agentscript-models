@@ -250,7 +250,7 @@ AirPollutionControls = (function() {
       min: 0,
       max: 10,
       step: 1,
-      value: ABM.model.getNumCars(),
+      value: ABM.model.numCars,
       slide: function(evt, ui) {
         return ABM.model.setNumCars(ui.value);
       }
@@ -308,7 +308,7 @@ AirPollutionControls = (function() {
       step: 10,
       value: ABM.model.electricCarPercentage,
       slide: function(evt, ui) {
-        return ABM.model.electricCarPercentage = ui.value;
+        return ABM.model.setElectricCarPercentage(ui.value);
       }
     });
     $("#factories-slider").slider({
@@ -490,7 +490,7 @@ AirPollutionModel = (function(_super) {
 
   AirPollutionModel.prototype.windSpeed = 0;
 
-  AirPollutionModel.prototype.maxNumCars = 10;
+  AirPollutionModel.prototype.numCars = 2;
 
   AirPollutionModel.prototype.maxNumFactories = 5;
 
@@ -533,24 +533,11 @@ AirPollutionModel = (function(_super) {
     }, [255, 255, 255], [0, -20]);
     this.patches.importColors("img/air-pollution-bg-mask.png", (function(_this) {
       return function() {
-        return _this.setupCars();
+        return _this.setupTracks();
       };
     })(this));
     this.patches.importDrawing("img/air-pollution-bg.png");
     this.setCacheAgentsHere();
-    ['sedan-left-side', 'sedan-right-side', 'sedan-front-quarter', 'sedan-rear-quarter', 'sedan-front', 'sedan-rear'].forEach(function(shapeName) {
-      var flip, img;
-      img = document.getElementById(shapeName.replace(/-.*-side/, '-side'));
-      flip = (shapeName.indexOf('-right-side') > 0) || (shapeName.indexOf('-front-quarter') > 0);
-      return ABM.shapes.add(shapeName, false, function(ctx) {
-        ctx.scale((flip ? -1 : 1), -1);
-        ctx.translate(0, -img.height);
-        if (flip) {
-          ctx.translate(-img.width, 0);
-        }
-        return ctx.drawImage(img, 0, 0);
-      });
-    });
     factoryImg = document.getElementById('factory-sprite');
     ABM.shapes.add("factory", false, (function(_this) {
       return function(ctx) {
@@ -568,6 +555,8 @@ AirPollutionModel = (function(_super) {
       };
     })(this));
     this.agentBreeds("wind cars factories primary secondary rain sunlight");
+    this.cars.setDefaultSize(1);
+    this._loadCarShapes();
     this.setupFactories();
     this.setupWind();
     this.setupPollution();
@@ -578,7 +567,38 @@ AirPollutionModel = (function(_super) {
     this.nextRainEnd = 0;
     this.raining = false;
     this.draw();
-    return this.refreshPatches = false;
+    this.refreshPatches = false;
+    ABM.agentBreeds.classes.carsClass.prototype.forward = function() {
+      if (--this.ttlAtPatch > 0) {
+        return true;
+      }
+      if (this.trackPosition + 1 === this.track.length) {
+        return false;
+      }
+      this.setTrackPosition(this.trackPosition + 1);
+      return true;
+    };
+    ABM.agentBreeds.classes.carsClass.prototype.setTrack = function(track) {
+      this.track = track;
+    };
+    ABM.agentBreeds.classes.carsClass.prototype.setTrackPosition = function(trackPosition) {
+      var patchInfo;
+      this.trackPosition = trackPosition;
+      patchInfo = this.track[this.trackPosition];
+      this.moveTo(patchInfo.patch);
+      this.ttlAtPatch = patchInfo.dwellTime;
+      this.size = patchInfo.scale;
+      return this.updateShape();
+    };
+    ABM.agentBreeds.classes.carsClass.prototype.chooseTypeRandomly = function() {
+      return this.type = Math.random() < 0.5 ? 'sedan' : 'suv';
+    };
+    return ABM.agentBreeds.classes.carsClass.prototype.updateShape = function() {
+      var patchInfo;
+      patchInfo = this.track[this.trackPosition];
+      this.shape = this.type + '-' + patchInfo.shapeSuffix;
+      return this.headingLeft = patchInfo.shapeSuffix === 'left-side';
+    };
   };
 
   AirPollutionModel.prototype.reset = function() {
@@ -619,9 +639,41 @@ AirPollutionModel = (function(_super) {
     })(this));
   };
 
-  AirPollutionModel.prototype.setupCars = function() {
+  AirPollutionModel.prototype._loadCarShapes = function() {
+    var _carShapesLoaded;
+    if (_carShapesLoaded) {
+      return;
+    }
+    _carShapesLoaded = true;
+    return ['sedan', 'suv', 'electric'].forEach((function(_this) {
+      return function(type) {
+        return ['-left-side', '-right-side', '-front-quarter', '-rear-quarter', '-front', '-rear'].forEach(function(suffix) {
+          var flip, img, shapeName;
+          shapeName = type + suffix;
+          img = new Image();
+          img.src = 'img/' + (shapeName.replace(/-.*-side/, '-side')) + '.png';
+          img.onload = function() {
+            return _this.anim.draw();
+          };
+          flip = shapeName.indexOf('-right-side') > 0;
+          return ABM.shapes.add(shapeName, false, function(ctx) {
+            ctx.scale((flip ? -0.5 : 0.5), -0.5);
+            ctx.translate(0, -img.height);
+            if (flip) {
+              ctx.translate(-img.width, 0);
+            }
+            return ctx.drawImage(img, 0, 0);
+          });
+        });
+      };
+    })(this));
+  };
+
+  AirPollutionModel.prototype.setupTracks = function() {
     var i, p, tracks, _i;
-    this.cars.setDefaultSize(1);
+    if (this.tracks != null) {
+      return;
+    }
     tracks = [];
     p = ABM.patches.patchXY(ABM.patches.maxX, ABM.patches.maxY);
     for (i = _i = 0; _i <= 1; i = ++_i) {
@@ -642,29 +694,28 @@ AirPollutionModel = (function(_super) {
         return a - b;
       }), yMin = _ref[0], yMax = _ref[1];
       return track.map(function(p) {
-        var dist, distsq;
+        var blueChannelHigh, dist, distsq, greenChannelHigh;
         dist = (p.y - yMin) / (yMax - yMin);
         distsq = dist * dist;
+        greenChannelHigh = p.color[1] > 100;
+        blueChannelHigh = p.color[2] > 100;
         return {
           patch: p,
           dwellTime: 1 + Math.ceil(5 * distsq),
-          scale: 1 - 0.9 * distsq,
-          shapeSuffix: p.color[1] > 100 ? headingLeft ? 'rear-quarter' : 'front-quarter' : p.color[2] > 100 ? headingLeft ? 'rear' : 'front' : headingLeft ? 'left-side' : 'right-side'
+          scale: (function() {
+            var scale;
+            scale = 1 - 0.9 * distsq;
+            if (blueChannelHigh) {
+              return scale * 0.8;
+            } else {
+              return scale;
+            }
+          })(),
+          shapeSuffix: greenChannelHigh ? headingLeft ? 'rear-quarter' : 'front-quarter' : blueChannelHigh ? headingLeft ? 'rear' : 'front' : headingLeft ? 'left-side' : 'right-side'
         };
       });
     });
-    this.cars.create(1, (function(_this) {
-      return function(car) {
-        car.track = _this.tracks[0];
-        return car.moveTo(car.track[0].patch);
-      };
-    })(this));
-    return this.cars.create(1, (function(_this) {
-      return function(car) {
-        car.track = _this.tracks[1];
-        return car.moveTo(car.track[0].patch);
-      };
-    })(this));
+    return this._addCarsToTracks();
   };
 
   AirPollutionModel.prototype.followTrack = function(p) {
@@ -775,16 +826,103 @@ AirPollutionModel = (function(_super) {
     }
   };
 
-  AirPollutionModel.prototype.setNumCars = function(n) {};
+  AirPollutionModel.prototype.setNumCars = function(numCars) {
+    if (numCars === this.numCars) {
+      return;
+    }
+    this.numCars = numCars;
+    if (this.tracks != null) {
+      this._addCarsToTracks();
+      return this.anim.draw();
+    }
+  };
+
+  AirPollutionModel.prototype.setElectricCarPercentage = function(electricCarPercentage) {
+    if (electricCarPercentage === this.electricCarPercentage) {
+      return;
+    }
+    this.electricCarPercentage = electricCarPercentage;
+    return this._transmogrifySomeCarsToElectric();
+  };
+
+  AirPollutionModel.prototype._addCarsToTracks = function() {
+    var car, i, k, num, stride, toKill, trackPosition, _i;
+    toKill = (function() {
+      var _i, _len, _ref, _results;
+      _ref = this.cars;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        car = _ref[_i];
+        _results.push(car);
+      }
+      return _results;
+    }).call(this);
+    toKill.forEach(function(car) {
+      return car.die();
+    });
+    num = [Math.floor(this.numCars / 2), this.numCars - Math.floor(this.numCars / 2)];
+    for (i = _i = 0; _i <= 1; i = ++_i) {
+      stride = Math.floor(this.tracks[i].length / (1 + num[i]));
+      trackPosition = 0;
+      k = 0;
+      while (k < num[i]) {
+        k++;
+        this.cars.create(1, (function(_this) {
+          return function(car) {
+            car.setTrack(_this.tracks[i]);
+            car.chooseTypeRandomly();
+            return car.setTrackPosition(stride * k);
+          };
+        })(this));
+      }
+    }
+    return this._transmogrifySomeCarsToElectric();
+  };
+
+  AirPollutionModel.prototype._transmogrifySomeCarsToElectric = function() {
+    var car, carsToTransmogrify, desiredNumElectricCars, electricCars, i, n, shuffle, transmogrify, _i;
+    shuffle = function(a) {
+      var i, j, _i, _ref, _ref1;
+      if (a.length < 2) {
+        return a;
+      }
+      for (i = _i = _ref = a.length - 1; _ref <= 1 ? _i <= 1 : _i >= 1; i = _ref <= 1 ? ++_i : --_i) {
+        j = Math.floor(Math.random() * (i + 1));
+        _ref1 = [a[j], a[i]], a[i] = _ref1[0], a[j] = _ref1[1];
+      }
+      return a;
+    };
+    electricCars = this.cars.filter(function(car) {
+      return car.type === 'electric';
+    });
+    desiredNumElectricCars = Math.round(this.electricCarPercentage / 100 * this.numCars);
+    if (desiredNumElectricCars > electricCars.length) {
+      n = desiredNumElectricCars - electricCars.length;
+      carsToTransmogrify = shuffle(this.cars.filter(function(car) {
+        return car.type !== 'electric';
+      }));
+      transmogrify = function(car) {
+        return car.type = 'electric';
+      };
+    } else {
+      n = electricCars.length - desiredNumElectricCars;
+      carsToTransmogrify = shuffle(electricCars);
+      transmogrify = function(car) {
+        return car.chooseTypeRandomly();
+      };
+    }
+    for (i = _i = 0; 0 <= n ? _i < n : _i > n; i = 0 <= n ? ++_i : --_i) {
+      car = carsToTransmogrify[i];
+      transmogrify(car);
+      car.updateShape();
+    }
+    return null;
+  };
 
   AirPollutionModel.prototype.getNumVisible = function(xs) {
     return xs.filter(function(x) {
       return !x.hidden;
     }).length;
-  };
-
-  AirPollutionModel.prototype.getNumCars = function() {
-    return this.getNumVisible(this.cars);
   };
 
   AirPollutionModel.prototype.setNumFactories = function(n) {
@@ -822,28 +960,32 @@ AirPollutionModel = (function(_super) {
   };
 
   AirPollutionModel.prototype.moveCars = function() {
-    var car, patchInfo, _i, _len, _ref;
+    var car, toKill, _i, _len, _ref;
+    toKill = [];
     _ref = this.cars;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       car = _ref[_i];
-      if (car.trackIndex == null) {
-        car.trackIndex = 0;
+      if (car.forward() === false) {
+        toKill.push(car);
       }
-      if (car.ttlAtPatch == null) {
-        car.ttlAtPatch = 1;
-      }
-      if (--car.ttlAtPatch !== 0) {
-        continue;
-      }
-      if (++car.trackIndex === car.track.length) {
-        car.trackIndex = 0;
-      }
-      patchInfo = car.track[car.trackIndex];
-      car.moveTo(patchInfo.patch);
-      car.ttlAtPatch = patchInfo.dwellTime;
-      car.size = patchInfo.scale;
-      car.shape = 'sedan-' + patchInfo.shapeSuffix;
     }
+    toKill.forEach((function(_this) {
+      return function(oldCar) {
+        var isElectric, track;
+        track = oldCar.track;
+        isElectric = oldCar.type === 'electric';
+        oldCar.die();
+        return _this.cars.create(1, function(newCar) {
+          newCar.setTrack(track);
+          if (isElectric) {
+            newCar.type = 'electric';
+          } else {
+            newCar.chooseTypeRandomly();
+          }
+          return newCar.setTrackPosition(0);
+        });
+      };
+    })(this));
     return null;
   };
 
@@ -1095,17 +1237,16 @@ AirPollutionModel = (function(_super) {
     _ref = this.cars;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       c = _ref[_i];
-      if ((c != null) && !c.hidden) {
-        if (ABM.util.randomInt(3000) < this.carPollutionRate && ABM.util.randomInt(100) > this.electricCarPercentage) {
-          this.primary.create(1, (function(_this) {
-            return function(p) {
-              var x;
-              x = c.heading === 0 ? c.x - 37 : c.x + 37;
-              return p.moveTo(_this.patches.patchXY(x, c.y - 10));
-            };
-          })(this));
-        }
+      if (c.type === 'electric' || ABM.util.randomInt(3000) > this.carPollutionRate) {
+        continue;
       }
+      this.primary.create(1, (function(_this) {
+        return function(p) {
+          var x;
+          x = c.headingLeft ? c.x + 30 : c.x;
+          return p.moveTo(_this.patches.patchXY(x, c.y + 5));
+        };
+      })(this));
     }
     _ref1 = this.factories;
     _results = [];
