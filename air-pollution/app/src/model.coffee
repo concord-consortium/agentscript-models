@@ -11,17 +11,23 @@ class AirPollutionModel extends ABM.Model
   DOWN: ABM.util.degToRad 270
   PI2: Math.PI * 2
   FACTORY_POLLUTION_SPAWN_OFFSETS: [
-    {x: 133, y:   3},
-    {x: 122, y:  -5},
-    {x: 106, y: -15},
-    {x:  93, y: -19}
+    {x: 508, y: 159},
+    {x: 562, y: 159},
+    {x: 300, y: 140},
+    {x: 336, y: 140},
+    {x: 411, y: 165},
+    {x: 435, y: 165},
+    {x: 352, y: 179},
+    {x: 368, y: 179},
+    {x: 445, y: 180},
+    {x: 457, y: 180}
   ]
   FACTORY_SPAWN_POS: [
-    {x: 160, y: 160, size: 1},
-    {x: 100, y: 100, size: 0.5},
-    {x: 240, y: 120, size: 0.8},
-    {x: 320, y: 120, size: 0.5},
-    {x:  90, y: 110, size: 0.3}
+    {x: 424, y:  60, size: 0.5},
+    {x: 240, y:  67, size: 0.35},
+    {x: 366, y: 109, size: 0.25},
+    {x: 327, y: 142, size: 0.15},
+    {x: 422, y: 150, size: 0.13}
   ]
   CAR_SPAWN: null
 
@@ -54,7 +60,7 @@ class AirPollutionModel extends ABM.Model
 
   constructor: ->
     super
-    @setNumFactories 0
+    @setNumFactories 1
     @setRootVars()
 
   setup: ->
@@ -71,9 +77,9 @@ class AirPollutionModel extends ABM.Model
 
     factoryImg = document.getElementById('factory-sprite')
 
-    ABM.shapes.add "factory", false, (ctx)=>
-      ctx.scale(-1, 1)
-      ctx.rotate @LEFT
+    ABM.shapes.add "factory", false, (ctx) =>
+      ctx.scale 1, -1
+      ctx.translate 0, -factoryImg.height
       ctx.drawImage(factoryImg, 0, 0)
     ABM.shapes.add "pollutant", false, (ctx)=>
       ctx.arc -0.5, -0.5, 0.5, 0, @PI2, false
@@ -267,7 +273,7 @@ class AirPollutionModel extends ABM.Model
     @factories.setDefaultColor [0,0,0]
     @factories.setDefaultHidden true
 
-    @factories.create @maxNumFactories, (f)=>
+    @factories.create @maxNumFactories, (f) =>
       pos = @FACTORY_SPAWN_POS[@factories.length-1]
       f.moveTo @patches.patchXY pos.x, pos.y
       f.size = pos.size
@@ -581,12 +587,12 @@ class AirPollutionModel extends ABM.Model
         x = if c.headingLeft then c.x + 30 else c.x
         p.moveTo @patches.patchXY x, c.y + 5
 
-    for f in @factories
-      if f? and !f.hidden
-        if ABM.util.randomInt(2500) < @factoryPollutionRate
-          @primary.create 1, (p)=>
-            offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(@FACTORY_POLLUTION_SPAWN_OFFSETS.length)]
-            p.moveTo @patches.patchXY f.x + Math.round(offset.x * f.size), f.y + Math.round(offset.y * f.size)
+    for f, i in @factories
+      continue if f.hidden or ABM.util.randomInt(2500) > @factoryPollutionRate
+      @primary.create 1, (p) =>
+        # emit from one or the other of the smokestacks
+        offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[2 * i + u.randomInt(2)]
+        p.moveTo @patches.patchXY offset.x, offset.y
 
   notifyGraphs: ->
     $(document).trigger AirPollutionModel.GRAPH_INTERVAL_ELAPSED
