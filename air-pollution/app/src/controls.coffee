@@ -253,7 +253,7 @@ class AirPollutionControls
     $(".icon-play").show()
 
     @pollutionGraph.reset()
-    @pollutionGraph.addSamples [[0],[0],[0],[0]]
+    @pollutionGraph.addSamples [[0],[0]]
 
     setTimeout ->
       ABM.model.reset()

@@ -140,6 +140,7 @@ class AirPollutionModel extends ABM.Model
   reset: ->
     super
     @setup()
+    @_addCarsToTracks() if @tracks?
     @anim.draw()
 
   step: ->
