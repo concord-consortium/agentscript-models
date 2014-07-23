@@ -126,7 +126,9 @@ class AirPollutionModel extends ABM.Model
       @type = if Math.random() < 0.5 then 'sedan' else 'suv'
 
     ABM.agentBreeds.classes.carsClass.prototype.updateShape = ->
-      @shape = this.type + '-' + @track[@trackPosition].shapeSuffix
+      patchInfo = @track[@trackPosition]
+      @shape = this.type + '-' + patchInfo.shapeSuffix
+      @headingLeft = patchInfo.shapeSuffix is 'left-side'
 
 
   reset: ->
@@ -574,11 +576,10 @@ class AirPollutionModel extends ABM.Model
 
   pollute: ->
     for c in @cars
-      if c? and !c.hidden
-        if ABM.util.randomInt(3000) < @carPollutionRate and ABM.util.randomInt(100) > @electricCarPercentage
-            @primary.create 1, (p)=>
-              x = if c.heading is 0 then c.x-37 else c.x+37
-              p.moveTo @patches.patchXY x, c.y-10
+      continue if c.type is 'electric' or ABM.util.randomInt(3000) > @carPollutionRate
+      @primary.create 1, (p) =>
+        x = if c.headingLeft then c.x + 30 else c.x
+        p.moveTo @patches.patchXY x, c.y + 5
 
     for f in @factories
       if f? and !f.hidden
