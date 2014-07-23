@@ -540,6 +540,7 @@ class AirPollutionModel extends ABM.Model
   _convertPollutionOnPatch: (p)->
     converted = false
     for a in p.agentsHere()
+      continue if Math.random() > 0.1
       if a? and a.breed is @primary
         if u.randomInt(4) is 0             # 25% of the time generate a new secondary
           p.sprout 1, @secondary, (_a)->
