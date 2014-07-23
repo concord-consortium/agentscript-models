@@ -63,7 +63,7 @@ class AirPollutionControls
     defaultOptions =
       title:  "Primary (brown), Secondary (orange) Pollutants"
       xlabel: "Time (ticks)"
-      ylabel: "AQI"
+      ylabel: "AQI (Air Quality Index)"
       xmax:   2100
       xmin:   0
       ymax:   300
