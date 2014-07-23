@@ -1191,6 +1191,9 @@ AirPollutionModel = (function(_super) {
     _ref = p.agentsHere();
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       a = _ref[_i];
+      if (Math.random() > 0.1) {
+        continue;
+      }
       if ((a != null) && a.breed === this.primary) {
         if (u.randomInt(4) === 0) {
           p.sprout(1, this.secondary, function(_a) {
