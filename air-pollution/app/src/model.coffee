@@ -45,6 +45,7 @@ class AirPollutionModel extends ABM.Model
   windSpeed: 0
   numCars: 2
   maxNumFactories: 5
+  numFactories: 1
   factoryDensity: 5
   carPollutionRate: 60
   electricCarPercentage: 25
@@ -60,7 +61,6 @@ class AirPollutionModel extends ABM.Model
 
   constructor: ->
     super
-    @setNumFactories 1
     @setRootVars()
 
   setup: ->
@@ -141,6 +141,8 @@ class AirPollutionModel extends ABM.Model
     super
     @setup()
     @_addCarsToTracks() if @tracks?
+    @_showHideFactories()
+    @_updateWindDisplay()
     @anim.draw()
 
   step: ->
@@ -280,7 +282,7 @@ class AirPollutionModel extends ABM.Model
       f.size = pos.size
       f.createTick = @anim.ticks || 0
 
-    @setNumFactories 1
+    @_showHideFactories()
 
   setupPollution: ->
     @primary.setDefaultSize 3
@@ -314,20 +316,22 @@ class AirPollutionModel extends ABM.Model
     @sunlight.setDefaultColor [255,255,0]
     @sunlight.setDefaultHidden false
 
-  setWindSpeed: (speed)->
-    @windSpeed = speed
+  setWindSpeed: (@windSpeed) ->
+    @_updateWindDisplay()
+
+  _updateWindDisplay: ->
     for w in @wind
-      w.hidden = (speed is 0)
+      w.hidden = (@windSpeed is 0)
       w.size = Math.abs(@_intSpeed(10)) + 5
-      w.heading = if speed >= 0 then 0 else @LEFT
+      w.heading = if @windSpeed >= 0 then 0 else @LEFT
 
     for r in @rain
       r.heading = @DOWN + ABM.util.degToRad(@windSpeed/2)
 
-    if speed <= 0
+    if @windSpeed <= 0
       @inversionStrength = 0
     else
-      @inversionStrength = speed*4.5 / 100
+      @inversionStrength = @windSpeed*4.5 / 100
     @draw() if @anim.animStop
 
 
@@ -395,14 +399,16 @@ class AirPollutionModel extends ABM.Model
 
   getNumVisible: (xs) -> xs.filter((x) -> not x.hidden).length
 
-  setNumFactories: (n)->
+  setNumFactories: (@numFactories) ->
+    @_showHideFactories()
+
+  getNumFactories: -> @numFactories
+
+  _showHideFactories: ->
     for i in [0...(@factories.length)]
       f = @factories[i]
-      f.hidden = (i >= n)
-
+      f.hidden = (i >= @numFactories)
     @draw() if @anim.animStop
-
-  getNumFactories: -> @getNumVisible @factories
 
   moveWind: ->
     speed = @_intSpeed(15)
