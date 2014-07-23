@@ -512,6 +512,8 @@ AirPollutionModel = (function(_super) {
 
   AirPollutionModel.prototype.maxNumFactories = 5;
 
+  AirPollutionModel.prototype.numFactories = 1;
+
   AirPollutionModel.prototype.factoryDensity = 5;
 
   AirPollutionModel.prototype.carPollutionRate = 60;
@@ -534,7 +536,6 @@ AirPollutionModel = (function(_super) {
 
   function AirPollutionModel() {
     AirPollutionModel.__super__.constructor.apply(this, arguments);
-    this.setNumFactories(1);
     this.setRootVars();
   }
 
@@ -625,6 +626,8 @@ AirPollutionModel = (function(_super) {
     if (this.tracks != null) {
       this._addCarsToTracks();
     }
+    this._showHideFactories();
+    this._updateWindDisplay();
     return this.anim.draw();
   };
 
@@ -782,7 +785,7 @@ AirPollutionModel = (function(_super) {
         return f.createTick = _this.anim.ticks || 0;
       };
     })(this));
-    return this.setNumFactories(1);
+    return this._showHideFactories();
   };
 
   AirPollutionModel.prototype.setupPollution = function() {
@@ -822,25 +825,29 @@ AirPollutionModel = (function(_super) {
     return this.sunlight.setDefaultHidden(false);
   };
 
-  AirPollutionModel.prototype.setWindSpeed = function(speed) {
+  AirPollutionModel.prototype.setWindSpeed = function(windSpeed) {
+    this.windSpeed = windSpeed;
+    return this._updateWindDisplay();
+  };
+
+  AirPollutionModel.prototype._updateWindDisplay = function() {
     var r, w, _i, _j, _len, _len1, _ref, _ref1;
-    this.windSpeed = speed;
     _ref = this.wind;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       w = _ref[_i];
-      w.hidden = speed === 0;
+      w.hidden = this.windSpeed === 0;
       w.size = Math.abs(this._intSpeed(10)) + 5;
-      w.heading = speed >= 0 ? 0 : this.LEFT;
+      w.heading = this.windSpeed >= 0 ? 0 : this.LEFT;
     }
     _ref1 = this.rain;
     for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
       r = _ref1[_j];
       r.heading = this.DOWN + ABM.util.degToRad(this.windSpeed / 2);
     }
-    if (speed <= 0) {
+    if (this.windSpeed <= 0) {
       this.inversionStrength = 0;
     } else {
-      this.inversionStrength = speed * 4.5 / 100;
+      this.inversionStrength = this.windSpeed * 4.5 / 100;
     }
     if (this.anim.animStop) {
       return this.draw();
@@ -946,19 +953,24 @@ AirPollutionModel = (function(_super) {
     }).length;
   };
 
-  AirPollutionModel.prototype.setNumFactories = function(n) {
+  AirPollutionModel.prototype.setNumFactories = function(numFactories) {
+    this.numFactories = numFactories;
+    return this._showHideFactories();
+  };
+
+  AirPollutionModel.prototype.getNumFactories = function() {
+    return this.numFactories;
+  };
+
+  AirPollutionModel.prototype._showHideFactories = function() {
     var f, i, _i, _ref;
     for (i = _i = 0, _ref = this.factories.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
       f = this.factories[i];
-      f.hidden = i >= n;
+      f.hidden = i >= this.numFactories;
     }
     if (this.anim.animStop) {
       return this.draw();
     }
-  };
-
-  AirPollutionModel.prototype.getNumFactories = function() {
-    return this.getNumVisible(this.factories);
   };
 
   AirPollutionModel.prototype.moveWind = function() {
