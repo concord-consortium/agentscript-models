@@ -51,7 +51,7 @@ div.graph {
 svg.graph:focus {
   outline: #76d2b8 solid 0.2em; }
 svg.graph text.title {
-  font-size: 0.9em; }
+  font-size: 0.8em; }
 svg.graph text.ylabel {
   font-size: 0.8em; }
 svg.graph text.xlabel {
