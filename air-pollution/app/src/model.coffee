@@ -588,7 +588,7 @@ class AirPollutionModel extends ABM.Model
         p.moveTo @patches.patchXY x, c.y + 5
 
     for f, i in @factories
-      continue if f.hidden or ABM.util.randomInt(2500) > @factoryPollutionRate
+      continue if f.hidden or ABM.util.randomInt(5000) > @factoryPollutionRate
       @primary.create 1, (p) =>
         # emit from one or the other of the smokestacks
         offset = @FACTORY_POLLUTION_SPAWN_OFFSETS[2 * i + u.randomInt(2)]
