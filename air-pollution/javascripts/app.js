@@ -386,7 +386,7 @@ AirPollutionControls = (function() {
     $(".icon-pause").hide();
     $(".icon-play").show();
     this.pollutionGraph.reset();
-    this.pollutionGraph.addSamples([[0], [0], [0], [0]]);
+    this.pollutionGraph.addSamples([[0], [0]]);
     return setTimeout(function() {
       return ABM.model.reset();
     }, 10);
@@ -622,6 +622,9 @@ AirPollutionModel = (function(_super) {
   AirPollutionModel.prototype.reset = function() {
     AirPollutionModel.__super__.reset.apply(this, arguments);
     this.setup();
+    if (this.tracks != null) {
+      this._addCarsToTracks();
+    }
     return this.anim.draw();
   };
 
@@ -1270,7 +1273,7 @@ AirPollutionModel = (function(_super) {
     _results = [];
     for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
       f = _ref1[i];
-      if (f.hidden || ABM.util.randomInt(2500) > this.factoryPollutionRate) {
+      if (f.hidden || ABM.util.randomInt(5000) > this.factoryPollutionRate) {
         continue;
       }
       _results.push(this.primary.create(1, (function(_this) {
