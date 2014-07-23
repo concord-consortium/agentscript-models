@@ -432,41 +432,59 @@ AirPollutionModel = (function(_super) {
 
   AirPollutionModel.prototype.FACTORY_POLLUTION_SPAWN_OFFSETS = [
     {
-      x: 133,
-      y: 3
+      x: 508,
+      y: 159
     }, {
-      x: 122,
-      y: -5
+      x: 562,
+      y: 159
     }, {
-      x: 106,
-      y: -15
+      x: 300,
+      y: 140
     }, {
-      x: 93,
-      y: -19
+      x: 336,
+      y: 140
+    }, {
+      x: 411,
+      y: 165
+    }, {
+      x: 435,
+      y: 165
+    }, {
+      x: 352,
+      y: 179
+    }, {
+      x: 368,
+      y: 179
+    }, {
+      x: 445,
+      y: 180
+    }, {
+      x: 457,
+      y: 180
     }
   ];
 
   AirPollutionModel.prototype.FACTORY_SPAWN_POS = [
     {
-      x: 160,
-      y: 160,
-      size: 1
-    }, {
-      x: 100,
-      y: 100,
+      x: 424,
+      y: 60,
       size: 0.5
     }, {
       x: 240,
-      y: 120,
-      size: 0.8
+      y: 67,
+      size: 0.35
     }, {
-      x: 320,
-      y: 120,
-      size: 0.5
+      x: 366,
+      y: 109,
+      size: 0.25
     }, {
-      x: 90,
-      y: 110,
-      size: 0.3
+      x: 327,
+      y: 142,
+      size: 0.15
+    }, {
+      x: 422,
+      y: 150,
+      size: 0.13
     }
   ];
 
@@ -516,7 +534,7 @@ AirPollutionModel = (function(_super) {
 
   function AirPollutionModel() {
     AirPollutionModel.__super__.constructor.apply(this, arguments);
-    this.setNumFactories(0);
+    this.setNumFactories(1);
     this.setRootVars();
   }
 
@@ -541,8 +559,8 @@ AirPollutionModel = (function(_super) {
     factoryImg = document.getElementById('factory-sprite');
     ABM.shapes.add("factory", false, (function(_this) {
       return function(ctx) {
-        ctx.scale(-1, 1);
-        ctx.rotate(_this.LEFT);
+        ctx.scale(1, -1);
+        ctx.translate(0, -factoryImg.height);
         return ctx.drawImage(factoryImg, 0, 0);
       };
     })(this));
@@ -1233,7 +1251,7 @@ AirPollutionModel = (function(_super) {
   };
 
   AirPollutionModel.prototype.pollute = function() {
-    var c, f, _i, _j, _len, _len1, _ref, _ref1, _results;
+    var c, f, i, _i, _j, _len, _len1, _ref, _ref1, _results;
     _ref = this.cars;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       c = _ref[_i];
@@ -1250,23 +1268,18 @@ AirPollutionModel = (function(_super) {
     }
     _ref1 = this.factories;
     _results = [];
-    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-      f = _ref1[_j];
-      if ((f != null) && !f.hidden) {
-        if (ABM.util.randomInt(2500) < this.factoryPollutionRate) {
-          _results.push(this.primary.create(1, (function(_this) {
-            return function(p) {
-              var offset;
-              offset = _this.FACTORY_POLLUTION_SPAWN_OFFSETS[ABM.util.randomInt(_this.FACTORY_POLLUTION_SPAWN_OFFSETS.length)];
-              return p.moveTo(_this.patches.patchXY(f.x + Math.round(offset.x * f.size), f.y + Math.round(offset.y * f.size)));
-            };
-          })(this)));
-        } else {
-          _results.push(void 0);
-        }
-      } else {
-        _results.push(void 0);
+    for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
+      f = _ref1[i];
+      if (f.hidden || ABM.util.randomInt(2500) > this.factoryPollutionRate) {
+        continue;
       }
+      _results.push(this.primary.create(1, (function(_this) {
+        return function(p) {
+          var offset;
+          offset = _this.FACTORY_POLLUTION_SPAWN_OFFSETS[2 * i + u.randomInt(2)];
+          return p.moveTo(_this.patches.patchXY(offset.x, offset.y));
+        };
+      })(this)));
     }
     return _results;
   };
