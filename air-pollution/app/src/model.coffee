@@ -481,17 +481,12 @@ class AirPollutionModel extends ABM.Model
     # Now move vertically based on temperature. The higher the temp, the more upward motion.
     if not @includeInversionLayer
       a.setXY a.x, a.y + Math.pow(2, (@temperature-130)/20)
-      @_resetHeading a
+      return true if @_shouldRemovePollution a
 
     return false
 
-  _resetHeading: (a)->
-    if a.y <= 20
-      a.heading = u.randomFloat2(Math.PI/4, Math.PI*3/4)
-    else if a.y >= 340
-      a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
 
-  _shouldRemovePollution: (a)->
+  _shouldRemovePollution: (a) ->
     return (a.x < @world.minX + 1 or a.x > @world.maxX - 1 or a.y < @world.minY + 1 or a.y > @world.maxX - 1)
 
   _killPollutionOnPatch: (p)->
