@@ -1079,17 +1079,11 @@ AirPollutionModel = (function(_super) {
     }
     if (!this.includeInversionLayer) {
       a.setXY(a.x, a.y + Math.pow(2, (this.temperature - 130) / 20));
-      this._resetHeading(a);
+      if (this._shouldRemovePollution(a)) {
+        return true;
+      }
     }
     return false;
-  };
-
-  AirPollutionModel.prototype._resetHeading = function(a) {
-    if (a.y <= 20) {
-      return a.heading = u.randomFloat2(Math.PI / 4, Math.PI * 3 / 4);
-    } else if (a.y >= 340) {
-      return a.heading = u.randomFloat2(-Math.PI / 4, -Math.PI * 3 / 4);
-    }
   };
 
   AirPollutionModel.prototype._shouldRemovePollution = function(a) {
