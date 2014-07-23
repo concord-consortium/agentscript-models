@@ -8,8 +8,8 @@
 }
 
 #output-graphs.pushed-right {
-  left: 637px;
-  width: 309px;
+  left: 662px;
+  width: 284px;
 }
 
 div.graph {
@@ -21,7 +21,11 @@ div.graph {
 }
 
 #output-graphs.pushed-right .graph {
-  width: 308px;
+  width: 283px;
+}
+
+#output-graphs.pushed-right .graph .title {
+  font-size: 0.7em;
 }
 
 .graph {
