@@ -1,4 +1,5 @@
 class WaterModel extends ABM.Model
+  @waterColor: [0, 0, 255, 0.8]
   DOWN:  ABM.util.degToRad(270)
   LEFT:  ABM.util.degToRad(180)
   UP:    ABM.util.degToRad(90)
@@ -179,7 +180,7 @@ class WaterModel extends ABM.Model
 
   _setupWater: (agents)->
     agents.setDefaultSize 2/@world.size  # try to keep water around 2px in size
-    agents.setDefaultColor [0, 0, 255, 0.4]
+    agents.setDefaultColor WaterModel.waterColor
     agents.setDefaultShape "circle"
 
   setupRain: ->

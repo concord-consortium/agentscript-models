@@ -97,6 +97,7 @@
     <script>
       $(document).one('controls-ready', function() {
         ImportExport.skipProperties.push("color");
+        WaterModel.waterColor = [0, 0, 255, 0.4];
         APP=new WaterModel("layers", 1, -400, 399, -130, 129, false);
         APP.setRootVars();
         WaterControls.setup();

@@ -37,6 +37,7 @@
     <script>
       $(document).one('controls-ready', function() {
         WaterModelStaticLayers.background = "state/img/WaterModel-WaterInTheWorld.png";
+        WaterModel.waterColor = [0, 0, 255, 0.4];
         APP=new WaterModelStaticLayers("layers", 1, -400, 399, -130, 129, false);
         APP.setRootVars();
         WaterControls.setup();

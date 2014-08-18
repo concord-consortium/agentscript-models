@@ -55,6 +55,7 @@
         return obj3;
       }
       $(document).one('controls-ready', function() {
+        WaterModel.waterColor = [0, 0, 255, 0.4];
         APP=new WaterModel("layers", 1, -400, 399, -130, 129, false);
         APP.setRootVars();
         WaterControls.countOptions = shallowMerge(WaterControls.countOptions, { x: 20, y: 20, dx: 100, dy: 40, debug: true });
