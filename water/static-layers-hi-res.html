@@ -1,4 +1,3 @@
-<meta http-equiv="content-type" content="text/html; charset=UTF8">
 <html>
   <head>
     <title>Water Model</title>
@@ -6,19 +5,14 @@
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-    <script src="//lab.concord.org/vendor/d3/d3.js"></script>
-    <script src="../lib/lab.grapher.js"></script>
     <script src="../lib/agentscript/agentscript.js"></script>
     <script src="../lib/agentscript/coffee-script.js"></script>
-    <script src="../lib/import-export.coffee" type="text/coffeescript"></script>
     <script src="../lib/well.coffee" type="text/coffeescript"></script>
 
     <link href="css/water.css" rel="stylesheet" type="text/css" />
-    <link href="css/graph.css" rel="stylesheet" type="text/css" />
     <script src="js/water-model.coffee" type="text/coffeescript"></script>
+    <script src="js/water-model-static-layers.coffee" type="text/coffeescript"></script>
     <script src="js/water-controls.coffee" type="text/coffeescript"></script>
-    <script src="//shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
-    <script type="text/javascript">new Shutterbug('body', '', null, null);</script>
   </head>
   <body>
     <div id="controls">
@@ -32,8 +26,7 @@
         </button>
       </div>
       <div id="view-button-set">
-          <input type="checkbox" id="irrigation-well-button" /><label for="irrigation-well-button"><img id="irrigation-well-button-icon" src="img/tool_addwellirrigation.svg" /></label>
-          <input type="checkbox" id="remove-well" /><label for="remove-well"><img id="remove-well-icon" src="img/tool_removewell.svg" /></label>
+        <button id="follow-water-button" class="follow-agent">Follow Water Droplet</button>
       </div>
     </div>
     <div id="model">
@@ -41,20 +34,12 @@
       <div id="layers"></div>
       <div id="mouse-catcher"></div>
     </div>
-    <div id='output-graphs'>
-      <div id='output-graph' class="graph"></div>
-    </div>
     <script>
       $(document).one('controls-ready', function() {
-        APP=new WaterModel("layers", 2, -200, 199, -65, 64, false);
+        WaterModelStaticLayers.background = "state/img/WaterModel-WaterInTheWorld.png";
+        APP=new WaterModelStaticLayers("layers", 1, -400, 399, -130, 129, false);
         APP.setRootVars();
-        WaterControls.countOptions = { x: 10, y: 5, dx: 50, dy: 30, debug: false }
         WaterControls.setup();
-
-        // Set these defaults *after* we call WaterControls.setup(), since that sets some defaults of its own.
-        APP.rainProbability = 0;
-        APP.evapProbability = 0;
-        APP.setTemplate("state/low-res/WaterModel-Gaining-Losing-Stream-StreamA.json");
       });
     </script>
   </body>

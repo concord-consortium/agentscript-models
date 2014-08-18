@@ -132,10 +132,17 @@ window.WaterControls =
       templateOptions.change (evt)=>
         # FIXME There's got to be a better way to handle this
         switch templateOptions.val()
-          when "state/WaterModel-Gaining-Losing-Stream-StreamA.json" then @graphOptions.initialValues = [28]
-          when "state/WaterModel-Gaining-Losing-Stream-StreamB.json" then @graphOptions.initialValues = [5333]
+          when "state/hi-res/WaterModel-Gaining-Losing-Stream-StreamA.json"  then @graphOptions.initialValues = [28]
+          when "state/low-res/WaterModel-Gaining-Losing-Stream-StreamA.json" then @graphOptions.initialValues = [28]
+          when "state/hi-res/WaterModel-Gaining-Losing-Stream-StreamB.json"  then @graphOptions.initialValues = [5333]
+          when "state/low-res/WaterModel-Gaining-Losing-Stream-StreamB.json" then @graphOptions.initialValues = [1120]
         ABM.model.setTemplate templateOptions.val()
         @resetModel(false)
+      staticOptions = $('#static-options')
+      staticOptions.change (evt)=>
+        if WaterModelStaticLayers?
+          WaterModelStaticLayers.background = staticOptions.val()
+          ABM.model._setupPatches()
       irrigationWellButton = $("#irrigation-well-button")
       irrigationWellButton.button().click =>
         @stopDraw()
@@ -498,8 +505,9 @@ window.WaterControls =
     $(".icon-pause").hide()
     $(".icon-play").show()
 
-    @outputGraph.reset()
-    @outputGraph.addSamples @graphOptions.initialValues
+    if @outputGraph?
+      @outputGraph.reset()
+      @outputGraph.addSamples @graphOptions.initialValues
 
   offsetX: (evt, target)->
     return if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)

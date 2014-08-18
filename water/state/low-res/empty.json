@@ -1,0 +1,33 @@
+{
+  "agentProperties": {
+    "rain": [],
+    "wellWater": [],
+    "evap": [],
+    "spray": []
+  },
+  "agents": [],
+  "patchProperties": [
+    "breed",
+    "type"
+  ],
+  "patches": [
+    [
+      [
+        -200,
+        64
+      ],
+      [
+        199,
+        -65
+      ],
+      [
+        "patches",
+        "sky"
+      ]
+    ]
+  ],
+  "linkProperties": {
+    "links": []
+  },
+  "links": []
+}

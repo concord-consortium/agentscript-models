@@ -34,8 +34,8 @@
       <div id="view-button-set">
         <label for="template-options">Stream:</label>
         <select id="template-options">
-          <option value="state/low-res/WaterModel-Gaining-Losing-Stream-StreamA.json">Stream A</option>
-          <option value="state/low-res/WaterModel-Gaining-Losing-Stream-StreamB.json">Stream B</option>
+          <option value="state/hi-res/WaterModel-Gaining-Losing-Stream-StreamA.json">Stream A</option>
+          <option value="state/hi-res/WaterModel-Gaining-Losing-Stream-StreamB.json">Stream B</option>
         </select>
       </div>
     </div>
@@ -55,16 +55,16 @@
         return obj3;
       }
       $(document).one('controls-ready', function() {
-        APP=new WaterModel("layers", 2, -200, 199, -65, 64, false);
+        APP=new WaterModel("layers", 1, -400, 399, -130, 129, false);
         APP.setRootVars();
-        WaterControls.countOptions = shallowMerge(WaterControls.countOptions, { x: 10, y: 5, dx: 50, dy: 30, debug: false });
-        WaterControls.graphOptions = shallowMerge(WaterControls.graphOptions, { xMin: 0, xMax: 10, yMin: 0, yMax: 1300, initialValues: [28] });
+        WaterControls.countOptions = shallowMerge(WaterControls.countOptions, { x: 20, y: 20, dx: 100, dy: 40, debug: true });
+        WaterControls.graphOptions = shallowMerge(WaterControls.graphOptions, { xMin: 0, xMax: 10, yMin: 0, yMax: 5000, initialValues: [28] });
         WaterControls.setup();
 
         // Set these defaults *after* we call WaterControls.setup(), since that sets some defaults of its own.
         APP.rainProbability = 0;
         APP.evapProbability = 0;
-        APP.setTemplate("state/low-res/WaterModel-Gaining-Losing-Stream-StreamA.json");
+        APP.setTemplate("state/hi-res/WaterModel-Gaining-Losing-Stream-StreamA.json");
       });
     </script>
   </body>
