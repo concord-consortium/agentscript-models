@@ -373,6 +373,7 @@ window.WaterControls =
     $("#erase-button").click() if source isnt "#erase-button" and $("#erase-button")[0]?.checked
     $("#irrigation-well-button").click() if source isnt "#irrigation-well-button" and $("#irrigation-well-button")[0]?.checked
     $("#removal-well-button").click() if source isnt "#removal-well-button" and $("#removal-well-button")[0]?.checked
+    $("#remove-well").click() if source isnt "#remove-well" and $("#remove-well")[0]?.checked
     $("#water-button").click() if source isnt "#water-button" and $("#water-button")[0]?.checked
     $("#remove-water-button").click() if source isnt "#remove-water-button" and $("#remove-water-button")[0]?.checked
     @startStopModel() if alsoStopModel and not ABM.model.anim.animStop
