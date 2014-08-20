@@ -309,7 +309,7 @@ window.WaterControls =
       cStart = cEnd
       return false
     target.show()
-    target.css('cursor', 'url("img/cursor_add.cur")')
+    target.css('cursor', 'url("img/cursor_add.cur"), default')
     target.bind 'mousedown', (evt)->
       mouseDown = true
       drawEvt(evt)
@@ -327,7 +327,7 @@ window.WaterControls =
   erase: ->
     target = $("#mouse-catcher")
     target.show()
-    target.css('cursor', 'url("img/cursor_remove.cur")')
+    target.css('cursor', 'url("img/cursor_remove.cur"), default')
     target.bind 'mousedown', (evt)=>
       # get the patch under the cursor,
       # find all the contiguous patches of the same type,
@@ -391,7 +391,7 @@ window.WaterControls =
   drill: (type='irrigation')->
     target = $("#mouse-catcher")
     target.show()
-    target.css('cursor', 'url("img/cursor_addwell' + type + '.cur")')
+    target.css('cursor', 'url("img/cursor_addwell' + type + '.cur"), default')
     target.bind 'mousedown', (evt)=>
       return if @timerId?
       ABM.model.newWellType = switch type
@@ -408,7 +408,7 @@ window.WaterControls =
   removeWell: ->
     target = $("#mouse-catcher")
     target.show()
-    target.css('cursor', 'url("img/cursor_removewell.cur")')
+    target.css('cursor', 'url("img/cursor_removewell.cur"), default')
     target.bind 'mousedown', (evt)=>
       # get the patch under the cursor,
       # check if there's a nearby well. If so, remove it.
@@ -422,7 +422,7 @@ window.WaterControls =
     lastWaterEvt = null
     mouseDown = false
     target.show()
-    target.css('cursor', 'url("img/cursor_addwater.cur")')
+    target.css('cursor', 'url("img/cursor_addwater.cur"), default')
     target.bind 'mousedown', (evt)=>
       return if @timerId?
       lastWaterEvt = evt
@@ -448,7 +448,7 @@ window.WaterControls =
     lastWaterEvt = null
     mouseDown = false
     target.show()
-    target.css('cursor', 'url("img/cursor_removewater.cur")')
+    target.css('cursor', 'url("img/cursor_removewater.cur"), default')
     target.bind 'mousedown', (evt)=>
       return if @timerId?
       lastWaterEvt = evt
