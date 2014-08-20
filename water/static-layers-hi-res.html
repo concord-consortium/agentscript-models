@@ -1,0 +1,47 @@
+<html>
+  <head>
+    <title>Water Model</title>
+    <link href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="../lib/agentscript/agentscript.js"></script>
+    <script src="../lib/agentscript/coffee-script.js"></script>
+    <script src="../lib/well.coffee" type="text/coffeescript"></script>
+
+    <link href="css/water.css" rel="stylesheet" type="text/css" />
+    <script src="js/water-model.coffee" type="text/coffeescript"></script>
+    <script src="js/water-model-static-layers.coffee" type="text/coffeescript"></script>
+    <script src="js/water-controls.coffee" type="text/coffeescript"></script>
+  </head>
+  <body>
+    <div id="controls">
+      <div id="playback">
+        <button id="reset-button">
+          <i class="icon-step-backward"></i>
+        </button>
+        <button id="play-pause-button">
+          <i class="icon-play"></i>
+          <i class="icon-pause"></i>
+        </button>
+      </div>
+      <div id="view-button-set">
+        <button id="follow-water-button" class="follow-agent">Follow Water Droplet</button>
+      </div>
+    </div>
+    <div id="model">
+      <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+      <div id="layers"></div>
+      <div id="mouse-catcher"></div>
+    </div>
+    <script>
+      $(document).one('controls-ready', function() {
+        WaterModelStaticLayers.background = "state/img/WaterModel-WaterInTheWorld.png";
+        WaterModel.waterColor = [0, 0, 255, 0.4];
+        APP=new WaterModelStaticLayers("layers", 1, -400, 399, -130, 129, false);
+        APP.setRootVars();
+        WaterControls.setup();
+      });
+    </script>
+  </body>
+</html>

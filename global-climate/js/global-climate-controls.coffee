@@ -312,7 +312,7 @@ d3.timer (elapsed) ->
         else
           samples.push climateModel.getCO2Count()
 
-      co2Graph?.addSamples samples
+        co2Graph?.addSamples samples
 
       updateTickCounter()
       lastTick = tick

@@ -1,0 +1,70 @@
+<meta http-equiv="content-type" content="text/html; charset=UTF8">
+<html>
+  <head>
+    <title>Water Model</title>
+    <link href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="../lib/agentscript/agentscript.js"></script>
+    <script src="../lib/agentscript/coffee-script.js"></script>
+    <script src="../lib/import-export.coffee" type="text/coffeescript"></script>
+    <script src="../lib/well.coffee" type="text/coffeescript"></script>
+
+    <link href="css/water.css" rel="stylesheet" type="text/css" />
+    <script src="js/water-model.coffee" type="text/coffeescript"></script>
+    <script src="js/water-controls.coffee" type="text/coffeescript"></script>
+    <script src="//shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
+    <script type="text/javascript">new Shutterbug('body', '', null, null);</script>
+  </head>
+  <body>
+    <div id="controls">
+      <div id="playback">
+        <button id="reset-button">
+          <i class="icon-step-backward"></i>
+        </button>
+        <button id="play-pause-button">
+          <i class="icon-play"></i>
+          <i class="icon-pause"></i>
+        </button>
+      </div>
+      <div id="view-button-set">
+        <button id="follow-water-button" class="follow-agent">Follow Water Droplet</button>
+      </div>
+      <div id="buttons">
+        <div id="remove-button-set">
+          <input type="checkbox" id="remove-button" /><label for="remove-button"><span class="remove-option layer"><img id="remove-water-icon" src="img/tool_removewater.svg" /></span></label>
+          <button id="remove-button-type">Select a layer type</button>
+        </div>
+        <ul id="remove-button-type-options">
+          <li class="header">Remove</li>
+          <li><a href="#"><span class="remove-option water"><img id="remove-water-icon" src="img/tool_removewater.svg" /></span><span class="label">Water</span></a></li>
+          <li><a href="#"><span class="remove-option well"><img id="remove-well-icon" src="img/tool_removewell.svg" /></span><span class="label">Well</span></a></li>
+        </ul>
+
+        <div id="edit-button-set">
+          <input type="checkbox" id="water-button" /><label for="water-button"><img id="add-water-icon" src="img/tool_addwater.svg" /></label>
+          <input type="checkbox" id="irrigation-well-button" /><label for="irrigation-well-button"><img id="irrigation-well-button-icon" src="img/tool_addwellirrigation.svg" /></label>
+        </div>
+      </div>
+    </div>
+    <div id="model">
+      <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+      <div id="layers"></div>
+      <div id="mouse-catcher"></div>
+    </div>
+    <script>
+      $(document).one('controls-ready', function() {
+        WaterModel.waterColor = [0, 0, 255, 0.4];
+        APP=new WaterModel("layers", 1, -400, 399, -130, 129, false);
+        APP.setRootVars();
+        WaterControls.setup();
+
+        // Set these defaults *after* we call WaterControls.setup(), since that sets some defaults of its own.
+        APP.rainProbability = 0.5;
+        APP.evapProbability = 20;
+        APP.setTemplate("state/hi-res/WaterModel-5-23-11-goodVbadAquifers-Example-Layers.json");
+      });
+    </script>
+  </body>
+</html>

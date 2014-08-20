@@ -1,4 +1,5 @@
 class WaterModel extends ABM.Model
+  @waterColor: [0, 0, 255, 0.8]
   DOWN:  ABM.util.degToRad(270)
   LEFT:  ABM.util.degToRad(180)
   UP:    ABM.util.degToRad(90)
@@ -179,8 +180,9 @@ class WaterModel extends ABM.Model
 
   _setupWater: (agents)->
     agents.setDefaultSize 2/@world.size  # try to keep water around 2px in size
-    agents.setDefaultColor [0, 0, 255, 0.4]
+    agents.setDefaultColor WaterModel.waterColor
     agents.setDefaultShape "circle"
+    agents.useSprites = true
 
   setupRain: ->
     @_setupWater @rain
@@ -254,7 +256,7 @@ class WaterModel extends ABM.Model
       when "rock1" then (if p.isOnSurface then  64 else   8)
       when "rock2" then (if p.isOnSurface then 128 else  16)
       when "rock3" then (if p.isOnSurface then 256 else  32)
-      when "rock4" then 1000000
+      when "rock4" then Infinity
       else 1
 
   random: (n)->
@@ -314,6 +316,7 @@ class WaterModel extends ABM.Model
       i.patch = a.p.n[i.idx]
       continue unless i.patch?
       continue unless @isPatchFree(i.patch)
+      continue if @resistance(i.patch) == Infinity
 
       preferred = false
       i.priority += 1 unless i.patch.type is "sky"

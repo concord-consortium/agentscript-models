@@ -1,0 +1,72 @@
+<meta http-equiv="content-type" content="text/html; charset=UTF8">
+<html>
+  <head>
+    <title>Water Model</title>
+    <link href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="//lab.concord.org/vendor/d3/d3.js"></script>
+    <script src="../lib/lab.grapher.js"></script>
+    <script src="../lib/agentscript/agentscript.js"></script>
+    <script src="../lib/agentscript/coffee-script.js"></script>
+    <script src="../lib/import-export.coffee" type="text/coffeescript"></script>
+    <script src="../lib/well.coffee" type="text/coffeescript"></script>
+
+    <link href="css/water.css" rel="stylesheet" type="text/css" />
+    <link href="css/graph.css" rel="stylesheet" type="text/css" />
+    <script src="js/water-model.coffee" type="text/coffeescript"></script>
+    <script src="js/water-controls.coffee" type="text/coffeescript"></script>
+    <script src="//shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
+    <script type="text/javascript">new Shutterbug('body', '', null, null);</script>
+  </head>
+  <body>
+    <div id="controls" style="left: 415px;">
+      <div id="playback">
+        <button id="reset-button">
+          <i class="icon-step-backward"></i>
+        </button>
+        <button id="play-pause-button">
+          <i class="icon-play"></i>
+          <i class="icon-pause"></i>
+        </button>
+      </div>
+      <div id="view-button-set">
+        <label for="template-options">Stream:</label>
+        <select id="template-options">
+          <option value="state/hi-res/WaterModel-Gaining-Losing-Stream-StreamA.json">Stream A</option>
+          <option value="state/hi-res/WaterModel-Gaining-Losing-Stream-StreamB.json">Stream B</option>
+        </select>
+      </div>
+    </div>
+    <div id="model">
+      <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+      <div id="layers"></div>
+      <div id="mouse-catcher"></div>
+    </div>
+    <div id='output-graphs' style="width: 400px;">
+      <div id='output-graph' class="graph" style="height: 300px; width: 400px;"></div>
+    </div>
+    <script>
+      var shallowMerge = function(obj1, obj2) {
+        var obj3 = {};
+        for (var attr in obj1) { obj3[attr] = obj1[attr]; }
+        for (var attr in obj2) { obj3[attr] = obj2[attr]; }
+        return obj3;
+      }
+      $(document).one('controls-ready', function() {
+        WaterModel.waterColor = [0, 0, 255, 0.4];
+        APP=new WaterModel("layers", 1, -400, 399, -130, 129, false);
+        APP.setRootVars();
+        WaterControls.countOptions = shallowMerge(WaterControls.countOptions, { x: 20, y: 20, dx: 100, dy: 40, debug: false });
+        WaterControls.graphOptions = shallowMerge(WaterControls.graphOptions, { xMin: 0, xMax: 10, yMin: 0, yMax: 5000, initialValues: [28] });
+        WaterControls.setup();
+
+        // Set these defaults *after* we call WaterControls.setup(), since that sets some defaults of its own.
+        APP.rainProbability = 0;
+        APP.evapProbability = 0;
+        APP.setTemplate("state/hi-res/WaterModel-Gaining-Losing-Stream-StreamA.json");
+      });
+    </script>
+  </body>
+</html>

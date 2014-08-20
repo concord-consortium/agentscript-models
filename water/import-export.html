@@ -66,14 +66,14 @@
         <label for="template-options">Template:</label>
         <select id="template-options">
           <option value="">None</option>
-          <option value="state/WaterModel-2PumpTypes-NoFile.json">WaterModel-2PumpTypes-NoFile</option>
-          <option value="state/WaterModel-5-23-11-compareLayers.json">WaterModel-5-23-11-compareLayers</option>
-          <option value="state/WaterModel-5-23-11-confinedAndUnconfined.json">WaterModel-5-23-11-confinedAndUnconfined</option>
-          <option value="state/WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example.json">WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example</option>
-          <option value="state/WaterModel-5-23-11-goodVbadAquifers-Example-Layers.json">WaterModel-5-23-11-goodVbadAquifers-Example-Layers</option>
-          <option value="state/WaterModel-Gaining-Losing-Stream-StreamA.json">WaterModel-Gaining-Losing-Stream-StreamA</option>
-          <option value="state/WaterModel-Gaining-Losing-Stream-StreamB.json">WaterModel-Gaining-Losing-Stream-StreamB</option>
-          <option value="state/WaterModel-WaterInTheWorld.json">WaterModel-WaterInTheWorld</option>
+          <option value="state/low-res/WaterModel-2PumpTypes-NoFile.json">WaterModel-2PumpTypes-NoFile</option>
+          <option value="state/low-res/WaterModel-5-23-11-compareLayers.json">WaterModel-5-23-11-compareLayers</option>
+          <option value="state/low-res/WaterModel-5-23-11-confinedAndUnconfined.json">WaterModel-5-23-11-confinedAndUnconfined</option>
+          <option value="state/low-res/WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example.json">WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example</option>
+          <option value="state/low-res/WaterModel-5-23-11-goodVbadAquifers-Example-Layers.json">WaterModel-5-23-11-goodVbadAquifers-Example-Layers</option>
+          <option value="state/low-res/WaterModel-Gaining-Losing-Stream-StreamA.json">WaterModel-Gaining-Losing-Stream-StreamA</option>
+          <option value="state/low-res/WaterModel-Gaining-Losing-Stream-StreamB.json">WaterModel-Gaining-Losing-Stream-StreamB</option>
+          <option value="state/low-res/WaterModel-WaterInTheWorld.json">WaterModel-WaterInTheWorld</option>
         </select>
         <div id="rain-top-labels" class="button-label-top">
           <span class="left"><i class="icon-sun"></i></span>
@@ -97,7 +97,7 @@
     <script>
       $(document).one('controls-ready', function() {
         ImportExport.skipProperties.push("color");
-        APP=new WaterModel("layers", 1, -400, 399, -130, 129, false);
+        APP=new WaterModel("layers", 2, -200, 199, -65, 64, false);
         APP.setRootVars();
         WaterControls.setup();
       });

@@ -33,7 +33,7 @@ window.WaterControls =
       #     @stopDraw()
       $("#play-pause-button").button()
       .click =>
-        @stopDraw(false)
+        @stopDraw(null, false)
         @startStopModel()
       $("#reset-button").button()
       .click =>
@@ -42,12 +42,12 @@ window.WaterControls =
       $("#playback").buttonset()
       $("#erase-button").button()
       .click =>
-        @stopDraw()
+        @stopDraw("#erase-button")
         @erase()
       $("#fill-button").button()
       .click =>
-        @stopDraw()
         if `this.checked`
+          @stopDraw("#fill-button")
           @drawStyle = "fill"
           @draw()
       $("#draw-button-type").button
@@ -72,8 +72,8 @@ window.WaterControls =
           $("#fill-button").click() unless $("#fill-button")[0].checked
       $("#remove-button").button()
       .click =>
-        @stopDraw()
         if `this.checked`
+          @stopDraw("#remove-button")
           switch @removeType
             when "layer" then @erase()
             when "water" then @removeWater()
@@ -132,34 +132,42 @@ window.WaterControls =
       templateOptions.change (evt)=>
         # FIXME There's got to be a better way to handle this
         switch templateOptions.val()
-          when "state/WaterModel-Gaining-Losing-Stream-StreamA.json" then @graphOptions.initialValues = [28]
-          when "state/WaterModel-Gaining-Losing-Stream-StreamB.json" then @graphOptions.initialValues = [5333]
+          when "state/hi-res/WaterModel-Gaining-Losing-Stream-StreamA.json"  then @graphOptions.initialValues = [28]
+          when "state/low-res/WaterModel-Gaining-Losing-Stream-StreamA.json" then @graphOptions.initialValues = [28]
+          when "state/hi-res/WaterModel-Gaining-Losing-Stream-StreamB.json"  then @graphOptions.initialValues = [5333]
+          when "state/low-res/WaterModel-Gaining-Losing-Stream-StreamB.json" then @graphOptions.initialValues = [1120]
         ABM.model.setTemplate templateOptions.val()
         @resetModel(false)
+      staticOptions = $('#static-options')
+      staticOptions.change (evt)=>
+        if WaterModelStaticLayers?
+          WaterModelStaticLayers.background = staticOptions.val()
+          ABM.model._setupPatches()
       irrigationWellButton = $("#irrigation-well-button")
       irrigationWellButton.button().click =>
-        @stopDraw()
         if irrigationWellButton[0]?.checked
+          @stopDraw("#irrigation-well-button")
           @drill('irrigation')
       removalWellButton = $("#removal-well-button")
       removalWellButton.button().click =>
-        @stopDraw()
         if removalWellButton[0]?.checked
+          @stopDraw("#removal-well-button")
           @drill('removal')
       removeWellButton = $("#remove-well")
       removeWellButton.button().click =>
-        @stopDraw()
         if removeWellButton[0]?.checked
+          @stopDraw("#remove-well")
           @removeWell()
       addWaterButton = $("#water-button")
       addWaterButton.button().click =>
-        @stopDraw()
+        console.log("adding water clicked")
         if addWaterButton[0]?.checked
+          @stopDraw("#water-button")
           @addWater()
       removeWaterButton = $("#remove-water-button")
       removeWaterButton.button().click =>
-        @stopDraw()
         if removeWaterButton[0]?.checked
+          @stopDraw("#remove-water-button")
           @removeWater()
 
       if $('#output-graph').length > 0
@@ -302,7 +310,7 @@ window.WaterControls =
       cStart = cEnd
       return false
     target.show()
-    target.css('cursor', 'url("img/cursor_add.cur")')
+    target.css('cursor', 'url("img/cursor_add.cur"), default')
     target.bind 'mousedown', (evt)->
       mouseDown = true
       drawEvt(evt)
@@ -320,7 +328,7 @@ window.WaterControls =
   erase: ->
     target = $("#mouse-catcher")
     target.show()
-    target.css('cursor', 'url("img/cursor_remove.cur")')
+    target.css('cursor', 'url("img/cursor_remove.cur"), default')
     target.bind 'mousedown', (evt)=>
       # get the patch under the cursor,
       # find all the contiguous patches of the same type,
@@ -359,13 +367,15 @@ window.WaterControls =
       ABM.model.draw()
       ABM.model.refreshPatches = false
 
-  stopDraw: (alsoStopModel=true)->
-    $("#fill-button").click() if $("#fill-button")[0]?.checked
-    $("#remove-button").click() if $("#remove-button")[0]?.checked
-    $("#erase-button").click() if $("#erase-button")[0]?.checked
-    $("#irrigation-well-button").click() if $("#irrigation-well-button")[0]?.checked
-    $("#removal-well-button").click() if $("#removal-well-button")[0]?.checked
-    $("#water-button").click() if $("#water-button")[0]?.checked
+  stopDraw: (source, alsoStopModel=true)->
+    $("#fill-button").click() if source isnt "#fill-button" and $("#fill-button")[0]?.checked
+    $("#remove-button").click() if source isnt "#remove-button" and $("#remove-button")[0]?.checked
+    $("#erase-button").click() if source isnt "#erase-button" and $("#erase-button")[0]?.checked
+    $("#irrigation-well-button").click() if source isnt "#irrigation-well-button" and $("#irrigation-well-button")[0]?.checked
+    $("#removal-well-button").click() if source isnt "#removal-well-button" and $("#removal-well-button")[0]?.checked
+    $("#remove-well").click() if source isnt "#remove-well" and $("#remove-well")[0]?.checked
+    $("#water-button").click() if source isnt "#water-button" and $("#water-button")[0]?.checked
+    $("#remove-water-button").click() if source isnt "#remove-water-button" and $("#remove-water-button")[0]?.checked
     @startStopModel() if alsoStopModel and not ABM.model.anim.animStop
     $("#mouse-catcher").hide()
     $("#mouse-catcher").css('cursor', '')
@@ -384,7 +394,7 @@ window.WaterControls =
   drill: (type='irrigation')->
     target = $("#mouse-catcher")
     target.show()
-    target.css('cursor', 'url("img/cursor_addwell' + type + '.cur")')
+    target.css('cursor', 'url("img/cursor_addwell' + type + '.cur"), default')
     target.bind 'mousedown', (evt)=>
       return if @timerId?
       ABM.model.newWellType = switch type
@@ -401,7 +411,7 @@ window.WaterControls =
   removeWell: ->
     target = $("#mouse-catcher")
     target.show()
-    target.css('cursor', 'url("img/cursor_removewell.cur")')
+    target.css('cursor', 'url("img/cursor_removewell.cur"), default')
     target.bind 'mousedown', (evt)=>
       # get the patch under the cursor,
       # check if there's a nearby well. If so, remove it.
@@ -415,7 +425,7 @@ window.WaterControls =
     lastWaterEvt = null
     mouseDown = false
     target.show()
-    target.css('cursor', 'url("img/cursor_addwater.cur")')
+    target.css('cursor', 'url("img/cursor_addwater.cur"), default')
     target.bind 'mousedown', (evt)=>
       return if @timerId?
       lastWaterEvt = evt
@@ -441,7 +451,7 @@ window.WaterControls =
     lastWaterEvt = null
     mouseDown = false
     target.show()
-    target.css('cursor', 'url("img/cursor_removewater.cur")')
+    target.css('cursor', 'url("img/cursor_removewater.cur"), default')
     target.bind 'mousedown', (evt)=>
       return if @timerId?
       lastWaterEvt = evt
@@ -498,8 +508,9 @@ window.WaterControls =
     $(".icon-pause").hide()
     $(".icon-play").show()
 
-    @outputGraph.reset()
-    @outputGraph.addSamples @graphOptions.initialValues
+    if @outputGraph?
+      @outputGraph.reset()
+      @outputGraph.addSamples @graphOptions.initialValues
 
   offsetX: (evt, target)->
     return if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)

@@ -1687,10 +1687,15 @@ class ABM.Animator
   # Create initial animator for the model, specifying default rate (fps) and multiStep (async).
   # If multiStep, run the draw() and step() methods asynchronously by draw() using
   # requestAnimFrame and step() using setTimeout.
-  constructor: (@model, @rate=30, @multiStep=false) -> @reset() # init all animation state
+  constructor: (@model, @rate=30, @multiStep=false, @drawRate=30) -> @reset() # init all animation state
   # Adjust animator.  This is used by programmer as the default animator will already have
   # been created by the time her model runs.
-  setRate: (@rate, @multiStep=false) -> @resetAnim()
+  setRate: (rate, @multiStep=false) ->
+    if @drawRate is @rate
+      @drawRate = rate
+    @rate = rate
+    @resetAnim()
+  setDrawRate: (@drawRate) -> @resetAnim()
   # start/stop model, often used for debugging
   start: ->
     if not @animStop then return # avoid multiple animates
@@ -1710,7 +1715,17 @@ class ABM.Animator
   reset: -> @stop(); @ticks = @draws = 0
   # step/draw the model.  Note ticks/draws counters separate due to async.
   step: -> @ticks++; @model.step()
-  draw: -> @draws++; @model.draw()
+  drawInProgress: false
+  draw: ->
+    unless @drawInProgress
+      @drawInProgress = true
+      setTimeout =>
+        @draws++;
+        @model.draw()
+        @drawInProgress = false
+      , 1
+      return true
+    return false
   # step and draw the model once, mainly debugging
   once: -> @step(); @draw()
   # Get current time, with high resolution timer if available
@@ -1721,14 +1736,15 @@ class ABM.Animator
   ticksPerSec: -> if (elapsed = @ticks-@startTick) is 0 then 0 else Math.round elapsed*1000/@ms()
   drawsPerSec: -> if (elapsed = @draws-@startDraw) is 0 then 0 else Math.round elapsed*1000/@ms()
   # Return a status string for debugging and logging performance
-  toString: -> "ticks: #{@ticks}, draws: #{@draws}, rate: #{@rate} #{@ticksPerSec()}/#{@drawsPerSec()}"
+  toString: -> "ticks: #{@ticks}, draws: #{@draws}, rate: #{@rate}/#{@drawRate} #{@ticksPerSec()}/#{@drawsPerSec()}"
   # Animation via setTimeout and requestAnimFrame
   animateSteps: =>
     @step()
-    @timeoutHandle = setTimeout @animateSteps, 10 unless @animStop
+    @timeoutHandle = setTimeout @animateSteps, (1000.0/@rate) unless @animStop
   animateDraws: =>
-    if @drawsPerSec() <= @rate
-      @step() if not @multiStep
+    if not @multiStep and @ticksPerSec() <= @rate
+      @step()
+    if @drawsPerSec() <= @drawRate
       @draw()
     @animHandle = requestAnimFrame @animateDraws unless @animStop
   animate: ->

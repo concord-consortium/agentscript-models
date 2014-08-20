@@ -1,0 +1,106 @@
+<meta http-equiv="content-type" content="text/html; charset=UTF8">
+<html>
+  <head>
+    <title>Water Model</title>
+    <link href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="../lib/agentscript/agentscript.js"></script>
+    <script src="../lib/agentscript/coffee-script.js"></script>
+    <script src="../lib/import-export.coffee" type="text/coffeescript"></script>
+    <script src="../lib/well.coffee" type="text/coffeescript"></script>
+
+    <link href="css/water.css" rel="stylesheet" type="text/css" />
+    <script src="js/water-model.coffee" type="text/coffeescript"></script>
+    <script src="js/water-model-static-layers.coffee" type="text/coffeescript"></script>
+    <script src="js/water-controls.coffee" type="text/coffeescript"></script>
+  </head>
+  <body>
+    <div id="controls">
+      <div id="playback">
+        <button id="reset-button">
+          <i class="icon-step-backward"></i>
+        </button>
+        <button id="play-pause-button">
+          <i class="icon-play"></i>
+          <i class="icon-pause"></i>
+        </button>
+      </div>
+      <div id="view-button-set">
+        <button id="follow-water-button" class="follow-agent">Follow Water Droplet</button>
+      </div>
+      <div id="buttons">
+        <div id="draw-button-set">
+          <input type="checkbox" id="fill-button" /><label for="fill-button"><span class="layer-option rock1"></span></label>
+          <button id="draw-button-type">Select a layer type</button>
+        </div>
+        <ul id="draw-button-type-options">
+          <li class="header">Permeability</li>
+          <li><a href="#"><span class="layer-option soil"></span><span class="label">Easy flow</span></a></li>
+          <li><a href="#"><span class="layer-option rock1"></span></a></li>
+          <li><a href="#"><span class="layer-option rock2"></span></a></li>
+          <li><a href="#"><span class="layer-option rock3"></span></a></li>
+          <li><a href="#"><span class="layer-option rock4"></span><span class="label">No flow</span></a></li>
+        </ul>
+
+        <div id="remove-button-set">
+          <input type="checkbox" id="remove-button" /><label for="remove-button"><span class="remove-option layer"><img id="remove-icon" src="img/tool_remove.svg" /></span></label>
+          <button id="remove-button-type">Select a layer type</button>
+        </div>
+        <ul id="remove-button-type-options">
+          <li class="header">Remove</li>
+          <li><a href="#"><span class="remove-option layer"><img id="remove-icon" src="img/tool_remove.svg" /></span><span class="label">Layer</span></a></li>
+          <li><a href="#"><span class="remove-option water"><img id="remove-water-icon" src="img/tool_removewater.svg" /></span><span class="label">Water</span></a></li>
+          <li><a href="#"><span class="remove-option well"><img id="remove-well-icon" src="img/tool_removewell.svg" /></span><span class="label">Well</span></a></li>
+        </ul>
+
+        <div id="edit-button-set">
+          <input type="checkbox" id="water-button" /><label for="water-button"><img id="add-water-icon" src="img/tool_addwater.svg" /></label>
+          <input type="checkbox" id="irrigation-well-button" /><label for="irrigation-well-button"><img id="irrigation-well-button-icon" src="img/tool_addwellirrigation.svg" /></label>
+          <input type="checkbox" id="removal-well-button" /><label for="removal-well-button"><img id="removal-well-button-icon" src="img/tool_addwellremoval.svg" /></label>
+        </div>
+      </div>
+      <div id="buttons-row2">
+        <label for="static-options">Static Template:</label>
+        <select id="static-options">
+          <option value="">None</option>
+          <option value="state/img/WaterModel-2PumpTypes-NoFile.png">WaterModel-2PumpTypes-NoFile</option>
+          <option value="state/img/WaterModel-5-23-11-compareLayers.png">WaterModel-5-23-11-compareLayers</option>
+          <option value="state/img/WaterModel-5-23-11-confinedAndUnconfined.png">WaterModel-5-23-11-confinedAndUnconfined</option>
+          <option value="state/img/WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example.png">WaterModel-5-23-11-goodVbadAquifers-Aquifers-Example</option>
+          <option value="state/img/WaterModel-5-23-11-goodVbadAquifers-Example-Layers.png">WaterModel-5-23-11-goodVbadAquifers-Example-Layers</option>
+          <option value="state/img/WaterModel-Gaining-Losing-Stream-StreamA.png">WaterModel-Gaining-Losing-Stream-StreamA</option>
+          <option value="state/img/WaterModel-Gaining-Losing-Stream-StreamB.png">WaterModel-Gaining-Losing-Stream-StreamB</option>
+          <option value="state/img/WaterModel-WaterInTheWorld.png">WaterModel-WaterInTheWorld</option>
+        </select>
+        <div id="rain-top-labels" class="button-label-top">
+          <span class="left"><i class="icon-sun"></i></span>
+          <span class="right"><i class="icon-umbrella"></i></span>
+        </div>
+        <div class="button-label-left">Rain: </div>
+        <div id="rain-slider" class="horizontal-slider"></div>
+      </div>
+    </div>
+    <div id="model">
+      <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+      <div id="layers"></div>
+      <div id="mouse-catcher"></div>
+    </div>
+    <div id="export">
+      <button id="export-button">Save</button>
+      <button id="import-button">Load</button>
+      <br/>
+      <textarea id="exported-data"></textarea>
+    </div>
+    <script>
+      $(document).one('controls-ready', function() {
+        ImportExport.skipProperties.push('color');
+        APP=new WaterModelStaticLayers("layers", 2, -200, 199, -65, 64, false);
+        APP.setRootVars();
+        WaterControls.setup();
+        APP.evapProbability = 0;
+      });
+    </script>
+  </body>
+</html>

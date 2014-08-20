@@ -37067,18 +37067,27 @@ $.widget( "ui.tooltip", {
   })(ABM.AgentSet);
 
   ABM.Animator = (function() {
-    function Animator(model, rate, multiStep) {
+    function Animator(model, rate, multiStep, drawRate) {
       this.model = model;
       this.rate = rate != null ? rate : 30;
       this.multiStep = multiStep != null ? multiStep : false;
+      this.drawRate = drawRate != null ? drawRate : 30;
       this.animateDraws = __bind(this.animateDraws, this);
       this.animateSteps = __bind(this.animateSteps, this);
       this.reset();
     }
 
     Animator.prototype.setRate = function(rate, multiStep) {
-      this.rate = rate;
       this.multiStep = multiStep != null ? multiStep : false;
+      if (this.drawRate === this.rate) {
+        this.drawRate = rate;
+      }
+      this.rate = rate;
+      return this.resetAnim();
+    };
+
+    Animator.prototype.setDrawRate = function(drawRate) {
+      this.drawRate = drawRate;
       return this.resetAnim();
     };
 
@@ -37121,9 +37130,21 @@ $.widget( "ui.tooltip", {
       return this.model.step();
     };
 
+    Animator.prototype.drawInProgress = false;
+
     Animator.prototype.draw = function() {
-      this.draws++;
-      return this.model.draw();
+      if (!this.drawInProgress) {
+        this.drawInProgress = true;
+        setTimeout((function(_this) {
+          return function() {
+            _this.draws++;
+            _this.model.draw();
+            return _this.drawInProgress = false;
+          };
+        })(this), 1);
+        return true;
+      }
+      return false;
     };
 
     Animator.prototype.once = function() {
@@ -37158,21 +37179,21 @@ $.widget( "ui.tooltip", {
     };
 
     Animator.prototype.toString = function() {
-      return "ticks: " + this.ticks + ", draws: " + this.draws + ", rate: " + this.rate + " " + (this.ticksPerSec()) + "/" + (this.drawsPerSec());
+      return "ticks: " + this.ticks + ", draws: " + this.draws + ", rate: " + this.rate + "/" + this.drawRate + " " + (this.ticksPerSec()) + "/" + (this.drawsPerSec());
     };
 
     Animator.prototype.animateSteps = function() {
       this.step();
       if (!this.animStop) {
-        return this.timeoutHandle = setTimeout(this.animateSteps, 10);
+        return this.timeoutHandle = setTimeout(this.animateSteps, 1000.0 / this.rate);
       }
     };
 
     Animator.prototype.animateDraws = function() {
-      if (this.drawsPerSec() <= this.rate) {
-        if (!this.multiStep) {
-          this.step();
-        }
+      if (!this.multiStep && this.ticksPerSec() <= this.rate) {
+        this.step();
+      }
+      if (this.drawsPerSec() <= this.drawRate) {
         this.draw();
       }
       if (!this.animStop) {
