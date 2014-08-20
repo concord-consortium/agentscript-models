@@ -33,7 +33,7 @@ window.WaterControls =
       #     @stopDraw()
       $("#play-pause-button").button()
       .click =>
-        @stopDraw(false)
+        @stopDraw(null, false)
         @startStopModel()
       $("#reset-button").button()
       .click =>
@@ -42,12 +42,12 @@ window.WaterControls =
       $("#playback").buttonset()
       $("#erase-button").button()
       .click =>
-        @stopDraw()
+        @stopDraw("#erase-button")
         @erase()
       $("#fill-button").button()
       .click =>
-        @stopDraw()
         if `this.checked`
+          @stopDraw("#fill-button")
           @drawStyle = "fill"
           @draw()
       $("#draw-button-type").button
@@ -72,8 +72,8 @@ window.WaterControls =
           $("#fill-button").click() unless $("#fill-button")[0].checked
       $("#remove-button").button()
       .click =>
-        @stopDraw()
         if `this.checked`
+          @stopDraw("#remove-button")
           switch @removeType
             when "layer" then @erase()
             when "water" then @removeWater()
@@ -145,28 +145,29 @@ window.WaterControls =
           ABM.model._setupPatches()
       irrigationWellButton = $("#irrigation-well-button")
       irrigationWellButton.button().click =>
-        @stopDraw()
         if irrigationWellButton[0]?.checked
+          @stopDraw("#irrigation-well-button")
           @drill('irrigation')
       removalWellButton = $("#removal-well-button")
       removalWellButton.button().click =>
-        @stopDraw()
         if removalWellButton[0]?.checked
+          @stopDraw("#removal-well-button")
           @drill('removal')
       removeWellButton = $("#remove-well")
       removeWellButton.button().click =>
-        @stopDraw()
         if removeWellButton[0]?.checked
+          @stopDraw("#remove-well")
           @removeWell()
       addWaterButton = $("#water-button")
       addWaterButton.button().click =>
-        @stopDraw()
+        console.log("adding water clicked")
         if addWaterButton[0]?.checked
+          @stopDraw("#water-button")
           @addWater()
       removeWaterButton = $("#remove-water-button")
       removeWaterButton.button().click =>
-        @stopDraw()
         if removeWaterButton[0]?.checked
+          @stopDraw("#remove-water-button")
           @removeWater()
 
       if $('#output-graph').length > 0
@@ -366,13 +367,14 @@ window.WaterControls =
       ABM.model.draw()
       ABM.model.refreshPatches = false
 
-  stopDraw: (alsoStopModel=true)->
-    $("#fill-button").click() if $("#fill-button")[0]?.checked
-    $("#remove-button").click() if $("#remove-button")[0]?.checked
-    $("#erase-button").click() if $("#erase-button")[0]?.checked
-    $("#irrigation-well-button").click() if $("#irrigation-well-button")[0]?.checked
-    $("#removal-well-button").click() if $("#removal-well-button")[0]?.checked
-    $("#water-button").click() if $("#water-button")[0]?.checked
+  stopDraw: (source, alsoStopModel=true)->
+    $("#fill-button").click() if source isnt "#fill-button" and $("#fill-button")[0]?.checked
+    $("#remove-button").click() if source isnt "#remove-button" and $("#remove-button")[0]?.checked
+    $("#erase-button").click() if source isnt "#erase-button" and $("#erase-button")[0]?.checked
+    $("#irrigation-well-button").click() if source isnt "#irrigation-well-button" and $("#irrigation-well-button")[0]?.checked
+    $("#removal-well-button").click() if source isnt "#removal-well-button" and $("#removal-well-button")[0]?.checked
+    $("#water-button").click() if source isnt "#water-button" and $("#water-button")[0]?.checked
+    $("#remove-water-button").click() if source isnt "#remove-water-button" and $("#remove-water-button")[0]?.checked
     @startStopModel() if alsoStopModel and not ABM.model.anim.animStop
     $("#mouse-catcher").hide()
     $("#mouse-catcher").css('cursor', '')
