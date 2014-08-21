@@ -99,7 +99,13 @@
       $(document).one('controls-ready', function() {
         APP=new WaterModel("layers", 2, -200, 199, -65, 64, false);
         APP.setRootVars();
+        WaterControls.localStoragePrefix = "water-index";
         WaterControls.setup();
+
+        var template = window.localStorage.getItem("water-index-template");
+        if (template) {
+          $('#template-options').val(template).change();
+        }
       });
     </script>
   </body>

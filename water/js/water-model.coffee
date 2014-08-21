@@ -123,7 +123,7 @@ class WaterModel extends ABM.Model
     , 1
 
   patchChanged: (p, redraw=true)->
-    unless p.isWell
+    if @_tileControl and not p.isWell
       p.color = @_tileControl.lookupColor p
     @_toRedraw.push p if redraw
 

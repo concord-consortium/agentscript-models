@@ -99,8 +99,14 @@
         ImportExport.skipProperties.push('color');
         APP=new WaterModelStaticLayers("layers", 2, -200, 199, -65, 64, false);
         APP.setRootVars();
-        WaterControls.setup();
         APP.evapProbability = 0;
+        WaterControls.localStoragePrefix = "water-static-layers-editing";
+        WaterControls.setup();
+
+        var bg = window.localStorage.getItem("water-static-layers-editing-background");
+        if (bg) {
+          $('#static-options').val(bg).change();
+        }
       });
     </script>
   </body>

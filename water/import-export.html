@@ -100,7 +100,13 @@
         ImportExport.skipProperties.push("color");
         APP=new WaterModel("layers", 2, -200, 199, -65, 64, false);
         APP.setRootVars();
+        WaterControls.localStoragePrefix = "water-import-export";
         WaterControls.setup();
+
+        var template = window.localStorage.getItem("water-import-export-template");
+        if (template) {
+          $('#template-options').val(template).change();
+        }
       });
     </script>
   </body>

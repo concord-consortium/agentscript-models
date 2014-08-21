@@ -15,6 +15,7 @@ window.WaterControls =
     yMin: 0
     yMax: 600
     initialValues: [0]
+  localStoragePrefix: "water"
   setup: ->
     if ABM.model?
       $(".icon-pause").hide()
@@ -137,11 +138,13 @@ window.WaterControls =
           when "state/hi-res/WaterModel-Gaining-Losing-Stream-StreamB.json"  then @graphOptions.initialValues = [5333]
           when "state/low-res/WaterModel-Gaining-Losing-Stream-StreamB.json" then @graphOptions.initialValues = [1120]
         ABM.model.setTemplate templateOptions.val()
+        window.localStorage.setItem @localStoragePrefix + "-template", templateOptions.val()
         @resetModel(false)
       staticOptions = $('#static-options')
       staticOptions.change (evt)=>
         if WaterModelStaticLayers?
           WaterModelStaticLayers.background = staticOptions.val()
+          window.localStorage.setItem @localStoragePrefix + "-background", staticOptions.val()
           ABM.model._setupPatches()
       irrigationWellButton = $("#irrigation-well-button")
       irrigationWellButton.button().click =>
