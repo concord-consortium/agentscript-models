@@ -16,6 +16,7 @@
     "tests"
   ],
   "dependencies": {
+    "jquery.ui.touch-punch.min": "../lib/jquery.ui.touch-punch.min.js",
     "jquery": "1.x",
     "jqueryui": "~1.10.4",
     "d3": "3.x",

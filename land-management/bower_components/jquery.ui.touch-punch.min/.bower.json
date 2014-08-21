@@ -1,0 +1,12 @@
+{
+  "name": "jquery.ui.touch-punch.min",
+  "_cacheHeaders": {
+    "Last-Modified": "Thu, 26 Jun 2014 18:00:18 GMT",
+    "Content-Type": "application/javascript"
+  },
+  "main": "index.js",
+  "_source": "http://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js",
+  "_target": "*",
+  "_originalSource": "http://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js",
+  "_direct": true
+}
