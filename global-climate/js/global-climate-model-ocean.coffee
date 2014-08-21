@@ -141,7 +141,25 @@ class OceanClimateModel extends ClimateModel
     @CO2.with("o.y > #{@earthTop}").length
 
   getOceanCO2Count : ->
-    @CO2.with("o.y <= #{@earthTop}").length
+    @CO2.with("o.y <= #{@earthTop} && !o.pinned").length
+
+  getCO2Count : ->
+    @CO2.with("!o.pinned").length
+
+  addCO2Spotlight: ->
+    agents = @CO2.with("!o.pinned && !o.hidden")
+    if agents.any()
+      a = agents.oneOf()
+      @setSpotlight a
+
+  addCO2: ->
+    @createCO2( Math.max 1, Math.round @CO2.with('!o.pinned').length*0.1 )
+
+  subtractCO2: ->
+    available = @CO2.with('!o.pinned')
+    quant = Math.ceil available.length*0.1
+    while quant--
+      available.oneOf().die()
 
   updateAlbedoOfSurface: ->
     earthAlbedo = (Math.min(Math.floor(a+@albedo*120),255) for a in [96, 155, 96])
@@ -250,12 +268,11 @@ class OceanClimateModel extends ClimateModel
   #
   runCO2: ->
     for a in @CO2
-      if a
+      if a and not a.pinned
         a.heading = a.heading + u.randomCentered(Math.PI/9)
         if a.y <= @oceanBottom                          # stop at bottom of ocean
-          a.stamp()
-          a.die()
-          return
+          a.pinned = true
+          continue
 
         if a.y <= @earthTop + 0.7 and a.x < @oceanLeft
           [oceanLeft, normal] = @oceanBoundaryAndNormalAngleAt a.y
