@@ -5,6 +5,7 @@ class WaterModel extends ABM.Model
   UP:    ABM.util.degToRad(90)
   CONE:  ABM.util.degToRad(110)
   RIGHT: 0
+  RIGHT_360: ABM.util.degToRad(360)
 
   template: null
   templateData: { url: null, data: null }
@@ -423,6 +424,19 @@ class WaterModel extends ABM.Model
       ww = a.changeBreed(@wellWater)[0]
       ww.well = well
 
+  _ensureNoOverlap: (agent)->
+    p = agent.p
+    if p.agentsHere().length > 1
+      # move this vertically to the next empty patch
+      while p? and p.agentsHere().length > 0
+        p = p.n4[3]
+
+      if p? and p isnt agent.p
+        agent.moveTo p
+        return true
+
+    return false
+
   moveSpray: (s)->
     # use vector addition to continually add "gravity" until it hits the surface, then change to @rain
     origin = [s.x, s.y]
@@ -430,6 +444,8 @@ class WaterModel extends ABM.Model
     s.heading = @DOWN
     s.forward 1
     patch = s.p
+    s.heading = ABM.util.radsToward origin[0], origin[1], s.x, s.y
+    s.speed = ABM.util.distance origin[0], origin[1], s.x, s.y
     if patch.type isnt "sky"
       # move it back to the surface and change its type to @rain
       while patch.type isnt "sky"
@@ -438,9 +454,20 @@ class WaterModel extends ABM.Model
       @_toDoAtEnd.push =>
         r = s.changeBreed(@rain)[0]
         r.moveTo patch
-    else
-      s.heading = ABM.util.radsToward origin[0], origin[1], s.x, s.y
-      s.speed = ABM.util.distance origin[0], origin[1], s.x, s.y
+        @_ensureNoOverlap(r)
+    # if the spray is heading downward and encounters a row of rain
+    else if s.heading > @LEFT and s.heading < @RIGHT_360 and
+            patch.n[0]?.agentsHere().filter((ag)=> ag.breed is @rain).length isnt 0 and
+            patch.n[1]?.agentsHere().filter((ag)=> ag.breed is @rain).length isnt 0 and
+            patch.n[2]?.agentsHere().filter((ag)=> ag.breed is @rain).length isnt 0
+      while patch.agentsHere().filter((ag)=> ag.breed is @rain).length isnt 0
+        break unless patch.n4[3]?
+        patch = patch.n4[3]
+
+      @_toDoAtEnd.push =>
+        r = s.changeBreed(@rain)[0]
+        r.moveTo patch
+        @_ensureNoOverlap(r)
 
   addRainSpotlight: ->
     # try to add spotlight to a raindrop at very top
