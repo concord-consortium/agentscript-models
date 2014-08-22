@@ -362,16 +362,21 @@ class WaterModel extends ABM.Model
   evaporateWater: ->
     for a in @rain
       if a? and a.p.isOnAirSurface and @random(10000) < @evapProbability
-        # move to the surface of any pools of water
-        nextP = a.p.n4[3]
-        while nextP? and nextP.agentsHere().length > 0
+        # find the agent at the surface of any pools of water
+        nextP = a.p
+        nextAgents = []
+        while nextP.agentsHere().length > 0
+          break if not nextP.n4[3]? or nextP.n4[3].agentsHere().length is 0 or (nextAgents = nextP.n4[3].agentsHere().filter((nextA)=> return nextA.breed is @rain)).length is 0
           nextP = nextP.n4[3]
-        @_changeToEvap a, nextP
+        @_changeToEvap (if nextAgents[0]? then nextAgents[0] else a), nextP
 
   _changeToEvap: (a, nextP)->
     @_toDoAtEnd.push ->
-      a = a.changeBreed(@evap)[0]
-      a.moveTo nextP if nextP?
+      try
+        a = a.changeBreed(@evap)[0]
+        a.moveTo nextP if nextP?
+      catch e
+        console.log "Error!", e
 
   moveEvaporation: (a)->
     return unless a?
