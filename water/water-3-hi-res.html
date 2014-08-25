@@ -44,7 +44,10 @@
         // Set these defaults *after* we call WaterControls.setup(), since that sets some defaults of its own.
         APP.rainProbability = 1.0;
         APP.evapProbability = 0;
-        APP.setTemplate("state/hi-res/WaterModel-5-23-11-compareLayers.json");
+      });
+
+      $(document).one('model-ready', function() {
+        ABM.model.setTemplate("state/hi-res/WaterModel-5-23-11-compareLayers.json");
       });
     </script>
   </body>

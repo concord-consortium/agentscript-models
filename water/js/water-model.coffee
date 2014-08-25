@@ -28,39 +28,27 @@ class WaterModel extends ABM.Model
   _toDoAtEnd: null
   _tileControl: null
 
-  _soilTileLoaded: false
-  _rock1TileLoaded: false
-  _rock2TileLoaded: false
-  _rock3TileLoaded: false
-  _rock4TileLoaded: false
-
-  _setupComplete: false
-
   @MONTH_ELAPSED: "modelMonthElapsed"
   @YEAR_ELAPSED:  "modelYearElapsed"
 
-  constructor: ->
-    super
-    @_tileControl = new TileControl @
-    @_tileControl.addTile "soil", 'img/tile_soil_01.png', =>
-      @_soilTileLoaded = true
-      @_notifyIfLoaded()
-    @_tileControl.addTile "rock1", 'img/tile_sand_01.png', =>
-      @_rock1TileLoaded = true
-      @_notifyIfLoaded()
-    @_tileControl.addTile "rock2", 'img/tile_clay_01.png', =>
-      @_rock2TileLoaded = true
-      @_notifyIfLoaded()
-    @_tileControl.addTile "rock3", 'img/tile_gravel_01.png', =>
-      @_rock3TileLoaded = true
-      @_notifyIfLoaded()
-    @_tileControl.addTile "rock4", 'img/tile_bedrock_01.png', =>
-      @_rock4TileLoaded = true
-      @_notifyIfLoaded()
+  tileDefs: [
+    {name: 'soil',  url: 'img/tile_soil_01.png'},
+    {name: 'rock1', url: 'img/tile_sand_01.png'},
+    {name: 'rock2', url: 'img/tile_clay_01.png'},
+    {name: 'rock3', url: 'img/tile_gravel_01.png'},
+    {name: 'rock4', url: 'img/tile_bedrock_01.png'}
+  ]
 
-  _notifyIfLoaded: ->
-    if @_soilTileLoaded and @_rock1TileLoaded and @_rock2TileLoaded and @_rock3TileLoaded and @_rock4TileLoaded and @_setupComplete
-      $(document).trigger('model-ready')
+  constructor: ->
+    @_deferredTiles = []
+    @_tileControl = new TileControl @
+    @tileDefs.map (tile)=>
+      dfd = $.Deferred()
+      @_tileControl.addTile tile.name, tile.url, =>
+        dfd.resolve true
+      @_deferredTiles.push dfd
+      return tile
+    super
 
   setup: ->
     @_toRedraw = []
@@ -108,8 +96,10 @@ class WaterModel extends ABM.Model
 
     @spotlightRadius = 12
 
-    @_setupComplete = true
-    @_notifyIfLoaded()
+    if @_deferredTiles?
+      $.when(@_deferredTiles...).then =>
+        @_deferredTiles = null
+        $(document).trigger('model-ready')
 
   _clear: ->
     for p in @patches

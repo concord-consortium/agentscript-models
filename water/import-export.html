@@ -102,7 +102,9 @@
         APP.setRootVars();
         WaterControls.localStoragePrefix = "water-import-export";
         WaterControls.setup();
+      });
 
+      $(document).one('model-ready', function() {
         var template = window.localStorage.getItem("water-import-export-template");
         if (template) {
           $('#template-options').val(template).change();

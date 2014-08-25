@@ -102,6 +102,9 @@
         APP.evapProbability = 0;
         WaterControls.localStoragePrefix = "water-static-layers-editing";
         WaterControls.setup();
+      });
+
+      $(document).one('model-ready', function() {
 
         var bg = window.localStorage.getItem("water-static-layers-editing-background");
         if (bg) {

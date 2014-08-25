@@ -101,7 +101,9 @@
         APP.setRootVars();
         WaterControls.localStoragePrefix = "water-index";
         WaterControls.setup();
+      });
 
+      $(document).one('model-ready', function() {
         var template = window.localStorage.getItem("water-index-template");
         if (template) {
           $('#template-options').val(template).change();
