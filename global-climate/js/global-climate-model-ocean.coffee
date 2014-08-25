@@ -19,6 +19,10 @@ class OceanClimateModel extends ClimateModel
   oceanLeft: -10
   oceanBottom: -15
 
+  constructor: ->
+    @contextsInit.gases = {z: 3, ctx: "2d"}
+    super
+
   setup: -> # called by Model ctor
     super
 
@@ -141,25 +145,7 @@ class OceanClimateModel extends ClimateModel
     @CO2.with("o.y > #{@earthTop}").length
 
   getOceanCO2Count : ->
-    @CO2.with("o.y <= #{@earthTop} && !o.pinned").length
-
-  getCO2Count : ->
-    @CO2.with("!o.pinned").length
-
-  addCO2Spotlight: ->
-    agents = @CO2.with("!o.pinned && !o.hidden")
-    if agents.any()
-      a = agents.oneOf()
-      @setSpotlight a
-
-  addCO2: ->
-    @createCO2( Math.max 1, Math.round @CO2.with('!o.pinned').length*0.1 )
-
-  subtractCO2: ->
-    available = @CO2.with('!o.pinned')
-    quant = Math.ceil available.length*0.1
-    while quant--
-      available.oneOf().die()
+    @CO2.with("o.y <= #{@earthTop}").length
 
   updateAlbedoOfSurface: ->
     earthAlbedo = (Math.min(Math.floor(a+@albedo*120),255) for a in [96, 155, 96])
@@ -268,10 +254,11 @@ class OceanClimateModel extends ClimateModel
   #
   runCO2: ->
     for a in @CO2
-      if a and not a.pinned
+      if a
         a.heading = a.heading + u.randomCentered(Math.PI/9)
         if a.y <= @oceanBottom                          # stop at bottom of ocean
-          a.pinned = true
+          a.draw @contexts.gases
+          a.die()
           continue
 
         if a.y <= @earthTop + 0.7 and a.x < @oceanLeft
@@ -417,6 +404,7 @@ class OceanClimateModel extends ClimateModel
     for agentSet in [@CO2, @vapor]
       for a in agentSet
         a.hidden = @hidingGases
+    if show then $(@contexts.gases.canvas).show() else $(@contexts.gases.canvas).hide()
 
   # normalizes an angle to [0,2PI)
   # this would be useful to be in agentset
