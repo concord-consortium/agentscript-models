@@ -343,5 +343,7 @@ a.show-agents-key:active {
   line-height: 1.1em;
   background: none;
   text-align: center;
+  -ms-transform: translate(-50%, 0%);
+  -webkit-transform: translate(-50%, 0%);
   transform: translate(-50%, 0%);
 }
