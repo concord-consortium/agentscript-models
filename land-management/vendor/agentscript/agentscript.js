@@ -1,0 +1,1 @@
+../../../lib/agentscript/agentscript.js
