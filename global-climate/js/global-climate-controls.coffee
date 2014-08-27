@@ -39,6 +39,8 @@ window.initControls = (args) ->
     tick = $("<div class='tick'><span style='font-size: 0.5em;'>|</span><br/>#{v}</div>").appendTo($emissionsSlider)
     tick.css
       left: "#{p}%"
+  $emissionsSlider.css
+    marginBottom: '2em'
 
   initialTemperature = climateModel.getTemperature()
 
