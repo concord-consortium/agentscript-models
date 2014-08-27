@@ -59,7 +59,7 @@ class GasWell extends Well
     @drawUI img, @head.x, @head.y, 0.5, 0.03
 
   drawLabel: ->
-    ctx = @model.contexts.drawing
+    ctx = @drawContext
 
     ctx.save()
     ctx.translate @head.x, @head.y
@@ -470,7 +470,7 @@ class GasWell extends Well
   eraseUI: ->
     # TODO. Fix coordinate assumptions here. Also figure out if this is actually used!
     super
-    ctx = @model.contexts.drawing
+    ctx = @drawContext
     ctx.save()
     ctx.globalCompositeOperation = "destination-out"
     ctx.translate @head.x, @head.y

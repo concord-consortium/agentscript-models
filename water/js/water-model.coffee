@@ -5,6 +5,7 @@ class WaterModel extends ABM.Model
   UP:    ABM.util.degToRad(90)
   CONE:  ABM.util.degToRad(110)
   RIGHT: 0
+  RIGHT_360: ABM.util.degToRad(360)
 
   template: null
   templateData: { url: null, data: null }
@@ -27,39 +28,27 @@ class WaterModel extends ABM.Model
   _toDoAtEnd: null
   _tileControl: null
 
-  _soilTileLoaded: false
-  _rock1TileLoaded: false
-  _rock2TileLoaded: false
-  _rock3TileLoaded: false
-  _rock4TileLoaded: false
-
-  _setupComplete: false
-
   @MONTH_ELAPSED: "modelMonthElapsed"
   @YEAR_ELAPSED:  "modelYearElapsed"
 
-  constructor: ->
-    super
-    @_tileControl = new TileControl @
-    @_tileControl.addTile "soil", 'img/tile_soil_01.png', =>
-      @_soilTileLoaded = true
-      @_notifyIfLoaded()
-    @_tileControl.addTile "rock1", 'img/tile_sand_01.png', =>
-      @_rock1TileLoaded = true
-      @_notifyIfLoaded()
-    @_tileControl.addTile "rock2", 'img/tile_clay_01.png', =>
-      @_rock2TileLoaded = true
-      @_notifyIfLoaded()
-    @_tileControl.addTile "rock3", 'img/tile_gravel_01.png', =>
-      @_rock3TileLoaded = true
-      @_notifyIfLoaded()
-    @_tileControl.addTile "rock4", 'img/tile_bedrock_01.png', =>
-      @_rock4TileLoaded = true
-      @_notifyIfLoaded()
+  tileDefs: [
+    {name: 'soil',  url: 'img/tile_soil_01.png'},
+    {name: 'rock1', url: 'img/tile_sand_01.png'},
+    {name: 'rock2', url: 'img/tile_clay_01.png'},
+    {name: 'rock3', url: 'img/tile_gravel_01.png'},
+    {name: 'rock4', url: 'img/tile_bedrock_01.png'}
+  ]
 
-  _notifyIfLoaded: ->
-    if @_soilTileLoaded and @_rock1TileLoaded and @_rock2TileLoaded and @_rock3TileLoaded and @_rock4TileLoaded and @_setupComplete
-      $(document).trigger('model-ready')
+  constructor: ->
+    @_deferredTiles = []
+    @_tileControl = new TileControl @
+    @tileDefs.map (tile)=>
+      dfd = $.Deferred()
+      @_tileControl.addTile tile.name, tile.url, =>
+        dfd.resolve true
+      @_deferredTiles.push dfd
+      return tile
+    super
 
   setup: ->
     @_toRedraw = []
@@ -107,8 +96,10 @@ class WaterModel extends ABM.Model
 
     @spotlightRadius = 12
 
-    @_setupComplete = true
-    @_notifyIfLoaded()
+    if @_deferredTiles?
+      $.when(@_deferredTiles...).then =>
+        @_deferredTiles = null
+        $(document).trigger('model-ready')
 
   _clear: ->
     for p in @patches
@@ -123,7 +114,7 @@ class WaterModel extends ABM.Model
     , 1
 
   patchChanged: (p, redraw=true)->
-    unless p.isWell
+    if @_tileControl and not p.isWell
       p.color = @_tileControl.lookupColor p
     @_toRedraw.push p if redraw
 
@@ -362,16 +353,21 @@ class WaterModel extends ABM.Model
   evaporateWater: ->
     for a in @rain
       if a? and a.p.isOnAirSurface and @random(10000) < @evapProbability
-        # move to the surface of any pools of water
-        nextP = a.p.n4[3]
-        while nextP? and nextP.agentsHere().length > 0
+        # find the agent at the surface of any pools of water
+        nextP = a.p
+        nextAgents = []
+        while nextP.agentsHere().length > 0
+          break if not nextP.n4[3]? or nextP.n4[3].agentsHere().length is 0 or (nextAgents = nextP.n4[3].agentsHere().filter((nextA)=> return nextA.breed is @rain)).length is 0
           nextP = nextP.n4[3]
-        @_changeToEvap a, nextP
+        @_changeToEvap (if nextAgents[0]? then nextAgents[0] else a), nextP
 
   _changeToEvap: (a, nextP)->
     @_toDoAtEnd.push ->
-      a = a.changeBreed(@evap)[0]
-      a.moveTo nextP if nextP?
+      try
+        a = a.changeBreed(@evap)[0]
+        a.moveTo nextP if nextP?
+      catch e
+        console.log "Error!", e
 
   moveEvaporation: (a)->
     return unless a?
@@ -409,7 +405,7 @@ class WaterModel extends ABM.Model
           destX = if i == 0 then (w.x-1) else (w.x+1)
           agents = p.agentsHere()
           for a in agents
-            if a.breed.name is "rain"
+            if a?.breed.name is "rain"
               a.setXY destX, y
               @_changeToWellWater a, w
 
@@ -418,6 +414,19 @@ class WaterModel extends ABM.Model
       ww = a.changeBreed(@wellWater)[0]
       ww.well = well
 
+  _ensureNoOverlap: (agent)->
+    p = agent.p
+    if p.agentsHere().length > 1
+      # move this vertically to the next empty patch
+      while p? and p.agentsHere().length > 0
+        p = p.n4[3]
+
+      if p? and p isnt agent.p
+        agent.moveTo p
+        return true
+
+    return false
+
   moveSpray: (s)->
     # use vector addition to continually add "gravity" until it hits the surface, then change to @rain
     origin = [s.x, s.y]
@@ -425,6 +434,8 @@ class WaterModel extends ABM.Model
     s.heading = @DOWN
     s.forward 1
     patch = s.p
+    s.heading = ABM.util.radsToward origin[0], origin[1], s.x, s.y
+    s.speed = ABM.util.distance origin[0], origin[1], s.x, s.y
     if patch.type isnt "sky"
       # move it back to the surface and change its type to @rain
       while patch.type isnt "sky"
@@ -433,9 +444,20 @@ class WaterModel extends ABM.Model
       @_toDoAtEnd.push =>
         r = s.changeBreed(@rain)[0]
         r.moveTo patch
-    else
-      s.heading = ABM.util.radsToward origin[0], origin[1], s.x, s.y
-      s.speed = ABM.util.distance origin[0], origin[1], s.x, s.y
+        @_ensureNoOverlap(r)
+    # if the spray is heading downward and encounters a row of rain
+    else if s.heading > @LEFT and s.heading < @RIGHT_360 and
+            patch.n[0]?.agentsHere().filter((ag)=> ag.breed is @rain).length isnt 0 and
+            patch.n[1]?.agentsHere().filter((ag)=> ag.breed is @rain).length isnt 0 and
+            patch.n[2]?.agentsHere().filter((ag)=> ag.breed is @rain).length isnt 0
+      while patch.agentsHere().filter((ag)=> ag.breed is @rain).length isnt 0
+        break unless patch.n4[3]?
+        patch = patch.n4[3]
+
+      @_toDoAtEnd.push =>
+        r = s.changeBreed(@rain)[0]
+        r.moveTo patch
+        @_ensureNoOverlap(r)
 
   addRainSpotlight: ->
     # try to add spotlight to a raindrop at very top

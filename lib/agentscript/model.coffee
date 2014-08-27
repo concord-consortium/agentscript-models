@@ -60,7 +60,11 @@ class ABM.Animator
   # step and draw the model once, mainly debugging
   once: -> @step(); @draw()
   # Get current time, with high resolution timer if available
-  now: -> (performance ? Date).now()
+  now: ->
+    if performance?.now?
+      performance.now()
+    else
+      Date.now()
   # Time in ms since starting animator
   ms: -> @now()-@startMS
   # Get the number of ticks/draws per second.  They will differ if async
@@ -125,8 +129,7 @@ class ABM.Model
     #     ctx.restore() # restore patch coord system
     
     for own k,v of @contextsInit
-      @contexts[k] = ctx = u.createLayer div, @world.width, @world.height, v.z, v.ctx
-      @setCtxTransform(ctx)
+      @addContext k, v.z, v.ctx
 
     # One of the layers is used for drawing only, not an agentset:
     @drawing = ABM.drawing = @contexts.drawing
@@ -149,7 +152,11 @@ class ABM.Model
     # the new variables created by setup(). Do not include agentsets, they
     # are available in the ABM global.
     @setup()
-  
+  # add a new canvas layer/context
+  addContext: (name, z, ctx="2d")->
+      @contexts[name] = ctx = u.createLayer @div, @world.width, @world.height, z, ctx
+      @setCtxTransform(ctx)
+      return ctx
   # Stop and reset the model
   reset: () -> 
     @anim.reset() # stop & reset ticks/steps counters

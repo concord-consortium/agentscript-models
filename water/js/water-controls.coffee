@@ -15,6 +15,7 @@ window.WaterControls =
     yMin: 0
     yMax: 600
     initialValues: [0]
+  localStoragePrefix: "water"
   setup: ->
     if ABM.model?
       $(".icon-pause").hide()
@@ -137,11 +138,13 @@ window.WaterControls =
           when "state/hi-res/WaterModel-Gaining-Losing-Stream-StreamB.json"  then @graphOptions.initialValues = [5333]
           when "state/low-res/WaterModel-Gaining-Losing-Stream-StreamB.json" then @graphOptions.initialValues = [1120]
         ABM.model.setTemplate templateOptions.val()
+        window.localStorage.setItem @localStoragePrefix + "-template", templateOptions.val()
         @resetModel(false)
       staticOptions = $('#static-options')
       staticOptions.change (evt)=>
         if WaterModelStaticLayers?
           WaterModelStaticLayers.background = staticOptions.val()
+          window.localStorage.setItem @localStoragePrefix + "-background", staticOptions.val()
           ABM.model._setupPatches()
       irrigationWellButton = $("#irrigation-well-button")
       irrigationWellButton.button().click =>
@@ -160,7 +163,6 @@ window.WaterControls =
           @removeWell()
       addWaterButton = $("#water-button")
       addWaterButton.button().click =>
-        console.log("adding water clicked")
         if addWaterButton[0]?.checked
           @stopDraw("#water-button")
           @addWater()
@@ -258,6 +260,7 @@ window.WaterControls =
     target = $("#mouse-catcher")
     mouseDown = false
     cStart = null
+    touchStart = null
     drawEvt = (evt)=>
       if evt? and evt.preventDefault?
         evt.preventDefault()
@@ -311,25 +314,41 @@ window.WaterControls =
       return false
     target.show()
     target.css('cursor', 'url("img/cursor_add.cur"), default')
-    target.bind 'mousedown', (evt)->
+    target.bind 'mousedown touchstart', (evt)->
       mouseDown = true
+      if evt.originalEvent.touches?
+        t = evt.originalEvent.touches[0]
+        touchStart = document.elementFromPoint(t.pageX,t.pageY)
       drawEvt(evt)
-    target.bind 'mouseup', =>
+    target.bind 'mouseup touchend', =>
       mouseDown = false
       cStart = null
+      touchStart = null
       @startType = null
     target.bind 'mouseleave', (evt)=>
       drawEvt(evt)
       mouseDown = false
       cStart = null
+      touchStart = null
       @startType = null
     target.bind 'mousemove', drawEvt
+    target.bind 'touchmove', (evt)=>
+      if touchStart?
+        t = evt.originalEvent.touches[0]
+        currTouch = document.elementFromPoint(t.pageX,t.pageY)
+        drawEvt(evt)
+        if touchStart isnt currTouch
+          mouseDown = false
+          cStart = null
+          touchStart = null
+          @startType = null
+
 
   erase: ->
     target = $("#mouse-catcher")
     target.show()
     target.css('cursor', 'url("img/cursor_remove.cur"), default')
-    target.bind 'mousedown', (evt)=>
+    target.bind 'mousedown touchstart', (evt)=>
       # get the patch under the cursor,
       # find all the contiguous patches of the same type,
       # set them to the type of the first non-similar patch above them
@@ -383,6 +402,9 @@ window.WaterControls =
     $("#mouse-catcher").unbind('mousedown')
     $("#mouse-catcher").unbind('mousemove')
     $("#mouse-catcher").unbind('mouseleave')
+    $("#mouse-catcher").unbind('touchend')
+    $("#mouse-catcher").unbind('touchstart')
+    $("#mouse-catcher").unbind('touchmove')
     clearInterval @timerId if @timerId?
     @timerId = null
 
@@ -395,8 +417,12 @@ window.WaterControls =
     target = $("#mouse-catcher")
     target.show()
     target.css('cursor', 'url("img/cursor_addwell' + type + '.cur"), default')
-    target.bind 'mousedown', (evt)=>
+    target.bind 'mousedown touchstart', (evt)=>
       return if @timerId?
+      if evt? and evt.preventDefault?
+        evt.preventDefault()
+      else
+        window.event.returnValue = false
       ABM.model.newWellType = switch type
         when "irrigation" then IrrigationWell
         else WaterRemovalWell
@@ -404,7 +430,7 @@ window.WaterControls =
         p = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
         ABM.model.drill p
       , 100
-    .bind 'mouseup mouseleave', =>
+    .bind 'mouseup mouseleave touchend', =>
       clearInterval @timerId if @timerId?
       @timerId = null
 
@@ -412,7 +438,7 @@ window.WaterControls =
     target = $("#mouse-catcher")
     target.show()
     target.css('cursor', 'url("img/cursor_removewell.cur"), default')
-    target.bind 'mousedown', (evt)=>
+    target.bind 'mousedown touchstart', (evt)=>
       # get the patch under the cursor,
       # check if there's a nearby well. If so, remove it.
       originalPatch = ABM.model.patches.patchAtPixel @offsetX(evt, target), @offsetY(evt, target)
@@ -424,53 +450,87 @@ window.WaterControls =
     target = $("#mouse-catcher")
     lastWaterEvt = null
     mouseDown = false
+    touchStart = null
     target.show()
     target.css('cursor', 'url("img/cursor_addwater.cur"), default')
-    target.bind 'mousedown', (evt)=>
+    target.bind 'mousedown touchstart', (evt)=>
       return if @timerId?
+      if evt? and evt.preventDefault?
+        evt.preventDefault()
+      else
+        window.event.returnValue = false
       lastWaterEvt = evt
       mouseDown = true
+      if evt.originalEvent.touches?
+        t = evt.originalEvent.touches[0]
+        touchStart = document.elementFromPoint(t.pageX,t.pageY)
       @_placeWater(evt, target)
       @timerId = setInterval =>
         @_placeWater(lastWaterEvt, target)
       , 10
-    .bind 'mousemove', (evt)=>
+    .bind 'mousemove touchmove', (evt)=>
       lastWaterEvt = evt if mouseDown
       if evt? and evt.preventDefault?
         evt.preventDefault()
       else
         window.event.returnValue = false
+      if touchStart?
+        t = evt.originalEvent.touches[0]
+        currTouch = document.elementFromPoint(t.pageX,t.pageY)
+        if currTouch isnt touchStart
+          mouseDown = false
+          clearInterval @timeId if @timeId?
+          @timerId = null
+          touchStart = null
       return false
-    .bind 'mouseup mouseleave', =>
+    .bind 'mouseup mouseleave touchend', =>
       mouseDown = false
       clearInterval @timerId if @timerId?
       @timerId = null
+      touchStart = null
 
   removeWater: ->
     target = $("#mouse-catcher")
     lastWaterEvt = null
     mouseDown = false
+    touchStart = null
     target.show()
     target.css('cursor', 'url("img/cursor_removewater.cur"), default')
-    target.bind 'mousedown', (evt)=>
+    target.bind 'mousedown touchstart', (evt)=>
       return if @timerId?
+      if evt? and evt.preventDefault?
+        evt.preventDefault()
+      else
+        window.event.returnValue = false
       lastWaterEvt = evt
       mouseDown = true
+      if evt.originalEvent.touches?
+        t = evt.originalEvent.touches[0]
+        touchStart = document.elementFromPoint(t.pageX,t.pageY)
       @_removeWater(evt, target)
       @timerId = setInterval =>
         @_removeWater(lastWaterEvt, target)
       , 10
-    .bind 'mousemove', (evt)=>
+    .bind 'mousemove touchmove', (evt)=>
       lastWaterEvt = evt if mouseDown
       if evt? and evt.preventDefault?
         evt.preventDefault()
       else
         window.event.returnValue = false
+      if touchStart?
+        t = evt.originalEvent.touches[0]
+        currTouch = document.elementFromPoint(t.pageX,t.pageY)
+        if currTouch isnt touchStart
+          mouseDown = false
+          clearInterval @timeId if @timeId?
+          @timerId = null
+          touchStart = null
       return false
-    .bind 'mouseup mouseleave', =>
+    .bind 'mouseup mouseleave touchend', =>
       mouseDown = false
       clearInterval @timerId if @timerId?
       @timerId = null
+      touchStart = null
 
   _placeWater: (evt, target)->
     p = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
@@ -513,9 +573,13 @@ window.WaterControls =
       @outputGraph.addSamples @graphOptions.initialValues
 
   offsetX: (evt, target)->
+    if evt.originalEvent.touches?
+      evt = evt.originalEvent.touches[0]
     return if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)
 
   offsetY: (evt, target)->
+    if evt.originalEvent.touches?
+      evt = evt.originalEvent.touches[0]
     return if evt.offsetY? then evt.offsetY else (evt.pageY - target.offset().top)
 
 $(document).one 'model-ready', ->

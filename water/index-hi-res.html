@@ -1,11 +1,13 @@
-<meta http-equiv="content-type" content="text/html; charset=UTF8">
+<!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8">
     <title>Water Model</title>
     <link href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="../lib/jquery.ui.touch-punch.min.js"></script>
     <script src="//lab.concord.org/vendor/d3/d3.js"></script>
     <script src="../lib/lab.grapher.js"></script>
     <script src="../lib/agentscript/agentscript.js"></script>
@@ -99,7 +101,15 @@
         WaterModel.waterColor = [0, 0, 255, 0.4];
         APP=new WaterModel("layers", 1, -400, 399, -130, 129, false);
         APP.setRootVars();
+        WaterControls.localStoragePrefix = "water-index";
         WaterControls.setup();
+      });
+
+      $(document).one('model-ready', function() {
+        var template = window.localStorage.getItem("water-index-template");
+        if (template) {
+          $('#template-options').val(template).change();
+        }
       });
     </script>
   </body>

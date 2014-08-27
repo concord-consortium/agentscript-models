@@ -165,3 +165,8 @@ h2 {
   height: 23px;
   border: 1px solid black;
 }
+
+.ui-state-active {
+  box-shadow: #0000ff 0px 0px 6px;
+  z-index: 10;
+}

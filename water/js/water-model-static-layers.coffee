@@ -5,21 +5,25 @@ class WaterModelStaticLayers extends WaterModel
 
     @_setupPatches()
 
+  _redrawPatches: ->
+    @refreshPatches = true
+    @draw()
+    @refreshPatches = false
+
+    # set patch types based on color
+    for p in @patches
+      @_setType p
+
+    @redraw()
+
   _setupPatches: ->
     if WaterModelStaticLayers.background?
       @patches.importColors WaterModelStaticLayers.background
-
-    setTimeout =>
-      @refreshPatches = true
-      @draw()
-      @refreshPatches = false
-
-      # set patch types based on color
-      for p in @patches
-        @_setType p
-
-      @redraw()
-    , 500
+      setTimeout =>
+        @_redrawPatches()
+      , 500
+    else
+      @_redrawPatches()
 
   _setType: (p)->
     if ABM.util.colorsEqual p.color, [205, 237, 252]

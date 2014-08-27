@@ -27,9 +27,20 @@ window.initControls = (args) ->
   $albedoSlider.slider  min: 0, max: 1, step: 0.01, value: climateModel.getAlbedo()
   $sunSlider.slider     min: 0, max: 200, step: 1,  value: climateModel.getSunBrightness()
   $iceSlider.slider     min: 0, max: 1, step: 0.01,  value: climateModel.getIcePercent() if climateModel.getIcePercent
-  $emissionsSlider.slider   min: 0, max: 1, step: 0.1,  value: climateModel.getHumanEmissionRate() if climateModel.getHumanEmissionRate
   $temperatureSlider.slider min: 0, max: 20, step: 0.2,  value: climateModel.getTemperature()
   $speedSlider.slider   min: 20, max: 60, step: 2,  value: climateModel.anim.rate
+  $emissionsSlider.slider   min: 0, max: 1, step: 0.1,  value: climateModel.getHumanEmissionRate() if climateModel.getHumanEmissionRate
+  # set up ticks
+  ticks =
+    25: '50%'
+    50: '100%'
+    75: '150%'
+  for p,v of ticks
+    tick = $("<div class='tick'><span style='font-size: 0.5em;'>|</span><br/>#{v}</div>").appendTo($emissionsSlider)
+    tick.css
+      left: "#{p}%"
+  $emissionsSlider.css
+    marginBottom: '2em'
 
   initialTemperature = climateModel.getTemperature()
 

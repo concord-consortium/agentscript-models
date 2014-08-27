@@ -484,7 +484,7 @@ window.ClimateModel = ClimateModel
 # up.
 imagesLoaded = $('#sprites img').map (img) ->
   dfd = $.Deferred()
-  if this.width > 0 and this.height > 0
+  if (this.width > 0 and this.height > 0) or this.complete
     dfd.resolve()
   else
     this.onload = -> dfd.resolve()

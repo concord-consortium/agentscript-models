@@ -10,6 +10,8 @@ class Well
   patches: null
   walls: null
 
+  drawContext: null
+
   # state management
   goneHorizontal: false
   toTheRight: null
@@ -38,6 +40,8 @@ class Well
     @head.x = @x
     @head.y = @depth
 
+    @drawContext = @_createDrawContext()
+
     @drawWell()
     @drawLabel()
     @model.draw()
@@ -54,8 +58,8 @@ class Well
     p = @model.patches.patchXY(@head.x, @head.y + 1)
     p.label = "" + @id
     @addPatch p
-    @model.contexts.drawing.labelColor = @getLabelColor @id
-    p.drawLabel(@model.contexts.drawing)
+    @drawContext.labelColor = @getLabelColor @id
+    p.drawLabel(@drawContext)
 
   # overridden in GasWell
   getLabelColor: (id) ->
@@ -190,7 +194,7 @@ class Well
     return ABM.util.contains(@constructor.WELL_HEAD_TYPES, head.type) and not ABM.util.contains(@constructor.WELL_HEAD_TYPES, patchBelow.type)
 
   eraseUI: ->
-    ctx = @model.contexts.drawing
+    ctx = @drawContext
     ctx.save()
     ctx.globalCompositeOperation = "destination-out"
     ctx.translate @head.x, @head.y
@@ -201,7 +205,7 @@ class Well
   # (xFraction, yFraction) within the image, where xFraction and yFraction are normalized to the
   # width and height of the image, and are relative to the bottom left of the image.
   drawUI: (img, x, y, xFraction = 0, yFraction = 0) ->
-    ctx = @model.contexts.drawing
+    ctx = @drawContext
 
     ctx.save()
     ctx.translate x, y
@@ -216,5 +220,15 @@ class Well
     y: y - 0.5 * yFraction * img.height,
     width: 0.5 * img.width,
     height: 0.5 * img.height
+
+  _createDrawContext: ->
+    return @model.contexts.wells if @model.contexts.wells?
+    ctx = @model.addContext "wells", 2
+    # mirror the drawing context's text and label settings
+    ctx.font         = @model.contexts.drawing.font
+    ctx.textAlign    = @model.contexts.drawing.textAlign
+    ctx.textBaseline = @model.contexts.drawing.textBaseline
+    ctx.labelXY      = @model.contexts.drawing.labelXY
+    ctx
 
 window.Well = Well

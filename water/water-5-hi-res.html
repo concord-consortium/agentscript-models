@@ -1,11 +1,13 @@
-<meta http-equiv="content-type" content="text/html; charset=UTF8">
+<!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8">
     <title>Water Model</title>
     <link href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="../lib/jquery.ui.touch-punch.min.js"></script>
     <script src="../lib/agentscript/agentscript.js"></script>
     <script src="../lib/agentscript/coffee-script.js"></script>
     <script src="../lib/import-export.coffee" type="text/coffeescript"></script>
@@ -63,7 +65,10 @@
         // Set these defaults *after* we call WaterControls.setup(), since that sets some defaults of its own.
         APP.rainProbability = 0.5;
         APP.evapProbability = 20;
-        APP.setTemplate("state/hi-res/WaterModel-5-23-11-goodVbadAquifers-Example-Layers.json");
+      });
+
+      $(document).one('model-ready', function() {
+        ABM.model.setTemplate("state/hi-res/WaterModel-5-23-11-goodVbadAquifers-Example-Layers.json");
       });
     </script>
   </body>

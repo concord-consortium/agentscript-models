@@ -19,6 +19,10 @@ class OceanClimateModel extends ClimateModel
   oceanLeft: -10
   oceanBottom: -15
 
+  constructor: ->
+    @contextsInit.gases = {z: 3, ctx: "2d"}
+    super
+
   setup: -> # called by Model ctor
     super
 
@@ -253,9 +257,9 @@ class OceanClimateModel extends ClimateModel
       if a
         a.heading = a.heading + u.randomCentered(Math.PI/9)
         if a.y <= @oceanBottom                          # stop at bottom of ocean
-          a.stamp()
+          a.draw @contexts.gases
           a.die()
-          return
+          continue
 
         if a.y <= @earthTop + 0.7 and a.x < @oceanLeft
           [oceanLeft, normal] = @oceanBoundaryAndNormalAngleAt a.y
@@ -308,7 +312,8 @@ class OceanClimateModel extends ClimateModel
         if a.y <= (-14)
           a.heading = u.randomFloat2(0.1, Math.PI-0.1)
         if a.y <= @earthTop + 1
-          a.die()
+          # bounce it off the surface
+          a.heading = Math.abs(a.heading - (2*Math.PI))
         if a.y >= @skyTop + 1
           a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
 
@@ -399,6 +404,7 @@ class OceanClimateModel extends ClimateModel
     for agentSet in [@CO2, @vapor]
       for a in agentSet
         a.hidden = @hidingGases
+    if show then $(@contexts.gases.canvas).show() else $(@contexts.gases.canvas).hide()
 
   # normalizes an angle to [0,2PI)
   # this would be useful to be in agentset

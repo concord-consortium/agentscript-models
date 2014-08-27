@@ -198,6 +198,12 @@ body {
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#32b5fc', endColorstr='#7db9e8',GradientType=0 );
 
 }
+
+.ui-state-active {
+  box-shadow: #0000ff 0px 0px 6px;
+  z-index: 10;
+}
+
 #output-graphs {
   position: absolute;
   top: 6px;
