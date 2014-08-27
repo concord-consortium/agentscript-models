@@ -177,3 +177,8 @@ span.remove-option {
   width: 23px;
   height: 23px;
 }
+
+.ui-state-active {
+  box-shadow: #0000ff 0px 0px 6px;
+  z-index: 10;
+}
