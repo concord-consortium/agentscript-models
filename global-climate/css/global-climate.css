@@ -334,3 +334,14 @@ a.show-agents-key:active {
   top: 381px;
   left: 156px;
 }
+
+.tick {
+  z-index: -1;
+  position: absolute;
+  top: 100%;
+  font-size: 0.8em;
+  line-height: 1.1em;
+  background: none;
+  text-align: center;
+  transform: translate(-50%, 0%);
+}
