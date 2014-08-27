@@ -64,7 +64,11 @@
   border-bottom-right-radius: 0.7em;
 }
 
-.ui-state-active {
+.ui-state-active, *:focus {
   box-shadow: #0000ff 0px 0px 6px;
   z-index: 10;
+}
+
+*:focus {
+  outline: none;
 }
