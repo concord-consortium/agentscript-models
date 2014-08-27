@@ -405,7 +405,7 @@ class WaterModel extends ABM.Model
           destX = if i == 0 then (w.x-1) else (w.x+1)
           agents = p.agentsHere()
           for a in agents
-            if a.breed.name is "rain"
+            if a?.breed.name is "rain"
               a.setXY destX, y
               @_changeToWellWater a, w
 
