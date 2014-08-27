@@ -276,9 +276,13 @@ span.slider-value {
     border: 1px solid #858484;
 }
 
-.ui-state-active {
+.ui-state-active, *:focus {
   box-shadow: #0000ff 0px 0px 6px;
   z-index: 10;
+}
+
+*:focus {
+  outline: none;
 }
 
 .checkbox {
