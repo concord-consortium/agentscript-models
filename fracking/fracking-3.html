@@ -20,6 +20,7 @@
     <script src="js/fracking-controls.coffee" type="text/coffeescript"></script>
     <script src="//shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
     <script type="text/javascript">new Shutterbug('body', '', null, null);</script>
+    <script src="../lib/interface.js"></script>
   </head>
   <body>
     <div id="controls">
@@ -68,6 +69,7 @@
       <div id='output-graph' class="graph"></div>
       <div id='contaminant-graph' class="graph"></div>
     </div>
+    <img id="cc-logo" src="../assets/img/cc-logo.png" alt="The Concord Consortium" />
     <script>
       var modelReady = false, controls = null;
       $(document).one('fracking-model-loaded', function() {
@@ -87,6 +89,14 @@
           controls.setup();
           APP.start();
         }
+      });
+      $(document).one('fracking-controls-loaded', function() {
+          $('body').append('<div id="instructions-overlay"></div>');
+          $('body').append('<a id="instructions-toggle" href="#">hide help</a>');
+          $('#instructions-overlay, #instructions-toggle').click(function() {
+            toggleInstructionsOverlay();
+            return false;
+          });
       });
     </script>
   </body>

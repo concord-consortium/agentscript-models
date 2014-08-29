@@ -72,3 +72,36 @@
 *:focus {
   outline: none;
 }
+
+
+#instructions-overlay {
+  background: url(../img/fracking_instructions_overlay.png) no-repeat;
+  cursor: pointer;
+  height: 600px;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 960px;
+  z-index: 100;
+}
+
+#instructions-toggle {
+  color: #f3f3f3;
+  display: block;
+  font: .8em arial, helvetica, sans-serif;
+  height: 20px;
+  left: 10px;
+  margin: 0;
+  position: absolute;
+  text-decoration: none;
+  top: 10px;
+  z-index: 110;
+}
+
+#cc-logo {
+  height: auto;
+  left: 778px;
+  position: absolute;
+  top: 507px;
+  width: 150px;
+}
