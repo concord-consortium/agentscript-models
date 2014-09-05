@@ -25,6 +25,8 @@ foo=`cat agentscript.js | sed '
   /setRootVars/,$d
 ' | wc`; echo "AgentScript: JavaScript lines of code: " $foo
 
+echo "add in typedarray polyfill"; mv agentscript.js agentscript-only.js; cat typedarray.js agentscript-only.js > agentscript.js
+
 echo "uglify agentscript.js"; uglifyjs agentscript.js -c -m > agentscript.min.js
 
 echo "creating docs from .coffee files"; ./doc.sh
