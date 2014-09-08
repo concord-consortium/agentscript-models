@@ -4,3 +4,6 @@
 [submodule "lib/lab-grapher"]
 	path = lib/lab-grapher
 	url = https://github.com/concord-consortium/lab-grapher.git
+[submodule "lib/iframe-phone"]
+	path = lib/iframe-phone
+	url = https://github.com/concord-consortium/iframe-phone.git
