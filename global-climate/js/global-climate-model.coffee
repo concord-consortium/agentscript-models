@@ -463,7 +463,10 @@ class ClimateModel extends ABM.Model
     ]
 
   getYear: ->
-    return Math.floor @initialYear + @anim.ticks / @ticksPerYear
+    return Math.floor @getFractionalYear()
+
+  getFractionalYear: ->
+    return @initialYear + @anim.ticks / @ticksPerYear
 
   #
   # Main Model Loop
@@ -475,6 +478,8 @@ class ClimateModel extends ABM.Model
     @runIR()
     @runCO2()
     @runPollution()
+    # optional hook to allow application to know a tick has completed
+    @stepCallback?()
 
 window.ClimateModel = ClimateModel
 
