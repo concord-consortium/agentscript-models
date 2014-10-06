@@ -283,9 +283,14 @@ class PlantEngine
     for zone in [0..1]
       quality = @soilQuality[zone]
       if managementPlan[zone] is "wheat"
+        # intensive tillage decreases soil quality,
+        # while conservative tilled maintains current quality levels
         if intensive[zone] then quality -= 0.02
-        else quality += 0.02
-        quality = Math.max(Math.min(quality, 2), 0)
+      else if managementPlan[zone] is "bare"
+        # hold soil quality steady
+      else
+        quality += 0.01
+      quality = Math.max(Math.min(quality, 2), 0)
       @soilQuality[zone] = quality
 
   plantData:
