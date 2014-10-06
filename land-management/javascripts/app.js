@@ -1425,11 +1425,13 @@ PlantEngine = (function() {
       if (managementPlan[zone] === "wheat") {
         if (intensive[zone]) {
           quality -= 0.02;
-        } else {
-          quality += 0.02;
         }
-        quality = Math.max(Math.min(quality, 2), 0);
+      } else if (managementPlan[zone] === "bare") {
+
+      } else {
+        quality += 0.01;
       }
+      quality = Math.max(Math.min(quality, 2), 0);
       _results.push(this.soilQuality[zone] = quality);
     }
     return _results;
