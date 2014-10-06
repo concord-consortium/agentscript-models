@@ -437,43 +437,52 @@ ErosionEngine = (function() {
 
   ErosionEngine.prototype.showSoilQuality = false;
 
-  ErosionEngine.prototype.findSurfaceLandPatches = function() {
-    var surfaceLand, x, y, _i, _ref, _ref1;
-    surfaceLand = [];
-    for (x = _i = _ref = this.patches.minX, _ref1 = this.patches.maxX; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; x = _ref <= _ref1 ? ++_i : --_i) {
-      y = this.patches.maxY;
-      while (this.patches.patch(x, y).type === SKY && y > this.patches.minY) {
-        y--;
-      }
-      surfaceLand.push(this.patches.patch(x, y));
+  ErosionEngine.prototype._lastKnownSurface = [];
+
+  ErosionEngine.prototype.findSurfaceLandPatches = function(reset) {
+    var p, x, y, _i, _ref, _ref1, _ref2;
+    if (reset == null) {
+      reset = false;
     }
-    return surfaceLand;
+    for (x = _i = _ref = this.patches.minX, _ref1 = this.patches.maxX; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; x = _ref <= _ref1 ? ++_i : --_i) {
+      p = null;
+      if (!reset && ((p = this._lastKnownSurface[x - this.patches.minX]) != null)) {
+        while (p.type === SKY && (p.n[1] != null)) {
+          p = p.n[1];
+        }
+        while (p.type === LAND && ((_ref2 = p.n[6]) != null ? _ref2.type : void 0) === LAND) {
+          p = p.n[6];
+        }
+      } else {
+        y = this.patches.maxY;
+        while ((p = this.patches.patch(x, y)).type !== LAND && y > this.patches.minY) {
+          y--;
+        }
+      }
+      this._lastKnownSurface[x - this.patches.minX] = p;
+    }
+    return this._lastKnownSurface;
   };
 
-  ErosionEngine.prototype.updateSurfacePatches = function() {
-    var i, newColor, p, surfacePatch, x, y, zone, _i, _len, _ref, _ref1, _results;
-    this.surfaceLand = this.findSurfaceLandPatches();
+  ErosionEngine.prototype.updateSurfacePatches = function(reset) {
+    var i, newColor, p, surfacePatch, x, y, zone, _i, _j, _len, _ref, _ref1, _ref2;
+    if (reset == null) {
+      reset = false;
+    }
+    this.surfaceLand = this.findSurfaceLandPatches(reset);
     _ref = this.surfaceLand;
-    _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       surfacePatch = _ref[_i];
       _ref1 = [surfacePatch.x, surfacePatch.y], x = _ref1[0], y = _ref1[1];
-      _results.push((function() {
-        var _j, _ref2, _results1;
-        _results1 = [];
-        for (i = _j = 0, _ref2 = this.INITIAL_TOPSOIL_DEPTH; 0 <= _ref2 ? _j < _ref2 : _j > _ref2; i = 0 <= _ref2 ? ++_j : --_j) {
-          p = this.patches.patch(x, y - i);
-          newColor = p.isTerrace ? TERRACE_COLOR : p.isTopsoil ? this.showErosion && p.eroded ? p.zone === 1 ? ORANGE : MAGENTA : this.showSoilQuality ? (zone = p.x <= 0 ? 0 : 1, p.quality < this.soilQuality[zone] ? p.quality += 0.001 : void 0, p.quality > this.soilQuality[zone] ? p.quality -= 0.001 : void 0, p.quality < 0.5 ? POOR_SOIL_COLOR : p.quality > 1.5 ? GOOD_SOIL_COLOR : LIGHT_LAND_COLOR) : LIGHT_LAND_COLOR : void 0;
-          if (newColor != null) {
-            _results1.push(p.color = newColor);
-          } else {
-            _results1.push(void 0);
-          }
+      for (i = _j = 0, _ref2 = this.INITIAL_TOPSOIL_DEPTH; 0 <= _ref2 ? _j < _ref2 : _j > _ref2; i = 0 <= _ref2 ? ++_j : --_j) {
+        p = this.patches.patch(x, y - i);
+        newColor = p.isTerrace ? TERRACE_COLOR : p.isTopsoil ? this.showErosion && p.eroded ? p.zone === 1 ? ORANGE : MAGENTA : this.showSoilQuality ? (zone = p.x <= 0 ? 0 : 1, p.quality < this.soilQuality[zone] ? p.quality += 0.001 : void 0, p.quality > this.soilQuality[zone] ? p.quality -= 0.001 : void 0, p.quality < 0.5 ? POOR_SOIL_COLOR : p.quality > 1.5 ? GOOD_SOIL_COLOR : LIGHT_LAND_COLOR) : LIGHT_LAND_COLOR : void 0;
+        if (newColor != null) {
+          p.color = newColor;
         }
-        return _results1;
-      }).call(this));
+      }
     }
-    return _results;
+    return null;
   };
 
   ErosionEngine.prototype.adjustEdges = function() {
@@ -541,7 +550,7 @@ ErosionEngine = (function() {
   };
 
   ErosionEngine.prototype.erode = function() {
-    var a, expectedHeightToLeft, expectedHeightToRight, i, lastIndex, localSlope, p, precipitationContribution, probabilityOfErosion, signOf, slopeContribution, target, totalVegetationSize, vegetation, vegetationContribution, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _results;
+    var a, expectedHeightToLeft, expectedHeightToRight, i, lastIndex, localSlope, p, precipitationContribution, probabilityOfErosion, signOf, slopeContribution, target, totalVegetationSize, vegetation, vegetationContribution, _i, _j, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
     signOf = function(x) {
       if (x === 0) {
         return 1;
@@ -550,7 +559,6 @@ ErosionEngine = (function() {
       }
     };
     this.adjustEdges();
-    _results = [];
     for (i = _i = 1, _ref = this.surfaceLand.length - 1; 1 <= _ref ? _i < _ref : _i > _ref; i = 1 <= _ref ? ++_i : --_i) {
       p = this.surfaceLand[i];
       localSlope = this.getLocalSlope(p.x, p.y);
@@ -607,12 +615,10 @@ ErosionEngine = (function() {
       }
       this.convertLandToSky(p);
       if (((_ref6 = p.n[6]) != null ? _ref6.type : void 0) === LAND) {
-        _results.push(this.swapSkyAndLand(p, p.n[6]));
-      } else {
-        _results.push(void 0);
+        this.swapSkyAndLand(p, p.n[6]);
       }
     }
-    return _results;
+    return null;
   };
 
   ErosionEngine.prototype.swapSkyAndLand = function(sky, land) {
@@ -842,7 +848,7 @@ LandGenerator = (function() {
         }
       }
     }
-    return this.updateSurfacePatches();
+    return this.updateSurfacePatches(true);
   };
 
   LandGenerator.prototype.setLandType = function(t) {
