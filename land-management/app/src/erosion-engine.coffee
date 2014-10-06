@@ -85,6 +85,7 @@ class ErosionEngine
               LIGHT_LAND_COLOR
 
         if newColor? then p.color = newColor
+    null
 
 
 
@@ -229,6 +230,7 @@ class ErosionEngine
       # above a sky patch. (All land patches are settled on terra firma after each iteration of
       # this loop, so we need to look upward no more than 1 patch.)
       @swapSkyAndLand p, p.n[6] if p.n[6]?.type is LAND
+    null
 
   swapSkyAndLand: (sky, land) ->
     for property in @landPropertyNames.concat(['type', 'color'])
