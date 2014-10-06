@@ -43,21 +43,27 @@ class ErosionEngine
 
   showSoilQuality: false
 
-  findSurfaceLandPatches: ->
-    surfaceLand = []
+  _lastKnownSurface: []
+  findSurfaceLandPatches: (reset=false)->
     for x in [@patches.minX..@patches.maxX]
-      y = @patches.maxY
-      y-- while @patches.patch(x, y).type is SKY and y > @patches.minY
-      surfaceLand.push @patches.patch x, y
+      p = null
+      if !reset and (p = @_lastKnownSurface[x-@patches.minX])?
+        # start from this patch and work our way up or down
+        (p = p.n[1]) while p.type is SKY and p.n[1]?
+        (p = p.n[6]) while p.type is LAND and p.n[6]?.type is LAND
+      else
+        y = @patches.maxY
+        y-- while (p = @patches.patch(x, y)).type isnt LAND and y > @patches.minY
+      @_lastKnownSurface[x-@patches.minX] = p
 
-    surfaceLand
+    @_lastKnownSurface
 
   # Called every tick to modify colors of surface-most INITIAL_TOPSOIL_DEPTH patches.
   # (A reasonable assumption is made that the patches that change during a tick are no more than
   # INITIAL_TOPSOIL_DEPTH deeper the land-sky boundary. Hower, we must process at least that depth
   # because the land generator relies on this method for the initial setup of the topsoil patches.)
-  updateSurfacePatches: ->
-    @surfaceLand = @findSurfaceLandPatches()
+  updateSurfacePatches: (reset=false)->
+    @surfaceLand = @findSurfaceLandPatches(reset)
 
     for surfacePatch in @surfaceLand
       [x, y] = [surfacePatch.x, surfacePatch.y]

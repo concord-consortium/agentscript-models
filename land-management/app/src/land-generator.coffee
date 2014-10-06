@@ -50,7 +50,7 @@ class LandGenerator
           else
             p.isTerrace = false
 
-    @updateSurfacePatches()
+    @updateSurfacePatches(true)
 
 
   setLandType: (t) ->
