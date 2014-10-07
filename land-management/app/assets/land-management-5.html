@@ -153,6 +153,11 @@
         window.model = new LandManagementModel("layers", 2.75, -114, 114, -40, 40, false);
         window.model.showErosion = false;
         window.model.showSoilQuality = true;
+
+        // make sure we repaint the surface soil
+        window.model.updateSurfacePatches();
+        window.model.draw();
+
         initControls();
 
         // Will fail if run offline, but that shouldn't be a problem.

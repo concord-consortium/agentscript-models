@@ -5,8 +5,8 @@ SKY_COLOR_CHANGE = [
   SKY_BTM_COLOR[1]-SKY_TOP_COLOR[1],
   SKY_BTM_COLOR[2]-SKY_TOP_COLOR[2],
 ]
-LIGHT_LAND_COLOR = [135, 79, 49]
-DARK_LAND_COLOR = [105, 49, 19]
+TOP_LAND_COLOR = [60, 51, 47]
+BASE_LAND_COLOR = [211, 109, 62]
 TERRACE_COLOR = [60, 60, 60]
 
 SKY  = "sky"
@@ -41,7 +41,7 @@ class LandGenerator
           p.stability = if p.isTopsoil then 1 else 0.2
 
           # topsoil and terrace colors will be updated by @updateSurfacePatches
-          p.color = DARK_LAND_COLOR
+          p.color = BASE_LAND_COLOR
           p.type = LAND
           p.eroded = false
           p.direction = 0

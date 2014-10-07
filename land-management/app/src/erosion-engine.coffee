@@ -6,15 +6,15 @@ SKY_COLOR_CHANGE = [
   SKY_BTM_COLOR[2]-SKY_TOP_COLOR[2],
 ]
 
-LIGHT_LAND_COLOR = [135, 79, 49]
-DARK_LAND_COLOR = [105, 49, 19]
+TOP_LAND_COLOR = [60, 51, 47]
+BASE_LAND_COLOR = [211, 109, 62]
 TERRACE_COLOR = [60, 60, 60]
 
-GOOD_SOIL_COLOR = [88, 41, 10]
+MEDIUM_SOIL_COLOR = [135, 79, 49]
 POOR_SOIL_COLOR = [193, 114, 7]
 
-MAGENTA = [255, 50, 185]
-ORANGE  = [255, 195, 50]
+MAGENTA = [164, 105, 189]
+ORANGE  = [216, 72, 40]
 SKY  = "sky"
 LAND = "land"
 
@@ -90,11 +90,11 @@ class ErosionEngine
               if p.quality < 0.5
                 POOR_SOIL_COLOR
               else if p.quality > 1.5
-                GOOD_SOIL_COLOR
+                TOP_LAND_COLOR
               else
-                LIGHT_LAND_COLOR
+                MEDIUM_SOIL_COLOR
             else
-              LIGHT_LAND_COLOR
+              TOP_LAND_COLOR
 
         if newColor? then p.color = newColor
     null
@@ -156,7 +156,7 @@ class ErosionEngine
 
     # we'll let @updateSurfaceLandPatches sort it out next cycle
     p.quality = 1
-    p.color = if p.isTopsoil then LIGHT_LAND_COLOR else DARK_LAND_COLOR
+    p.color = if p.isTopsoil then TOP_LAND_COLOR else BASE_LAND_COLOR
 
   convertLandToSky: (p) ->
       p.type = SKY
