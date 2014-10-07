@@ -1427,7 +1427,7 @@ PlantEngine = (function() {
           quality -= 0.02;
         }
       } else if (managementPlan[zone] === "bare") {
-
+        quality -= 0.03;
       } else {
         quality += 0.01;
       }

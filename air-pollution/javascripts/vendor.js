@@ -34646,5 +34646,6672 @@ $.widget( "ui.tooltip", {
 
 }( jQuery ) );
 
+/*
+ Copyright (c) 2010, Linden Research, Inc.
+ Copyright (c) 2014, Joshua Bell
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+ $/LicenseInfo$
+ */
+
+// Original can be found at:
+//   https://bitbucket.org/lindenlab/llsd
+// Modifications by Joshua Bell inexorabletash@gmail.com
+//   https://github.com/inexorabletash/polyfill
+
+// ES3/ES5 implementation of the Krhonos Typed Array Specification
+//   Ref: http://www.khronos.org/registry/typedarray/specs/latest/
+//   Date: 2011-02-01
+//
+// Variations:
+//  * Allows typed_array.get/set() as alias for subscripts (typed_array[])
+//  * Gradually migrating structure from Khronos spec to ES6 spec
+(function(global) {
+  'use strict';
+  var undefined = (void 0); // Paranoia
+
+  // Beyond this value, index getters/setters (i.e. array[0], array[1]) are so slow to
+  // create, and consume so much memory, that the browser appears frozen.
+  var MAX_ARRAY_LENGTH = 1e5;
+
+  // Approximations of internal ECMAScript conversion functions
+  function Type(v) {
+    switch(typeof v) {
+    case 'undefined': return 'undefined';
+    case 'boolean': return 'boolean';
+    case 'number': return 'number';
+    case 'string': return 'string';
+    default: return v === null ? 'null' : 'object';
+    }
+  }
+
+  // Class returns internal [[Class]] property, used to avoid cross-frame instanceof issues:
+  function Class(v) { return Object.prototype.toString.call(v).replace(/^\[object *|\]$/g, ''); }
+  function IsCallable(o) { return typeof o === 'function'; }
+  function ToObject(v) {
+    if (v === null || v === undefined) throw TypeError();
+    return Object(v);
+  }
+  function ToInt32(v) { return v >> 0; }
+  function ToUint32(v) { return v >>> 0; }
+
+  // Snapshot intrinsics
+  var LN2 = Math.LN2,
+      abs = Math.abs,
+      floor = Math.floor,
+      log = Math.log,
+      max = Math.max,
+      min = Math.min,
+      pow = Math.pow,
+      round = Math.round;
+
+  // emulate ES5 getter/setter API using legacy APIs
+  // http://blogs.msdn.com/b/ie/archive/2010/09/07/transitioning-existing-code-to-the-es5-getter-setter-apis.aspx
+  // (second clause tests for Object.defineProperty() in IE<9 that only supports extending DOM prototypes, but
+  // note that IE<9 does not support __defineGetter__ or __defineSetter__ so it just renders the method harmless)
+
+  (function() {
+    var orig = Object.defineProperty;
+    var dom_only = !(function(){try{return Object.defineProperty({},'x',{});}catch(_){return false;}}());
+
+    if (!orig || dom_only) {
+      Object.defineProperty = function (o, prop, desc) {
+        // In IE8 try built-in implementation for defining properties on DOM prototypes.
+        if (orig)
+          try { return orig(o, prop, desc); } catch (_) {}
+        if (o !== Object(o))
+          throw TypeError('Object.defineProperty called on non-object');
+        if (Object.prototype.__defineGetter__ && ('get' in desc))
+          Object.prototype.__defineGetter__.call(o, prop, desc.get);
+        if (Object.prototype.__defineSetter__ && ('set' in desc))
+          Object.prototype.__defineSetter__.call(o, prop, desc.set);
+        if ('value' in desc)
+          o[prop] = desc.value;
+        return o;
+      };
+    }
+  }());
+
+  // ES5: Make obj[index] an alias for obj._getter(index)/obj._setter(index, value)
+  // for index in 0 ... obj.length
+  function makeArrayAccessors(obj) {
+    if (obj.length > MAX_ARRAY_LENGTH) throw RangeError('Array too large for polyfill');
+
+    function makeArrayAccessor(index) {
+      Object.defineProperty(obj, index, {
+        'get': function() { return obj._getter(index); },
+        'set': function(v) { obj._setter(index, v); },
+        enumerable: true,
+        configurable: false
+      });
+    }
+
+    var i;
+    for (i = 0; i < obj.length; i += 1) {
+      makeArrayAccessor(i);
+    }
+  }
+
+  // Internal conversion functions:
+  //    pack<Type>()   - take a number (interpreted as Type), output a byte array
+  //    unpack<Type>() - take a byte array, output a Type-like number
+
+  function as_signed(value, bits) { var s = 32 - bits; return (value << s) >> s; }
+  function as_unsigned(value, bits) { var s = 32 - bits; return (value << s) >>> s; }
+
+  function packI8(n) { return [n & 0xff]; }
+  function unpackI8(bytes) { return as_signed(bytes[0], 8); }
+
+  function packU8(n) { return [n & 0xff]; }
+  function unpackU8(bytes) { return as_unsigned(bytes[0], 8); }
+
+  function packU8Clamped(n) { n = round(Number(n)); return [n < 0 ? 0 : n > 0xff ? 0xff : n & 0xff]; }
+
+  function packI16(n) { return [(n >> 8) & 0xff, n & 0xff]; }
+  function unpackI16(bytes) { return as_signed(bytes[0] << 8 | bytes[1], 16); }
+
+  function packU16(n) { return [(n >> 8) & 0xff, n & 0xff]; }
+  function unpackU16(bytes) { return as_unsigned(bytes[0] << 8 | bytes[1], 16); }
+
+  function packI32(n) { return [(n >> 24) & 0xff, (n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff]; }
+  function unpackI32(bytes) { return as_signed(bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3], 32); }
+
+  function packU32(n) { return [(n >> 24) & 0xff, (n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff]; }
+  function unpackU32(bytes) { return as_unsigned(bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3], 32); }
+
+  function packIEEE754(v, ebits, fbits) {
+
+    var bias = (1 << (ebits - 1)) - 1,
+        s, e, f, ln,
+        i, bits, str, bytes;
+
+    function roundToEven(n) {
+      var w = floor(n), f = n - w;
+      if (f < 0.5)
+        return w;
+      if (f > 0.5)
+        return w + 1;
+      return w % 2 ? w + 1 : w;
+    }
+
+    // Compute sign, exponent, fraction
+    if (v !== v) {
+      // NaN
+      // http://dev.w3.org/2006/webapi/WebIDL/#es-type-mapping
+      e = (1 << ebits) - 1; f = pow(2, fbits - 1); s = 0;
+    } else if (v === Infinity || v === -Infinity) {
+      e = (1 << ebits) - 1; f = 0; s = (v < 0) ? 1 : 0;
+    } else if (v === 0) {
+      e = 0; f = 0; s = (1 / v === -Infinity) ? 1 : 0;
+    } else {
+      s = v < 0;
+      v = abs(v);
+
+      if (v >= pow(2, 1 - bias)) {
+        e = min(floor(log(v) / LN2), 1023);
+        f = roundToEven(v / pow(2, e) * pow(2, fbits));
+        if (f / pow(2, fbits) >= 2) {
+          e = e + 1;
+          f = 1;
+        }
+        if (e > bias) {
+          // Overflow
+          e = (1 << ebits) - 1;
+          f = 0;
+        } else {
+          // Normalized
+          e = e + bias;
+          f = f - pow(2, fbits);
+        }
+      } else {
+        // Denormalized
+        e = 0;
+        f = roundToEven(v / pow(2, 1 - bias - fbits));
+      }
+    }
+
+    // Pack sign, exponent, fraction
+    bits = [];
+    for (i = fbits; i; i -= 1) { bits.push(f % 2 ? 1 : 0); f = floor(f / 2); }
+    for (i = ebits; i; i -= 1) { bits.push(e % 2 ? 1 : 0); e = floor(e / 2); }
+    bits.push(s ? 1 : 0);
+    bits.reverse();
+    str = bits.join('');
+
+    // Bits to bytes
+    bytes = [];
+    while (str.length) {
+      bytes.push(parseInt(str.substring(0, 8), 2));
+      str = str.substring(8);
+    }
+    return bytes;
+  }
+
+  function unpackIEEE754(bytes, ebits, fbits) {
+    // Bytes to bits
+    var bits = [], i, j, b, str,
+        bias, s, e, f;
+
+    for (i = bytes.length; i; i -= 1) {
+      b = bytes[i - 1];
+      for (j = 8; j; j -= 1) {
+        bits.push(b % 2 ? 1 : 0); b = b >> 1;
+      }
+    }
+    bits.reverse();
+    str = bits.join('');
+
+    // Unpack sign, exponent, fraction
+    bias = (1 << (ebits - 1)) - 1;
+    s = parseInt(str.substring(0, 1), 2) ? -1 : 1;
+    e = parseInt(str.substring(1, 1 + ebits), 2);
+    f = parseInt(str.substring(1 + ebits), 2);
+
+    // Produce number
+    if (e === (1 << ebits) - 1) {
+      return f !== 0 ? NaN : s * Infinity;
+    } else if (e > 0) {
+      // Normalized
+      return s * pow(2, e - bias) * (1 + f / pow(2, fbits));
+    } else if (f !== 0) {
+      // Denormalized
+      return s * pow(2, -(bias - 1)) * (f / pow(2, fbits));
+    } else {
+      return s < 0 ? -0 : 0;
+    }
+  }
+
+  function unpackF64(b) { return unpackIEEE754(b, 11, 52); }
+  function packF64(v) { return packIEEE754(v, 11, 52); }
+  function unpackF32(b) { return unpackIEEE754(b, 8, 23); }
+  function packF32(v) { return packIEEE754(v, 8, 23); }
+
+  //
+  // 3 The ArrayBuffer Type
+  //
+
+  (function() {
+
+    function ArrayBuffer(length) {
+      length = ToInt32(length);
+      if (length < 0) throw RangeError('ArrayBuffer size is not a small enough positive integer.');
+      Object.defineProperty(this, 'byteLength', {value: length});
+      Object.defineProperty(this, '_bytes', {value: Array(length)});
+
+      for (var i = 0; i < length; i += 1)
+        this._bytes[i] = 0;
+    }
+
+    global.ArrayBuffer = global.ArrayBuffer || ArrayBuffer;
+
+    //
+    // 5 The Typed Array View Types
+    //
+
+    function $TypedArray$() {
+
+      // %TypedArray% ( length )
+      if (!arguments.length || typeof arguments[0] !== 'object') {
+        return (function(length) {
+          length = ToInt32(length);
+          if (length < 0) throw RangeError('length is not a small enough positive integer.');
+          Object.defineProperty(this, 'length', {value: length});
+          Object.defineProperty(this, 'byteLength', {value: length * this.BYTES_PER_ELEMENT});
+          Object.defineProperty(this, 'buffer', {value: new ArrayBuffer(this.byteLength)});
+          Object.defineProperty(this, 'byteOffset', {value: 0});
+
+         }).apply(this, arguments);
+      }
+
+      // %TypedArray% ( typedArray )
+      if (arguments.length >= 1 &&
+          Type(arguments[0]) === 'object' &&
+          arguments[0] instanceof $TypedArray$) {
+        return (function(typedArray){
+          if (this.constructor !== typedArray.constructor) throw TypeError();
+
+          var byteLength = typedArray.length * this.BYTES_PER_ELEMENT;
+          Object.defineProperty(this, 'buffer', {value: new ArrayBuffer(byteLength)});
+          Object.defineProperty(this, 'byteLength', {value: byteLength});
+          Object.defineProperty(this, 'byteOffset', {value: 0});
+          Object.defineProperty(this, 'length', {value: typedArray.length});
+
+          for (var i = 0; i < this.length; i += 1)
+            this._setter(i, typedArray._getter(i));
+
+        }).apply(this, arguments);
+      }
+
+      // %TypedArray% ( array )
+      if (arguments.length >= 1 &&
+          Type(arguments[0]) === 'object' &&
+          !(arguments[0] instanceof $TypedArray$) &&
+          !(arguments[0] instanceof ArrayBuffer || Class(arguments[0]) === 'ArrayBuffer')) {
+        return (function(array) {
+
+          var byteLength = array.length * this.BYTES_PER_ELEMENT;
+          Object.defineProperty(this, 'buffer', {value: new ArrayBuffer(byteLength)});
+          Object.defineProperty(this, 'byteLength', {value: byteLength});
+          Object.defineProperty(this, 'byteOffset', {value: 0});
+          Object.defineProperty(this, 'length', {value: array.length});
+
+          for (var i = 0; i < this.length; i += 1) {
+            var s = array[i];
+            this._setter(i, Number(s));
+          }
+        }).apply(this, arguments);
+      }
+
+      // %TypedArray% ( buffer, byteOffset=0, length=undefined )
+      if (arguments.length >= 1 &&
+          Type(arguments[0]) === 'object' &&
+          (arguments[0] instanceof ArrayBuffer || Class(arguments[0]) === 'ArrayBuffer')) {
+        return (function(buffer, byteOffset, length) {
+
+          byteOffset = ToUint32(byteOffset);
+          if (byteOffset > buffer.byteLength)
+            throw RangeError('byteOffset out of range');
+
+          // The given byteOffset must be a multiple of the element
+          // size of the specific type, otherwise an exception is raised.
+          if (byteOffset % this.BYTES_PER_ELEMENT)
+            throw RangeError('buffer length minus the byteOffset is not a multiple of the element size.');
+
+          if (length === undefined) {
+            var byteLength = buffer.byteLength - byteOffset;
+            if (byteLength % this.BYTES_PER_ELEMENT)
+              throw RangeError('length of buffer minus byteOffset not a multiple of the element size');
+            length = byteLength / this.BYTES_PER_ELEMENT;
+
+          } else {
+            length = ToUint32(length);
+            byteLength = length * this.BYTES_PER_ELEMENT;
+          }
+
+          if ((byteOffset + byteLength) > buffer.byteLength)
+            throw RangeError('byteOffset and length reference an area beyond the end of the buffer');
+
+          Object.defineProperty(this, 'buffer', {value: buffer});
+          Object.defineProperty(this, 'byteLength', {value: byteLength});
+          Object.defineProperty(this, 'byteOffset', {value: byteOffset});
+          Object.defineProperty(this, 'length', {value: length});
+
+        }).apply(this, arguments);
+      }
+
+      // %TypedArray% ( all other argument combinations )
+      throw TypeError();
+    }
+
+    // Properties of the %TypedArray Instrinsic Object
+
+    // %TypedArray%.from ( source , mapfn=undefined, thisArg=undefined )
+    Object.defineProperty($TypedArray$, 'from', {value: function(iterable) {
+      return new this(iterable);
+    }});
+
+    // %TypedArray%.of ( ...items )
+    Object.defineProperty($TypedArray$, 'of', {value: function(/*...items*/) {
+      return new this(arguments);
+    }});
+
+    // %TypedArray%.prototype
+    var $TypedArrayPrototype$ = {};
+    $TypedArray$.prototype = $TypedArrayPrototype$;
+
+    // WebIDL: getter type (unsigned long index);
+    Object.defineProperty($TypedArray$.prototype, '_getter', {value: function(index) {
+      if (arguments.length < 1) throw SyntaxError('Not enough arguments');
+
+      index = ToUint32(index);
+      if (index >= this.length)
+        return undefined;
+
+      var bytes = [], i, o;
+      for (i = 0, o = this.byteOffset + index * this.BYTES_PER_ELEMENT;
+           i < this.BYTES_PER_ELEMENT;
+           i += 1, o += 1) {
+        bytes.push(this.buffer._bytes[o]);
+      }
+      return this._unpack(bytes);
+    }});
+
+    // NONSTANDARD: convenience alias for getter: type get(unsigned long index);
+    Object.defineProperty($TypedArray$.prototype, 'get', {value: $TypedArray$.prototype._getter});
+
+    // WebIDL: setter void (unsigned long index, type value);
+    Object.defineProperty($TypedArray$.prototype, '_setter', {value: function(index, value) {
+      if (arguments.length < 2) throw SyntaxError('Not enough arguments');
+
+      index = ToUint32(index);
+      if (index >= this.length)
+        return;
+
+      var bytes = this._pack(value), i, o;
+      for (i = 0, o = this.byteOffset + index * this.BYTES_PER_ELEMENT;
+           i < this.BYTES_PER_ELEMENT;
+           i += 1, o += 1) {
+        this.buffer._bytes[o] = bytes[i];
+      }
+    }});
+
+    // get %TypedArray%.prototype.buffer
+    // get %TypedArray%.prototype.byteLength
+    // get %TypedArray%.prototype.byteOffset
+    // -- applied directly to the object in the constructor
+
+    // %TypedArray%.prototype.constructor
+    Object.defineProperty($TypedArray$.prototype, 'constructor', {value: $TypedArray$});
+
+    // %TypedArray%.prototype.copyWithin (target, start, end = this.length )
+    Object.defineProperty($TypedArray$.prototype, 'copyWithin', {value: function(target, start) {
+      var end = arguments[2];
+
+      var o = ToObject(this);
+      var lenVal = o.length;
+      var len = ToUint32(lenVal);
+      len = max(len, 0);
+      var relativeTarget = ToInt32(target);
+      var to;
+      if (relativeTarget < 0)
+        to = max(len + relativeTarget, 0);
+      else
+        to = min(relativeTarget, len);
+      var relativeStart = ToInt32(start);
+      var from;
+      if (relativeStart < 0)
+        from = max(len + relativeStart, 0);
+      else
+        from = min(relativeStart, len);
+      var relativeEnd;
+      if (end === undefined)
+        relativeEnd = len;
+      else
+        relativeEnd = ToInt32(end);
+      var final;
+      if (relativeEnd < 0)
+        final = max(len + relativeEnd, 0);
+      else
+        final = min(relativeEnd, len);
+      var count = min(final - from, len - to);
+      var direction;
+      if (from < to && to < from + count) {
+        direction = -1;
+        from = from + count - 1;
+        to = to + count - 1;
+      } else {
+        direction = 1;
+      }
+      while (count > 0) {
+        o._setter(to, o._getter(from));
+        from = from + direction;
+        to = to + direction;
+        count = count - 1;
+      }
+      return o;
+    }});
+
+    // %TypedArray%.prototype.entries ( )
+    // -- defined in es6.js to shim browsers w/ native TypedArrays
+
+    // %TypedArray%.prototype.every ( callbackfn, thisArg = undefined )
+    Object.defineProperty($TypedArray$.prototype, 'every', {value: function(callbackfn) {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      if (!IsCallable(callbackfn)) throw TypeError();
+      var thisArg = arguments[1];
+      for (var i = 0; i < len; i++) {
+        if (!callbackfn.call(thisArg, t._getter(i), i, t))
+          return false;
+      }
+      return true;
+    }});
+
+    // %TypedArray%.prototype.fill (value, start = 0, end = this.length )
+    Object.defineProperty($TypedArray$.prototype, 'fill', {value: function(value) {
+      var start = arguments[1],
+          end = arguments[2];
+
+      var o = ToObject(this);
+      var lenVal = o.length;
+      var len = ToUint32(lenVal);
+      len = max(len, 0);
+      var relativeStart = ToInt32(start);
+      var k;
+      if (relativeStart < 0)
+        k = max((len + relativeStart), 0);
+      else
+        k = min(relativeStart, len);
+      var relativeEnd;
+      if (end === undefined)
+        relativeEnd = len;
+      else
+        relativeEnd = ToInt32(end);
+      var final;
+      if (relativeEnd < 0)
+        final = max((len + relativeEnd), 0);
+      else
+        final = min(relativeEnd, len);
+      while (k < final) {
+        o._setter(k, value);
+        k += 1;
+      }
+      return o;
+    }});
+
+    // %TypedArray%.prototype.filter ( callbackfn, thisArg = undefined )
+    Object.defineProperty($TypedArray$.prototype, 'filter', {value: function(callbackfn) {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      if (!IsCallable(callbackfn)) throw TypeError();
+      var res = [];
+      var thisp = arguments[1];
+      for (var i = 0; i < len; i++) {
+        var val = t._getter(i); // in case fun mutates this
+        if (callbackfn.call(thisp, val, i, t))
+          res.push(val);
+      }
+      return new this.constructor(res);
+    }});
+
+    // %TypedArray%.prototype.find (predicate, thisArg = undefined)
+    Object.defineProperty($TypedArray$.prototype, 'find', {value: function(predicate) {
+      var o = ToObject(this);
+      var lenValue = o.length;
+      var len = ToUint32(lenValue);
+      if (!IsCallable(predicate)) throw TypeError();
+      var t = arguments.length > 1 ? arguments[1] : undefined;
+      var k = 0;
+      while (k < len) {
+        var kValue = o._getter(k);
+        var testResult = predicate.call(t, kValue, k, o);
+        if (Boolean(testResult))
+          return kValue;
+        ++k;
+      }
+      return undefined;
+    }});
+
+    // %TypedArray%.prototype.findIndex ( predicate, thisArg = undefined )
+    Object.defineProperty($TypedArray$.prototype, 'findIndex', {value: function(predicate) {
+      var o = ToObject(this);
+      var lenValue = o.length;
+      var len = ToUint32(lenValue);
+      if (!IsCallable(predicate)) throw TypeError();
+      var t = arguments.length > 1 ? arguments[1] : undefined;
+      var k = 0;
+      while (k < len) {
+        var kValue = o._getter(k);
+        var testResult = predicate.call(t, kValue, k, o);
+        if (Boolean(testResult))
+          return k;
+        ++k;
+      }
+      return -1;
+    }});
+
+    // %TypedArray%.prototype.forEach ( callbackfn, thisArg = undefined )
+    Object.defineProperty($TypedArray$.prototype, 'forEach', {value: function(callbackfn) {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      if (!IsCallable(callbackfn)) throw TypeError();
+      var thisp = arguments[1];
+      for (var i = 0; i < len; i++)
+        callbackfn.call(thisp, t._getter(i), i, t);
+    }});
+
+    // %TypedArray%.prototype.indexOf (searchElement, fromIndex = 0 )
+    Object.defineProperty($TypedArray$.prototype, 'indexOf', {value: function(searchElement) {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      if (len === 0) return -1;
+      var n = 0;
+      if (arguments.length > 0) {
+        n = Number(arguments[1]);
+        if (n !== n) {
+          n = 0;
+        } else if (n !== 0 && n !== (1 / 0) && n !== -(1 / 0)) {
+          n = (n > 0 || -1) * floor(abs(n));
+        }
+      }
+      if (n >= len) return -1;
+      var k = n >= 0 ? n : max(len - abs(n), 0);
+      for (; k < len; k++) {
+        if (t._getter(k) === searchElement) {
+          return k;
+        }
+      }
+      return -1;
+    }});
+
+    // %TypedArray%.prototype.join ( separator )
+    Object.defineProperty($TypedArray$.prototype, 'join', {value: function(separator) {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      var tmp = Array(len);
+      for (var i = 0; i < len; ++i)
+        tmp[i] = t._getter(i);
+      return tmp.join(separator === undefined ? ',' : separator); // Hack for IE7
+    }});
+
+    // %TypedArray%.prototype.keys ( )
+    // -- defined in es6.js to shim browsers w/ native TypedArrays
+
+    // %TypedArray%.prototype.lastIndexOf ( searchElement, fromIndex = this.length-1 )
+    Object.defineProperty($TypedArray$.prototype, 'lastIndexOf', {value: function(searchElement) {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      if (len === 0) return -1;
+      var n = len;
+      if (arguments.length > 1) {
+        n = Number(arguments[1]);
+        if (n !== n) {
+          n = 0;
+        } else if (n !== 0 && n !== (1 / 0) && n !== -(1 / 0)) {
+          n = (n > 0 || -1) * floor(abs(n));
+        }
+      }
+      var k = n >= 0 ? min(n, len - 1) : len - abs(n);
+      for (; k >= 0; k--) {
+        if (t._getter(k) === searchElement)
+          return k;
+      }
+      return -1;
+    }});
+
+    // get %TypedArray%.prototype.length
+    // -- applied directly to the object in the constructor
+
+    // %TypedArray%.prototype.map ( callbackfn, thisArg = undefined )
+    Object.defineProperty($TypedArray$.prototype, 'map', {value: function(callbackfn) {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      if (!IsCallable(callbackfn)) throw TypeError();
+      var res = []; res.length = len;
+      var thisp = arguments[1];
+      for (var i = 0; i < len; i++)
+        res[i] = callbackfn.call(thisp, t._getter(i), i, t);
+      return new this.constructor(res);
+    }});
+
+    // %TypedArray%.prototype.reduce ( callbackfn [, initialValue] )
+    Object.defineProperty($TypedArray$.prototype, 'reduce', {value: function(callbackfn) {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      if (!IsCallable(callbackfn)) throw TypeError();
+      // no value to return if no initial value and an empty array
+      if (len === 0 && arguments.length === 1) throw TypeError();
+      var k = 0;
+      var accumulator;
+      if (arguments.length >= 2) {
+        accumulator = arguments[1];
+      } else {
+        accumulator = t._getter(k++);
+      }
+      while (k < len) {
+        accumulator = callbackfn.call(undefined, accumulator, t._getter(k), k, t);
+        k++;
+      }
+      return accumulator;
+    }});
+
+    // %TypedArray%.prototype.reduceRight ( callbackfn [, initialValue] )
+    Object.defineProperty($TypedArray$.prototype, 'reduceRight', {value: function(callbackfn) {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      if (!IsCallable(callbackfn)) throw TypeError();
+      // no value to return if no initial value, empty array
+      if (len === 0 && arguments.length === 1) throw TypeError();
+      var k = len - 1;
+      var accumulator;
+      if (arguments.length >= 2) {
+        accumulator = arguments[1];
+      } else {
+        accumulator = t._getter(k--);
+      }
+      while (k >= 0) {
+        accumulator = callbackfn.call(undefined, accumulator, t._getter(k), k, t);
+        k--;
+      }
+      return accumulator;
+    }});
+
+    // %TypedArray%.prototype.reverse ( )
+    Object.defineProperty($TypedArray$.prototype, 'reverse', {value: function() {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      var half = floor(len / 2);
+      for (var i = 0, j = len - 1; i < half; ++i, --j) {
+        var tmp = t._getter(i);
+        t._setter(i, t._getter(j));
+        t._setter(j, tmp);
+      }
+      return t;
+    }});
+
+    // %TypedArray%.prototype.set(array, offset = 0 )
+    // %TypedArray%.prototype.set(typedArray, offset = 0 )
+    // WebIDL: void set(TypedArray array, optional unsigned long offset);
+    // WebIDL: void set(sequence<type> array, optional unsigned long offset);
+    Object.defineProperty($TypedArray$.prototype, 'set', {value: function(index, value) {
+      if (arguments.length < 1) throw SyntaxError('Not enough arguments');
+      var array, sequence, offset, len,
+          i, s, d,
+          byteOffset, byteLength, tmp;
+
+      if (typeof arguments[0] === 'object' && arguments[0].constructor === this.constructor) {
+        // void set(TypedArray array, optional unsigned long offset);
+        array = arguments[0];
+        offset = ToUint32(arguments[1]);
+
+        if (offset + array.length > this.length) {
+          throw RangeError('Offset plus length of array is out of range');
+        }
+
+        byteOffset = this.byteOffset + offset * this.BYTES_PER_ELEMENT;
+        byteLength = array.length * this.BYTES_PER_ELEMENT;
+
+        if (array.buffer === this.buffer) {
+          tmp = [];
+          for (i = 0, s = array.byteOffset; i < byteLength; i += 1, s += 1) {
+            tmp[i] = array.buffer._bytes[s];
+          }
+          for (i = 0, d = byteOffset; i < byteLength; i += 1, d += 1) {
+            this.buffer._bytes[d] = tmp[i];
+          }
+        } else {
+          for (i = 0, s = array.byteOffset, d = byteOffset;
+               i < byteLength; i += 1, s += 1, d += 1) {
+            this.buffer._bytes[d] = array.buffer._bytes[s];
+          }
+        }
+      } else if (typeof arguments[0] === 'object' && typeof arguments[0].length !== 'undefined') {
+        // void set(sequence<type> array, optional unsigned long offset);
+        sequence = arguments[0];
+        len = ToUint32(sequence.length);
+        offset = ToUint32(arguments[1]);
+
+        if (offset + len > this.length) {
+          throw RangeError('Offset plus length of array is out of range');
+        }
+
+        for (i = 0; i < len; i += 1) {
+          s = sequence[i];
+          this._setter(offset + i, Number(s));
+        }
+      } else {
+        throw TypeError('Unexpected argument type(s)');
+      }
+    }});
+
+    // %TypedArray%.prototype.slice ( start, end )
+    Object.defineProperty($TypedArray$.prototype, 'slice', {value: function(start, end) {
+      var o = ToObject(this);
+      var lenVal = o.length;
+      var len = ToUint32(lenVal);
+      var relativeStart = ToInt32(start);
+      var k = (relativeStart < 0) ? max(len + relativeStart, 0) : min(relativeStart, len);
+      var relativeEnd = (end === undefined) ? len : ToInt32(end);
+      var final = (relativeEnd < 0) ? max(len + relativeEnd, 0) : min(relativeEnd, len);
+      var count = final - k;
+      var c = o.constructor;
+      var a = new c(count);
+      var n = 0;
+      while (k < final) {
+        var kValue = o._getter(k);
+        a._setter(n, kValue);
+        ++k;
+        ++n;
+      }
+      return a;
+    }});
+
+    // %TypedArray%.prototype.some ( callbackfn, thisArg = undefined )
+    Object.defineProperty($TypedArray$.prototype, 'some', {value: function(callbackfn) {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      if (!IsCallable(callbackfn)) throw TypeError();
+      var thisp = arguments[1];
+      for (var i = 0; i < len; i++) {
+        if (callbackfn.call(thisp, t._getter(i), i, t)) {
+          return true;
+        }
+      }
+      return false;
+    }});
+
+    // %TypedArray%.prototype.sort ( comparefn )
+    Object.defineProperty($TypedArray$.prototype, 'sort', {value: function(comparefn) {
+      if (this === undefined || this === null) throw TypeError();
+      var t = Object(this);
+      var len = ToUint32(t.length);
+      var tmp = Array(len);
+      for (var i = 0; i < len; ++i)
+        tmp[i] = t._getter(i);
+      if (comparefn) tmp.sort(comparefn); else tmp.sort(); // Hack for IE8/9
+      for (i = 0; i < len; ++i)
+        t._setter(i, tmp[i]);
+      return t;
+    }});
+
+    // %TypedArray%.prototype.subarray(begin = 0, end = this.length )
+    // WebIDL: TypedArray subarray(long begin, optional long end);
+    Object.defineProperty($TypedArray$.prototype, 'subarray', {value: function(start, end) {
+      function clamp(v, min, max) { return v < min ? min : v > max ? max : v; }
+
+      start = ToInt32(start);
+      end = ToInt32(end);
+
+      if (arguments.length < 1) { start = 0; }
+      if (arguments.length < 2) { end = this.length; }
+
+      if (start < 0) { start = this.length + start; }
+      if (end < 0) { end = this.length + end; }
+
+      start = clamp(start, 0, this.length);
+      end = clamp(end, 0, this.length);
+
+      var len = end - start;
+      if (len < 0) {
+        len = 0;
+      }
+
+      return new this.constructor(
+        this.buffer, this.byteOffset + start * this.BYTES_PER_ELEMENT, len);
+    }});
+
+    // %TypedArray%.prototype.toLocaleString ( )
+    // %TypedArray%.prototype.toString ( )
+    // %TypedArray%.prototype.values ( )
+    // %TypedArray%.prototype [ @@iterator ] ( )
+    // get %TypedArray%.prototype [ @@toStringTag ]
+    // -- defined in es6.js to shim browsers w/ native TypedArrays
+
+    function makeTypedArray(elementSize, pack, unpack) {
+      // Each TypedArray type requires a distinct constructor instance with
+      // identical logic, which this produces.
+      var TypedArray = function() {
+        Object.defineProperty(this, 'constructor', {value: TypedArray});
+        $TypedArray$.apply(this, arguments);
+        makeArrayAccessors(this);
+      };
+      if ('__proto__' in TypedArray) {
+        TypedArray.__proto__ = $TypedArray$;
+      } else {
+        TypedArray.from = $TypedArray$.from;
+        TypedArray.of = $TypedArray$.of;
+      }
+
+      TypedArray.BYTES_PER_ELEMENT = elementSize;
+
+      var TypedArrayPrototype = function() {};
+      TypedArrayPrototype.prototype = $TypedArrayPrototype$;
+
+      TypedArray.prototype = new TypedArrayPrototype();
+
+      Object.defineProperty(TypedArray.prototype, 'BYTES_PER_ELEMENT', {value: elementSize});
+      Object.defineProperty(TypedArray.prototype, '_pack', {value: pack});
+      Object.defineProperty(TypedArray.prototype, '_unpack', {value: unpack});
+
+      return TypedArray;
+    }
+
+    var Int8Array = makeTypedArray(1, packI8, unpackI8);
+    var Uint8Array = makeTypedArray(1, packU8, unpackU8);
+    var Uint8ClampedArray = makeTypedArray(1, packU8Clamped, unpackU8);
+    var Int16Array = makeTypedArray(2, packI16, unpackI16);
+    var Uint16Array = makeTypedArray(2, packU16, unpackU16);
+    var Int32Array = makeTypedArray(4, packI32, unpackI32);
+    var Uint32Array = makeTypedArray(4, packU32, unpackU32);
+    var Float32Array = makeTypedArray(4, packF32, unpackF32);
+    var Float64Array = makeTypedArray(8, packF64, unpackF64);
+
+    global.Int8Array = global.Int8Array || Int8Array;
+    global.Uint8Array = global.Uint8Array || Uint8Array;
+    global.Uint8ClampedArray = global.Uint8ClampedArray || Uint8ClampedArray;
+    global.Int16Array = global.Int16Array || Int16Array;
+    global.Uint16Array = global.Uint16Array || Uint16Array;
+    global.Int32Array = global.Int32Array || Int32Array;
+    global.Uint32Array = global.Uint32Array || Uint32Array;
+    global.Float32Array = global.Float32Array || Float32Array;
+    global.Float64Array = global.Float64Array || Float64Array;
+  }());
+
+  //
+  // 6 The DataView View Type
+  //
+
+  (function() {
+    function r(array, index) {
+      return IsCallable(array.get) ? array.get(index) : array[index];
+    }
+
+    var IS_BIG_ENDIAN = (function() {
+      var u16array = new Uint16Array([0x1234]),
+          u8array = new Uint8Array(u16array.buffer);
+      return r(u8array, 0) === 0x12;
+    }());
+
+    // DataView(buffer, byteOffset=0, byteLength=undefined)
+    // WebIDL: Constructor(ArrayBuffer buffer,
+    //                     optional unsigned long byteOffset,
+    //                     optional unsigned long byteLength)
+    function DataView(buffer, byteOffset, byteLength) {
+      if (!(buffer instanceof ArrayBuffer || Class(buffer) === 'ArrayBuffer')) throw TypeError();
+
+      byteOffset = ToUint32(byteOffset);
+      if (byteOffset > buffer.byteLength)
+        throw RangeError('byteOffset out of range');
+
+      if (byteLength === undefined)
+        byteLength = buffer.byteLength - byteOffset;
+      else
+        byteLength = ToUint32(byteLength);
+
+      if ((byteOffset + byteLength) > buffer.byteLength)
+        throw RangeError('byteOffset and length reference an area beyond the end of the buffer');
+
+      Object.defineProperty(this, 'buffer', {value: buffer});
+      Object.defineProperty(this, 'byteLength', {value: byteLength});
+      Object.defineProperty(this, 'byteOffset', {value: byteOffset});
+    };
+
+    // get DataView.prototype.buffer
+    // get DataView.prototype.byteLength
+    // get DataView.prototype.byteOffset
+    // -- applied directly to instances by the constructor
+
+    function makeGetter(arrayType) {
+      return function GetViewValue(byteOffset, littleEndian) {
+        byteOffset = ToUint32(byteOffset);
+
+        if (byteOffset + arrayType.BYTES_PER_ELEMENT > this.byteLength)
+          throw RangeError('Array index out of range');
+
+        byteOffset += this.byteOffset;
+
+        var uint8Array = new Uint8Array(this.buffer, byteOffset, arrayType.BYTES_PER_ELEMENT),
+            bytes = [];
+        for (var i = 0; i < arrayType.BYTES_PER_ELEMENT; i += 1)
+          bytes.push(r(uint8Array, i));
+
+        if (Boolean(littleEndian) === Boolean(IS_BIG_ENDIAN))
+          bytes.reverse();
+
+        return r(new arrayType(new Uint8Array(bytes).buffer), 0);
+      };
+    }
+
+    Object.defineProperty(DataView.prototype, 'getUint8', {value: makeGetter(Uint8Array)});
+    Object.defineProperty(DataView.prototype, 'getInt8', {value: makeGetter(Int8Array)});
+    Object.defineProperty(DataView.prototype, 'getUint16', {value: makeGetter(Uint16Array)});
+    Object.defineProperty(DataView.prototype, 'getInt16', {value: makeGetter(Int16Array)});
+    Object.defineProperty(DataView.prototype, 'getUint32', {value: makeGetter(Uint32Array)});
+    Object.defineProperty(DataView.prototype, 'getInt32', {value: makeGetter(Int32Array)});
+    Object.defineProperty(DataView.prototype, 'getFloat32', {value: makeGetter(Float32Array)});
+    Object.defineProperty(DataView.prototype, 'getFloat64', {value: makeGetter(Float64Array)});
+
+    function makeSetter(arrayType) {
+      return function SetViewValue(byteOffset, value, littleEndian) {
+        byteOffset = ToUint32(byteOffset);
+        if (byteOffset + arrayType.BYTES_PER_ELEMENT > this.byteLength)
+          throw RangeError('Array index out of range');
+
+        // Get bytes
+        var typeArray = new arrayType([value]),
+            byteArray = new Uint8Array(typeArray.buffer),
+            bytes = [], i, byteView;
+
+        for (i = 0; i < arrayType.BYTES_PER_ELEMENT; i += 1)
+          bytes.push(r(byteArray, i));
+
+        // Flip if necessary
+        if (Boolean(littleEndian) === Boolean(IS_BIG_ENDIAN))
+          bytes.reverse();
+
+        // Write them
+        byteView = new Uint8Array(this.buffer, byteOffset, arrayType.BYTES_PER_ELEMENT);
+        byteView.set(bytes);
+      };
+    }
+
+    Object.defineProperty(DataView.prototype, 'setUint8', {value: makeSetter(Uint8Array)});
+    Object.defineProperty(DataView.prototype, 'setInt8', {value: makeSetter(Int8Array)});
+    Object.defineProperty(DataView.prototype, 'setUint16', {value: makeSetter(Uint16Array)});
+    Object.defineProperty(DataView.prototype, 'setInt16', {value: makeSetter(Int16Array)});
+    Object.defineProperty(DataView.prototype, 'setUint32', {value: makeSetter(Uint32Array)});
+    Object.defineProperty(DataView.prototype, 'setInt32', {value: makeSetter(Int32Array)});
+    Object.defineProperty(DataView.prototype, 'setFloat32', {value: makeSetter(Float32Array)});
+    Object.defineProperty(DataView.prototype, 'setFloat64', {value: makeSetter(Float64Array)});
+
+    global.DataView = global.DataView || DataView;
+
+  }());
+
+}(this));
+// Generated by CoffeeScript 1.6.3
+(function() {
+  var root, u, _base,
+    __hasProp = {}.hasOwnProperty,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    __slice = [].slice,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  this.ABM = {};
+
+  root = this;
+
+  (function() {
+    var vendor, _i, _len, _ref;
+    this.requestAnimFrame = this.requestAnimationFrame || null;
+    this.cancelAnimFrame = this.cancelAnimationFrame || null;
+    _ref = ['ms', 'moz', 'webkit', 'o'];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      vendor = _ref[_i];
+      if (!(!this.requestAnimFrame)) {
+        continue;
+      }
+      this.requestAnimFrame || (this.requestAnimFrame = this[vendor + 'RequestAnimationFrame']);
+      this.cancelAnimFrame || (this.cancelAnimFrame = this[vendor + 'CancelAnimationFrame']);
+      this.cancelAnimFrame || (this.cancelAnimFrame = this[vendor + 'CancelRequestAnimationFrame']);
+    }
+    this.requestAnimFrame || (this.requestAnimFrame = function(callback) {
+      return this.setTimeout(callback, 1000 / 60);
+    });
+    return this.cancelAnimFrame || (this.cancelAnimFrame = function(id) {
+      return this.clearTimeout(id);
+    });
+  })();
+
+  (_base = Array.prototype).indexOf || (_base.indexOf = function(item) {
+    var i, x;
+    if ((function() {
+      var _i, _len, _results;
+      _results = [];
+      for (i = _i = 0, _len = this.length; _i < _len; i = ++_i) {
+        x = this[i];
+        _results.push(x === item);
+      }
+      return _results;
+    }).call(this)) {
+      return i;
+    }
+    return -1;
+  });
+
+  ABM.util = u = {
+    error: function(s) {
+      throw new Error(s);
+    },
+    isArray: Array.isArray || function(obj) {
+      return !!(obj && obj.concat && obj.unshift && !obj.callee);
+    },
+    isFunction: function(obj) {
+      return !!(obj && obj.constructor && obj.call && obj.apply);
+    },
+    isString: function(obj) {
+      return !!(obj === '' || (obj && obj.charCodeAt && obj.substr));
+    },
+    randomInt: function(max) {
+      return Math.floor(Math.random() * max);
+    },
+    randomInt2: function(min, max) {
+      return min + Math.floor(Math.random() * (max - min));
+    },
+    randomNormal: function(mean, sigma) {
+      var norm, u1, u2;
+      if (mean == null) {
+        mean = 0.0;
+      }
+      if (sigma == null) {
+        sigma = 1.0;
+      }
+      u1 = 1.0 - Math.random();
+      u2 = Math.random();
+      norm = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+      return norm * sigma + mean;
+    },
+    randomFloat: function(max) {
+      return Math.random() * max;
+    },
+    randomFloat2: function(min, max) {
+      return min + Math.random() * (max - min);
+    },
+    randomCentered: function(r) {
+      return this.randomFloat2(-r / 2, r / 2);
+    },
+    log10: function(n) {
+      return Math.log(n) / Math.LN10;
+    },
+    logN: function(n, base) {
+      return Math.log(n) / Math.log(base);
+    },
+    mod: function(v, n) {
+      return ((v % n) + n) % n;
+    },
+    wrap: function(v, min, max) {
+      return min + this.mod(v - min, max - min);
+    },
+    clamp: function(v, min, max) {
+      return Math.max(Math.min(v, max), min);
+    },
+    sign: function(v) {
+      return (v < 0 ? -1 : 1);
+    },
+    aToFixed: function(a, p) {
+      var i, _i, _len, _results;
+      if (p == null) {
+        p = 2;
+      }
+      _results = [];
+      for (_i = 0, _len = a.length; _i < _len; _i++) {
+        i = a[_i];
+        _results.push(i.toFixed(p));
+      }
+      return _results;
+    },
+    randomColor: function(c) {
+      var i, _i;
+      if (c == null) {
+        c = [];
+      }
+      if (c.str != null) {
+        c.str = null;
+      }
+      for (i = _i = 0; _i <= 2; i = ++_i) {
+        c[i] = this.randomInt(256);
+      }
+      return c;
+    },
+    randomGray: function(c, min, max) {
+      var i, r, _i;
+      if (c == null) {
+        c = [];
+      }
+      if (min == null) {
+        min = 64;
+      }
+      if (max == null) {
+        max = 192;
+      }
+      if (arguments.length === 2) {
+        return this.randomGray(null, c, min);
+      }
+      if (c.str != null) {
+        c.str = null;
+      }
+      r = this.randomInt2(min, max);
+      for (i = _i = 0; _i <= 2; i = ++_i) {
+        c[i] = r;
+      }
+      return c;
+    },
+    randomMapColor: function(c, set) {
+      if (c == null) {
+        c = [];
+      }
+      if (set == null) {
+        set = [0, 63, 127, 191, 255];
+      }
+      return this.setColor(c, u.oneOf(set), u.oneOf(set), u.oneOf(set));
+    },
+    randomBrightColor: function(c) {
+      if (c == null) {
+        c = [];
+      }
+      return this.randomMapColor(c, [0, 127, 255]);
+    },
+    setColor: function(c, r, g, b, a) {
+      if (c.str != null) {
+        c.str = null;
+      }
+      c[0] = r;
+      c[1] = g;
+      c[2] = b;
+      if (a != null) {
+        c[3] = a;
+      }
+      return c;
+    },
+    scaleColor: function(max, s, c) {
+      var i, val, _i, _len;
+      if (c == null) {
+        c = [];
+      }
+      if (c.str != null) {
+        c.str = null;
+      }
+      for (i = _i = 0, _len = max.length; _i < _len; i = ++_i) {
+        val = max[i];
+        c[i] = this.clamp(Math.round(val * s), 0, 255);
+      }
+      return c;
+    },
+    colorStr: function(c) {
+      var s;
+      if ((s = c.str) != null) {
+        return s;
+      }
+      return c.str = c.length === 3 ? "rgb(" + c + ")" : "rgba(" + c + ")";
+    },
+    colorsEqual: function(c1, c2) {
+      return c1.toString() === c2.toString();
+    },
+    isLittleEndian: function() {
+      var d32, d8;
+      d8 = new Uint8ClampedArray(4);
+      d32 = new Uint32Array(d8.buffer);
+      d32[0] = 0x01020304;
+      return d8[0] === 4;
+    },
+    degToRad: function(degrees) {
+      return degrees * Math.PI / 180;
+    },
+    radToDeg: function(radians) {
+      return radians * 180 / Math.PI;
+    },
+    subtractRads: function(rad1, rad2) {
+      var PI, dr;
+      dr = rad1 - rad2;
+      PI = Math.PI;
+      if (dr <= -PI) {
+        dr += 2 * PI;
+      }
+      if (dr > PI) {
+        dr -= 2 * PI;
+      }
+      return dr;
+    },
+    ownKeys: function(obj) {
+      var key, value, _results;
+      _results = [];
+      for (key in obj) {
+        if (!__hasProp.call(obj, key)) continue;
+        value = obj[key];
+        _results.push(key);
+      }
+      return _results;
+    },
+    ownVarKeys: function(obj) {
+      var key, value, _results;
+      _results = [];
+      for (key in obj) {
+        if (!__hasProp.call(obj, key)) continue;
+        value = obj[key];
+        if (!this.isFunction(value)) {
+          _results.push(key);
+        }
+      }
+      return _results;
+    },
+    any: function(array) {
+      return array.length !== 0;
+    },
+    empty: function(array) {
+      return array.length === 0;
+    },
+    clone: function(array) {
+      return array.slice(0);
+    },
+    last: function(array) {
+      if (this.empty(array)) {
+        this.error("last: empty array");
+      }
+      return array[array.length - 1];
+    },
+    oneOf: function(array) {
+      if (this.empty(array)) {
+        this.error("oneOf: empty array");
+      }
+      return array[this.randomInt(array.length)];
+    },
+    nOf: function(array, n) {
+      var o, r;
+      if (n > array.length) {
+        this.error("nOf: n > length");
+      }
+      r = [];
+      while (r.length < n) {
+        o = this.oneOf(array);
+        if (__indexOf.call(r, o) < 0) {
+          r.push(o);
+        }
+      }
+      return r;
+    },
+    contains: function(array, item) {
+      return -1 !== array.indexOf(item);
+    },
+    removeItem: function(array, item) {
+      var i;
+      if ((i = array.indexOf(item)) !== -1) {
+        array.splice(i, 1);
+      }
+      if (i < 0) {
+        this.error("removeItem: item not found");
+      }
+      return i;
+    },
+    shuffle: function(array) {
+      return array.sort(function() {
+        return 0.5 - Math.random();
+      });
+    },
+    minOneOf: function(array, f, valueToo) {
+      var a, o, r, r1, s, _i, _len;
+      if (valueToo == null) {
+        valueToo = false;
+      }
+      if (this.empty(array)) {
+        this.error("minOneOf: empty array");
+      }
+      r = Infinity;
+      o = null;
+      if (this.isString(f)) {
+        s = f;
+        f = (function(o) {
+          return o[s];
+        });
+      }
+      for (_i = 0, _len = array.length; _i < _len; _i++) {
+        a = array[_i];
+        if ((r1 = f(a)) < r) {
+          r = r1;
+          o = a;
+        }
+      }
+      if (valueToo) {
+        return [o, r];
+      } else {
+        return o;
+      }
+    },
+    maxOneOf: function(array, f, valueToo) {
+      var a, o, r, r1, s, _i, _len;
+      if (valueToo == null) {
+        valueToo = false;
+      }
+      if (this.empty(array)) {
+        this.error("maxOneOf: empty array");
+      }
+      r = -Infinity;
+      o = null;
+      if (this.isString(f)) {
+        s = f;
+        f = (function(o) {
+          return o[s];
+        });
+      }
+      for (_i = 0, _len = array.length; _i < _len; _i++) {
+        a = array[_i];
+        if ((r1 = f(a)) > r) {
+          r = r1;
+          o = a;
+        }
+      }
+      if (valueToo) {
+        return [o, r];
+      } else {
+        return o;
+      }
+    },
+    histOf: function(array, bin, f) {
+      var a, i, r, ri, s, val, _i, _j, _len, _len1;
+      r = [];
+      if (this.isString(f)) {
+        s = f;
+        f = (function(o) {
+          return o[s];
+        });
+      }
+      for (_i = 0, _len = array.length; _i < _len; _i++) {
+        a = array[_i];
+        i = Math.floor(f(a) / bin);
+        r[i] = (ri = r[i]) != null ? ri + 1 : 1;
+      }
+      for (i = _j = 0, _len1 = r.length; _j < _len1; i = ++_j) {
+        val = r[i];
+        if (val == null) {
+          r[i] = 0;
+        }
+      }
+      return r;
+    },
+    sortBy: function(array, prop) {
+      return array.sort(function(a, b) {
+        return a[prop] - b[prop];
+      });
+    },
+    uniq: function(array) {
+      var i, _i, _ref;
+      for (i = _i = _ref = array.length - 1; _i >= 1; i = _i += -1) {
+        if (array[i - 1] === array[i]) {
+          array.splice(i, 1);
+        }
+      }
+      return array;
+    },
+    flatten: function(matrix) {
+      return matrix.reduce(function(a, b) {
+        return a.concat(b);
+      });
+    },
+    aMax: function(array) {
+      return array.reduce(function(a, b) {
+        return Math.max(a, b);
+      });
+    },
+    aMin: function(array) {
+      return array.reduce(function(a, b) {
+        return Math.min(a, b);
+      });
+    },
+    aSum: function(array) {
+      return array.reduce(function(a, b) {
+        return a + b;
+      });
+    },
+    aMul: function(array) {
+      return array.reduce(function(a, b) {
+        return a * b;
+      });
+    },
+    aAvg: function(array) {
+      return this.aSum(array) / array.length;
+    },
+    aPairwise: function(a1, a2, f) {
+      var i, v, _i, _len, _results;
+      v = 0;
+      _results = [];
+      for (i = _i = 0, _len = a1.length; _i < _len; i = ++_i) {
+        v = a1[i];
+        _results.push(f(v, a2[i]));
+      }
+      return _results;
+    },
+    aPairSum: function(a1, a2) {
+      return this.aPairwise(a1, a2, function(a, b) {
+        return a + b;
+      });
+    },
+    aPairDif: function(a1, a2) {
+      return this.aPairwise(a1, a2, function(a, b) {
+        return a - b;
+      });
+    },
+    aPairMul: function(a1, a2) {
+      return this.aPairwise(a1, a2, function(a, b) {
+        return a * b;
+      });
+    },
+    typedToJS: function(typedArray) {
+      var i, _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = typedArray.length; _i < _len; _i++) {
+        i = typedArray[_i];
+        _results.push(i);
+      }
+      return _results;
+    },
+    normalize: function(array, norm) {
+      var min, num, scale, _i, _len, _results;
+      if (norm == null) {
+        norm = .999999999;
+      }
+      min = this.aMin(array);
+      scale = norm / (this.aMax(array) - min);
+      _results = [];
+      for (_i = 0, _len = array.length; _i < _len; _i++) {
+        num = array[_i];
+        _results.push((num - min) * scale);
+      }
+      return _results;
+    },
+    binarySearch: function(items, value, fcn) {
+      var pivot, pivotVal, start, stop;
+      if (fcn == null) {
+        fcn = function(ex) {
+          return ex;
+        };
+      }
+      start = 0;
+      stop = items.length - 1;
+      pivot = Math.floor((start + stop) / 2);
+      while ((pivotVal = fcn(items[pivot])) !== value && start < stop) {
+        if (value < pivotVal) {
+          stop = pivot - 1;
+        }
+        if (value > pivotVal) {
+          start = pivot + 1;
+        }
+        pivot = Math.floor((stop + start) / 2);
+      }
+      if (fcn(items[pivot]) === value) {
+        return pivot;
+      } else {
+        return -1;
+      }
+    },
+    radsToward: function(x1, y1, x2, y2) {
+      var PI, dx, dy;
+      PI = Math.PI;
+      dx = x2 - x1;
+      dy = y2 - y1;
+      if (dx === 0) {
+        if (dy < 0) {
+          return 3 * PI / 2;
+        }
+        if (dy > 0) {
+          return PI / 2;
+        }
+        return 0;
+      } else {
+        return Math.atan(dy / dx) + (dx < 0 ? PI : 0);
+      }
+    },
+    inCone: function(heading, cone, radius, x1, y1, x2, y2) {
+      var angle12;
+      if (radius < this.distance(x1, y1, x2, y2)) {
+        return false;
+      }
+      angle12 = this.radsToward(x1, y1, x2, y2);
+      return cone / 2 >= Math.abs(this.subtractRads(heading, angle12));
+    },
+    distance: function(x1, y1, x2, y2) {
+      var dx, dy;
+      dx = x1 - x2;
+      dy = y1 - y2;
+      return Math.sqrt(dx * dx + dy * dy);
+    },
+    sqDistance: function(x1, y1, x2, y2) {
+      var dx, dy;
+      dx = x1 - x2;
+      dy = y1 - y2;
+      return dx * dx + dy * dy;
+    },
+    torusDistance: function(x1, y1, x2, y2, w, h) {
+      return Math.sqrt(this.torusSqDistance(x1, y1, x2, y2, w, h));
+    },
+    torusSqDistance: function(x1, y1, x2, y2, w, h) {
+      var dx, dxMin, dy, dyMin;
+      dx = Math.abs(x2 - x1);
+      dy = Math.abs(y2 - y1);
+      dxMin = Math.min(dx, w - dx);
+      dyMin = Math.min(dy, h - dy);
+      return dxMin * dxMin + dyMin * dyMin;
+    },
+    torusWraps: function(x1, y1, x2, y2, w, h) {
+      var dx, dy;
+      dx = Math.abs(x2 - x1);
+      dy = Math.abs(y2 - y1);
+      return dx > w - dx || dy > h - dy;
+    },
+    torus4Pts: function(x1, y1, x2, y2, w, h) {
+      var x2r, y2r;
+      x2r = x2 < x1 ? x2 + w : x2 - w;
+      y2r = y2 < y1 ? y2 + h : y2 - h;
+      return [[x2, y2], [x2r, y2], [x2, y2r], [x2r, y2r]];
+    },
+    torusPt: function(x1, y1, x2, y2, w, h) {
+      var x, x2r, y, y2r;
+      x2r = x2 < x1 ? x2 + w : x2 - w;
+      y2r = y2 < y1 ? y2 + h : y2 - h;
+      x = Math.abs(x2r - x1) < Math.abs(x2 - x1) ? x2r : x2;
+      y = Math.abs(y2r - y1) < Math.abs(y2 - y1) ? y2r : y2;
+      return [x, y];
+    },
+    torusRadsToward: function(x1, y1, x2, y2, w, h) {
+      var _ref;
+      _ref = this.torusPt(x1, y1, x2, y2, w, h), x2 = _ref[0], y2 = _ref[1];
+      return this.radsToward(x1, y1, x2, y2);
+    },
+    inTorusCone: function(heading, cone, radius, x1, y1, x2, y2, w, h) {
+      var p, _i, _len, _ref;
+      _ref = this.torus4Pts(x1, y1, x2, y2, w, h);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        p = _ref[_i];
+        if (this.inCone(heading, cone, radius, x1, y1, p[0], p[1])) {
+          return true;
+        }
+      }
+      return false;
+    },
+    fileIndex: {},
+    importImage: function(name, f) {
+      var img;
+      if (((img = this.fileIndex[name]) != null) || ((img = name).width && img.height)) {
+        if (f != null) {
+          f(img);
+        }
+      } else {
+        img = new Image();
+        if (f != null) {
+          img.onload = function() {
+            return f(img);
+          };
+        }
+        img.src = name;
+        this.fileIndex[name] = img;
+      }
+      return img;
+    },
+    xhrLoadFile: function(name, type, f) {
+      var xhr;
+      if (type == null) {
+        type = "text";
+      }
+      if ((xhr = this.fileIndex[name]) != null) {
+        if (f != null) {
+          f(xhr.response);
+        }
+      } else {
+        xhr = new XMLHttpRequest();
+        xhr.open("GET", name, f != null);
+        xhr.responseType = type;
+        if (f != null) {
+          xhr.onload = function() {
+            return f(xhr.response);
+          };
+        }
+        xhr.send();
+        this.fileIndex[name] = xhr;
+      }
+      return xhr;
+    },
+    createCanvas: function(width, height) {
+      var can;
+      can = document.createElement('canvas');
+      can.width = width;
+      can.height = height;
+      return can;
+    },
+    createCtx: function(width, height, ctxType) {
+      var can, _ref;
+      if (ctxType == null) {
+        ctxType = "2d";
+      }
+      can = this.createCanvas(width, height);
+      if (ctxType === "2d") {
+        return can.getContext("2d");
+      } else {
+        return (_ref = can.getContext("webgl")) != null ? _ref : can.getContext("experimental-webgl");
+      }
+    },
+    createLayer: function(div, width, height, z, ctx) {
+      if (ctx == null) {
+        ctx = "2d";
+      }
+      ctx = this.createCtx(width, height, ctx);
+      ctx.canvas.setAttribute('style', "position:absolute;top:0;left:0;z-index:" + z);
+      document.getElementById(div).appendChild(ctx.canvas);
+      return ctx;
+    },
+    setIdentity: function(ctx) {
+      ctx.save();
+      return ctx.setTransform(1, 0, 0, 1, 0, 0);
+    },
+    clearCtx: function(ctx) {
+      if (ctx.save != null) {
+        this.setIdentity(ctx);
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        return ctx.restore();
+      } else {
+        ctx.clearColor(0, 0, 0, 0);
+        return ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT);
+      }
+    },
+    fillCtx: function(ctx, color) {
+      if (ctx.fillStyle != null) {
+        this.setIdentity(ctx);
+        ctx.fillStyle = this.colorStr(color);
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        return ctx.restore();
+      } else {
+        ctx.clearColor.apply(ctx, __slice.call(color).concat([1]));
+        return ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT);
+      }
+    },
+    ctxDrawText: function(ctx, string, xy, color) {
+      if (color == null) {
+        color = [0, 0, 0];
+      }
+      ctx.fillStyle = this.colorStr(color);
+      return ctx.fillText(string, xy[0], xy[1]);
+    },
+    ctxTextParams: function(ctx, font, align, baseline) {
+      if (align == null) {
+        align = "center";
+      }
+      if (baseline == null) {
+        baseline = "middle";
+      }
+      ctx.font = font;
+      ctx.textAlign = align;
+      return ctx.textBaseline = baseline;
+    },
+    ctxLabelParams: function(ctx, color, xy) {
+      ctx.labelColor = color;
+      return ctx.labelXY = xy;
+    },
+    imageToCtx: function(image) {
+      var ctx;
+      ctx = this.createCtx(image.width, image.height);
+      ctx.drawImage(image, 0, 0);
+      return ctx;
+    },
+    ctxToImage: function(ctx, f) {
+      var img;
+      img = new Image();
+      if (f != null) {
+        img.onload = function() {
+          return f(img);
+        };
+      }
+      return img.src = ctx.canvas.toDataURL("image/png");
+    },
+    ctxToImageData: function(ctx) {
+      return ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+    },
+    canvasToImage: function(canvas) {
+      return ctxToImage(canvas.getContext("2d"));
+    },
+    canvasToImageData: function(canvas) {
+      return ctxToImageData(canvas.getContext("2d"));
+    },
+    imageToCanvas: function(image) {
+      return imageToCtx(image).canvas;
+    },
+    drawCenteredImage: function(ctx, img, rad, x, y, dx, dy) {
+      ctx.translate(x, y);
+      ctx.rotate(rad);
+      return ctx.drawImage(img, -dx / 2, -dy / 2);
+    },
+    copyCtx: function(ctx0) {
+      var ctx;
+      ctx = this.createCtx(ctx0.canvas.width, ctx0.canvas.height);
+      ctx.drawImage(ctx0.canvas, 0, 0);
+      return ctx;
+    },
+    resizeCtx: function(ctx, width, height, scale) {
+      var copy;
+      if (scale == null) {
+        scale = false;
+      }
+      copy = this.copyCtx(ctx);
+      ctx.canvas.width = width;
+      ctx.canvas.height = height;
+      return ctx.drawImage(copy.canvas, 0, 0);
+    }
+  };
+
+  ABM.shapes = ABM.util.s = (function() {
+    var ccirc, cimg, circ, csq, fillSlot, poly, spriteSheets;
+    poly = function(c, a) {
+      var i, p, _i, _len;
+      for (i = _i = 0, _len = a.length; _i < _len; i = ++_i) {
+        p = a[i];
+        if (i === 0) {
+          c.moveTo(p[0], p[1]);
+        } else {
+          c.lineTo(p[0], p[1]);
+        }
+      }
+      return null;
+    };
+    circ = function(c, x, y, s) {
+      return c.arc(x, y, s / 2, 0, 2 * Math.PI);
+    };
+    ccirc = function(c, x, y, s) {
+      return c.arc(x, y, s / 2, 0, 2 * Math.PI, true);
+    };
+    cimg = function(c, x, y, s, img) {
+      c.scale(1, -1);
+      c.drawImage(img, x - s / 2, y - s / 2, s, s);
+      return c.scale(1, -1);
+    };
+    csq = function(c, x, y, s) {
+      return c.fillRect(x - s / 2, y - s / 2, s, s);
+    };
+    fillSlot = function(slot, img) {
+      slot.ctx.save();
+      slot.ctx.scale(1, -1);
+      slot.ctx.drawImage(img, slot.x, -(slot.y + slot.bits), slot.bits, slot.bits);
+      return slot.ctx.restore();
+    };
+    spriteSheets = [];
+    return {
+      "default": {
+        rotate: true,
+        draw: function(c) {
+          return poly(c, [[.5, 0], [-.5, -.5], [-.25, 0], [-.5, .5]]);
+        }
+      },
+      triangle: {
+        rotate: true,
+        draw: function(c) {
+          return poly(c, [[.5, 0], [-.5, -.4], [-.5, .4]]);
+        }
+      },
+      arrow: {
+        rotate: true,
+        draw: function(c) {
+          return poly(c, [[.5, 0], [0, .5], [0, .2], [-.5, .2], [-.5, -.2], [0, -.2], [0, -.5]]);
+        }
+      },
+      bug: {
+        rotate: true,
+        draw: function(c) {
+          c.strokeStyle = c.fillStyle;
+          c.lineWidth = .05;
+          poly(c, [[.4, .225], [.2, 0], [.4, -.225]]);
+          c.stroke();
+          c.beginPath();
+          circ(c, .12, 0, .26);
+          circ(c, -.05, 0, .26);
+          return circ(c, -.27, 0, .4);
+        }
+      },
+      pyramid: {
+        rotate: false,
+        draw: function(c) {
+          return poly(c, [[0, .5], [-.433, -.25], [.433, -.25]]);
+        }
+      },
+      circle: {
+        shortcut: function(c, x, y, s) {
+          c.beginPath();
+          circ(c, x, y, s);
+          c.closePath();
+          return c.fill();
+        },
+        rotate: false,
+        draw: function(c) {
+          return circ(c, 0, 0, 1);
+        }
+      },
+      square: {
+        shortcut: function(c, x, y, s) {
+          return csq(c, x, y, s);
+        },
+        rotate: false,
+        draw: function(c) {
+          return csq(c, 0, 0, 1);
+        }
+      },
+      pentagon: {
+        rotate: false,
+        draw: function(c) {
+          return poly(c, [[0, .45], [-.45, .1], [-.3, -.45], [.3, -.45], [.45, .1]]);
+        }
+      },
+      ring: {
+        rotate: false,
+        draw: function(c) {
+          circ(c, 0, 0, 1);
+          c.closePath();
+          return ccirc(c, 0, 0, .6);
+        }
+      },
+      cup: {
+        shortcut: function(c, x, y, s) {
+          return cimg(c, x, y, s, this.img());
+        },
+        rotate: false,
+        imgCache: null,
+        img: function() {
+          if (this.imgCache) {
+            return this.imageCache;
+          } else {
+            return this.imageCache = u.importImage("http://goo.gl/LTIyR");
+          }
+        },
+        draw: function(c) {
+          return cimg(c, .5, .5, 1, this.img());
+        }
+      },
+      person: {
+        rotate: false,
+        draw: function(c) {
+          poly(c, [[.15, .2], [.3, 0], [.125, -.1], [.125, .05], [.1, -.15], [.25, -.5], [.05, -.5], [0, -.25], [-.05, -.5], [-.25, -.5], [-.1, -.15], [-.125, .05], [-.125, -.1], [-.3, 0], [-.15, .2]]);
+          c.closePath();
+          return circ(c, 0, .35, .30);
+        }
+      },
+      names: function() {
+        var name, val, _results;
+        _results = [];
+        for (name in this) {
+          if (!__hasProp.call(this, name)) continue;
+          val = this[name];
+          if ((val.rotate != null) && (val.draw != null)) {
+            _results.push(name);
+          }
+        }
+        return _results;
+      },
+      add: function(name, rotate, draw, shortcut) {
+        var s;
+        s = this[name] = u.isFunction(draw) ? {
+          rotate: rotate,
+          draw: draw
+        } : {
+          rotate: rotate,
+          img: draw,
+          draw: function(c) {
+            return cimg(c, .5, .5, 1, this.img);
+          }
+        };
+        if ((s.img != null) && !s.rotate) {
+          s.shortcut = function(c, x, y, s) {
+            return cimg(c, x, y, s, this.img);
+          };
+        }
+        if (shortcut != null) {
+          return s.shortcut = shortcut;
+        }
+      },
+      poly: poly,
+      circ: circ,
+      ccirc: ccirc,
+      cimg: cimg,
+      csq: csq,
+      spriteSheets: spriteSheets,
+      draw: function(ctx, shape, x, y, size, rad, color) {
+        if (shape.shortcut != null) {
+          if (shape.img == null) {
+            ctx.fillStyle = u.colorStr(color);
+          }
+          shape.shortcut(ctx, x, y, size);
+        } else {
+          ctx.save();
+          ctx.translate(x, y);
+          if (size !== 1) {
+            ctx.scale(size, size);
+          }
+          if (rad !== 0) {
+            ctx.rotate(rad);
+          }
+          if (shape.img != null) {
+            shape.draw(ctx);
+          } else {
+            ctx.fillStyle = u.colorStr(color);
+            ctx.beginPath();
+            shape.draw(ctx);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+        return shape;
+      },
+      drawSprite: function(ctx, s, x, y, size, rad) {
+        if (rad === 0) {
+          ctx.drawImage(s.ctx.canvas, s.x, s.y, s.bits, s.bits, x - size / 2, y - size / 2, size, size);
+        } else {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(rad);
+          ctx.drawImage(s.ctx.canvas, s.x, s.y, s.bits, s.bits, -size / 2, -size / 2, size, size);
+          ctx.restore();
+        }
+        return s;
+      },
+      shapeToSprite: function(name, color, size) {
+        var bits, ctx, foundSlot, img, index, shape, slot, x, y;
+        bits = Math.ceil(ABM.patches.toBits(size));
+        shape = this[name];
+        index = shape.img != null ? name : "" + name + "-" + (u.colorStr(color));
+        ctx = spriteSheets[bits];
+        if (ctx == null) {
+          spriteSheets[bits] = ctx = u.createCtx(bits * 10, bits);
+          ctx.nextX = 0;
+          ctx.nextY = 0;
+          ctx.index = {};
+        }
+        if ((foundSlot = ctx.index[index]) != null) {
+          return foundSlot;
+        }
+        if (bits * ctx.nextX === ctx.canvas.width) {
+          u.resizeCtx(ctx, ctx.canvas.width, ctx.canvas.height + bits);
+          ctx.nextX = 0;
+          ctx.nextY++;
+        }
+        x = bits * ctx.nextX;
+        y = bits * ctx.nextY;
+        slot = {
+          ctx: ctx,
+          x: x,
+          y: y,
+          size: size,
+          bits: bits,
+          name: name,
+          color: color,
+          index: index
+        };
+        ctx.index[index] = slot;
+        if ((img = shape.img) != null) {
+          if (img.height !== 0) {
+            fillSlot(slot, img);
+          } else {
+            img.onload = function() {
+              return fillSlot(slot, img);
+            };
+          }
+        } else {
+          ctx.save();
+          ctx.scale(bits, bits);
+          ctx.translate(ctx.nextX + .5, ctx.nextY + .5);
+          ctx.fillStyle = u.colorStr(color);
+          ctx.beginPath();
+          shape.draw(ctx);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.nextX++;
+        return slot;
+      }
+    };
+  })();
+
+  ABM.AgentSet = (function(_super) {
+    __extends(AgentSet, _super);
+
+    AgentSet.asSet = function(a, setType) {
+      var _ref;
+      if (setType == null) {
+        setType = ABM.AgentSet;
+      }
+      a.__proto__ = (_ref = setType.prototype) != null ? _ref : setType.constructor.prototype;
+      return a;
+    };
+
+    function AgentSet(agentClass, name, mainSet) {
+      this.agentClass = agentClass;
+      this.name = name;
+      this.mainSet = mainSet;
+      AgentSet.__super__.constructor.call(this);
+      this.agentClass.prototype.breed = this;
+      this.ownVariables = [];
+      if (this.mainSet == null) {
+        this.ID = 0;
+      }
+    }
+
+    AgentSet.prototype.create = function() {};
+
+    AgentSet.prototype.add = function(o) {
+      if (this.mainSet != null) {
+        this.mainSet.add(o);
+      } else {
+        o.id = this.ID++;
+      }
+      this.push(o);
+      return o;
+    };
+
+    AgentSet.prototype.remove = function(o) {
+      var i;
+      if (this.mainSet != null) {
+        this.mainSet.remove(o);
+      }
+      if (this.length === 0) {
+        u.error("remove: empty arraySet");
+      }
+      if (o === this.last()) {
+        this[--this.length] = null;
+      } else {
+        if ((i = this.indexOfID(o.id)) !== -1) {
+          this.splice(i, 1);
+        }
+        if (i === -1) {
+          u.error("remove: indexOfID not in list");
+        }
+      }
+      return this;
+    };
+
+    AgentSet.prototype.setDefault = function(name, value) {
+      if (typeof name !== "string") {
+        u.error("setDefault: name is not a string");
+      }
+      return this.agentClass.prototype[name] = value;
+    };
+
+    AgentSet.prototype.own = function() {
+      var i, name, nameValueList, _i, _len, _results;
+      nameValueList = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      if (nameValueList.length % 2 !== 0) {
+        u.error("own: odd number of arguments");
+      }
+      _results = [];
+      for (i = _i = 0, _len = nameValueList.length; _i < _len; i = _i += 2) {
+        name = nameValueList[i];
+        this.setDefault(name, nameValueList[i + 1]);
+        _results.push(this.ownVariables.push(name));
+      }
+      return _results;
+    };
+
+    AgentSet.prototype.uniq = function() {
+      return u.uniq(this);
+    };
+
+    AgentSet.prototype.withID = function(id) {
+      var i;
+      if ((i = this.indexOfID(id)) !== -1) {
+        return this[i];
+      } else {
+        return null;
+      }
+    };
+
+    AgentSet.prototype.indexOfID = function(id, sorted) {
+      if (sorted == null) {
+        sorted = true;
+      }
+      if (!sorted) {
+        this.sortById();
+      }
+      if (id === this.last().id) {
+        return this.length - 1;
+      }
+      return u.binarySearch(this, id, function(o) {
+        return o.id;
+      });
+    };
+
+    AgentSet.prototype.asSet = function(a) {
+      return ABM.AgentSet.asSet(a);
+    };
+
+    AgentSet.prototype.asOrderedSet = function(a) {
+      return this.asSet(a).sortById();
+    };
+
+    AgentSet.prototype.toString = function() {
+      var a;
+      return "[" + ((function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          a = this[_i];
+          _results.push(a.toString());
+        }
+        return _results;
+      }).call(this)).join(", ") + "]";
+    };
+
+    AgentSet.prototype.getProp = function(prop) {
+      var o, _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = this.length; _i < _len; _i++) {
+        o = this[_i];
+        _results.push(o[prop]);
+      }
+      return _results;
+    };
+
+    AgentSet.prototype.getProps = function(props) {
+      var o, p, _i, _len, _results;
+      if (u.isString(props)) {
+        props = props.split(" ");
+      }
+      _results = [];
+      for (_i = 0, _len = this.length; _i < _len; _i++) {
+        o = this[_i];
+        _results.push((function() {
+          var _j, _len1, _results1;
+          _results1 = [];
+          for (_j = 0, _len1 = props.length; _j < _len1; _j++) {
+            p = props[_j];
+            _results1.push(o[p]);
+          }
+          return _results1;
+        })());
+      }
+      return _results;
+    };
+
+    AgentSet.prototype.getPropWith = function(prop, value) {
+      var o;
+      return this.asSet((function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          o = this[_i];
+          if (o[prop] === value) {
+            _results.push(o);
+          }
+        }
+        return _results;
+      }).call(this));
+    };
+
+    AgentSet.prototype.setProp = function(prop, value) {
+      var o, _i, _len;
+      for (_i = 0, _len = this.length; _i < _len; _i++) {
+        o = this[_i];
+        o[prop] = value;
+      }
+      return this;
+    };
+
+    AgentSet.prototype.maxProp = function(prop) {
+      return Math.max.apply(Math, this.getProp(prop));
+    };
+
+    AgentSet.prototype.minProp = function(prop) {
+      return Math.min.apply(Math, this.getProp(prop));
+    };
+
+    AgentSet.prototype.shuffle = function() {
+      return u.shuffle(this);
+    };
+
+    AgentSet.prototype.sortById = function() {
+      return u.sortBy(this, "id");
+    };
+
+    AgentSet.prototype.clone = function() {
+      return this.asSet(u.clone(this));
+    };
+
+    AgentSet.prototype.last = function() {
+      return u.last(this);
+    };
+
+    AgentSet.prototype.any = function() {
+      return u.any(this);
+    };
+
+    AgentSet.prototype.other = function(a) {
+      var o;
+      return this.asSet((function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          o = this[_i];
+          if (o !== a) {
+            _results.push(o);
+          }
+        }
+        return _results;
+      }).call(this));
+    };
+
+    AgentSet.prototype.oneOf = function() {
+      return u.oneOf(this);
+    };
+
+    AgentSet.prototype.nOf = function(n) {
+      return this.asSet(u.nOf(this, n));
+    };
+
+    AgentSet.prototype.minOneOf = function(f, valueToo) {
+      if (valueToo == null) {
+        valueToo = false;
+      }
+      return u.minOneOf(this, f, valueToo);
+    };
+
+    AgentSet.prototype.maxOneOf = function(f, valueToo) {
+      if (valueToo == null) {
+        valueToo = false;
+      }
+      return u.maxOneOf(this, f, valueToo);
+    };
+
+    AgentSet.prototype.draw = function(ctx) {
+      var o, _i, _len;
+      u.clearCtx(ctx);
+      for (_i = 0, _len = this.length; _i < _len; _i++) {
+        o = this[_i];
+        if (!o.hidden) {
+          o.draw(ctx);
+        }
+      }
+      return null;
+    };
+
+    AgentSet.prototype.inRadius = function(o, d, meToo) {
+      var a, d2, h, w, x, y;
+      if (meToo == null) {
+        meToo = false;
+      }
+      d2 = d * d;
+      x = o.x;
+      y = o.y;
+      if (ABM.patches.isTorus) {
+        w = ABM.patches.numX;
+        h = ABM.patches.numY;
+        return this.asSet((function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = this.length; _i < _len; _i++) {
+            a = this[_i];
+            if (u.torusSqDistance(x, y, a.x, a.y, w, h) <= d2 && (meToo || a !== o)) {
+              _results.push(a);
+            }
+          }
+          return _results;
+        }).call(this));
+      } else {
+        return this.asSet((function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = this.length; _i < _len; _i++) {
+            a = this[_i];
+            if (u.sqDistance(x, y, a.x, a.y) <= d2 && (meToo || a !== o)) {
+              _results.push(a);
+            }
+          }
+          return _results;
+        }).call(this));
+      }
+    };
+
+    AgentSet.prototype.inCone = function(o, heading, cone, radius, meToo) {
+      var a, h, rSet, w, x, y;
+      if (meToo == null) {
+        meToo = false;
+      }
+      rSet = this.inRadius(o, radius, meToo);
+      x = o.x;
+      y = o.y;
+      if (ABM.patches.isTorus) {
+        w = ABM.patches.numX;
+        h = ABM.patches.numY;
+        return this.asSet((function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = rSet.length; _i < _len; _i++) {
+            a = rSet[_i];
+            if ((a === o && meToo) || u.inTorusCone(heading, cone, radius, x, y, a.x, a.y, w, h)) {
+              _results.push(a);
+            }
+          }
+          return _results;
+        })());
+      } else {
+        return this.asSet((function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = rSet.length; _i < _len; _i++) {
+            a = rSet[_i];
+            if ((a === o && meToo) || u.inCone(heading, cone, radius, x, y, a.x, a.y)) {
+              _results.push(a);
+            }
+          }
+          return _results;
+        })());
+      }
+    };
+
+    AgentSet.prototype.ask = function(f) {
+      var o, _i, _len;
+      if (u.isString(f)) {
+        eval("f=function(o){return " + f + ";}");
+      }
+      for (_i = 0, _len = this.length; _i < _len; _i++) {
+        o = this[_i];
+        f(o);
+      }
+      return this;
+    };
+
+    AgentSet.prototype["with"] = function(f) {
+      var o;
+      if (u.isString(f)) {
+        eval("f=function(o){return " + f + ";}");
+      }
+      return this.asSet((function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          o = this[_i];
+          if (f(o)) {
+            _results.push(o);
+          }
+        }
+        return _results;
+      }).call(this));
+    };
+
+    return AgentSet;
+
+  })(Array);
+
+  ABM.Patch = (function() {
+    Patch.prototype.n = null;
+
+    Patch.prototype.n4 = null;
+
+    Patch.prototype.color = [0, 0, 0];
+
+    Patch.prototype.hidden = false;
+
+    Patch.prototype.label = null;
+
+    Patch.prototype.breed = null;
+
+    function Patch(x, y) {
+      this.x = x;
+      this.y = y;
+    }
+
+    Patch.prototype.toString = function() {
+      return "{id:" + this.id + " xy:" + [this.x, this.y] + " c:" + this.color + "}";
+    };
+
+    Patch.prototype.scaleColor = function(c, s) {
+      if (!this.hasOwnProperty("color")) {
+        this.color = u.clone(this.color);
+      }
+      return u.scaleColor(c, s, this.color);
+    };
+
+    Patch.prototype.draw = function(ctx) {
+      ctx.fillStyle = u.colorStr(this.color);
+      ctx.fillRect(this.x - .5, this.y - .5, 1, 1);
+      return this.drawLabel(ctx);
+    };
+
+    Patch.prototype.drawLabel = function(ctx) {
+      var x, y, _ref;
+      if (this.label != null) {
+        _ref = ctx.labelXY, x = _ref[0], y = _ref[1];
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.scale(1 / ABM.patches.size, -1 / ABM.patches.size);
+        u.ctxDrawText(ctx, this.label, [x, y], ctx.labelColor);
+        return ctx.restore();
+      }
+    };
+
+    Patch.prototype.agentsHere = function() {
+      var a, _ref;
+      return (_ref = this.agents) != null ? _ref : (function() {
+        var _i, _len, _ref1, _results;
+        _ref1 = ABM.agents;
+        _results = [];
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          a = _ref1[_i];
+          if (a.p === this) {
+            _results.push(a);
+          }
+        }
+        return _results;
+      }).call(this);
+    };
+
+    Patch.prototype.isOnEdge = function() {
+      return this.x === ABM.patches.minX || this.x === ABM.patches.maxX || this.y === ABM.patches.minY || this.y === ABM.patches.maxY;
+    };
+
+    Patch.prototype.sprout = function(num, breed, init) {
+      var _this = this;
+      if (num == null) {
+        num = 1;
+      }
+      if (breed == null) {
+        breed = ABM.agents;
+      }
+      if (init == null) {
+        init = function() {};
+      }
+      return breed.create(num, function(a) {
+        a.setXY(_this.x, _this.y);
+        init(a);
+        return a;
+      });
+    };
+
+    return Patch;
+
+  })();
+
+  ABM.Patches = (function(_super) {
+    __extends(Patches, _super);
+
+    function Patches() {
+      var k, v, x, y, _i, _j, _ref, _ref1, _ref2, _ref3, _ref4;
+      Patches.__super__.constructor.apply(this, arguments);
+      _ref = ABM.world;
+      for (k in _ref) {
+        if (!__hasProp.call(_ref, k)) continue;
+        v = _ref[k];
+        this[k] = v;
+      }
+      for (y = _i = _ref1 = this.maxY, _ref2 = this.minY; _i >= _ref2; y = _i += -1) {
+        for (x = _j = _ref3 = this.minX, _ref4 = this.maxX; _j <= _ref4; x = _j += 1) {
+          this.add(new ABM.Patch(x, y));
+        }
+      }
+      if (this.hasNeighbors) {
+        this.setNeighbors();
+      }
+      this.setPixels();
+      this.drawWithPixels = this.size === 1;
+    }
+
+    Patches.prototype.setDefaultColor = function(color) {
+      return ABM.Patch.prototype.color = color;
+    };
+
+    Patches.prototype.cacheAgentsHere = function() {
+      var p, _i, _len;
+      for (_i = 0, _len = this.length; _i < _len; _i++) {
+        p = this[_i];
+        p.agents = [];
+      }
+      return null;
+    };
+
+    Patches.prototype.usePixels = function(usePix) {
+      var ctx;
+      if (usePix == null) {
+        usePix = true;
+      }
+      ctx = ABM.contexts.patches;
+      ctx.imageSmoothingEnabled = !usePix;
+      ctx.mozImageSmoothingEnabled = !usePix;
+      ctx.webkitImageSmoothingEnabled = !usePix;
+      u.setIdentity(ctx);
+      return this.drawWithPixels = usePix;
+    };
+
+    Patches.prototype.cacheRect = function(radius, meToo) {
+      var p, _i, _len, _results;
+      if (meToo == null) {
+        meToo = false;
+      }
+      _results = [];
+      for (_i = 0, _len = this.length; _i < _len; _i++) {
+        p = this[_i];
+        p.pRect = this.patchRect(p, radius, radius, meToo);
+        p.pRect.radius = radius;
+        _results.push(p.pRect.meToo = meToo);
+      }
+      return _results;
+    };
+
+    Patches.prototype.setNeighbors = function() {
+      var p, _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = this.length; _i < _len; _i++) {
+        p = this[_i];
+        p.n = this.patchRect(p, 1, 1);
+        _results.push(p.n4 = [p.n[1], p.n[3], p.n[4], p.n[6]]);
+      }
+      return _results;
+    };
+
+    Patches.prototype.setPixels = function() {
+      var can;
+      if (this.size === 1) {
+        this.pixelsCtx = ABM.contexts.patches;
+      } else {
+        can = document.createElement('canvas');
+        can.width = this.numX;
+        can.height = this.numY;
+        this.pixelsCtx = can.getContext("2d");
+      }
+      this.pixelsImageData = this.pixelsCtx.getImageData(0, 0, this.numX, this.numY);
+      this.pixelsData = this.pixelsImageData.data;
+      if (this.pixelsData instanceof Uint8Array) {
+        this.pixelsData32 = new Uint32Array(this.pixelsData.buffer);
+        return this.pixelsAreLittleEndian = u.isLittleEndian();
+      }
+    };
+
+    Patches.prototype.draw = function(ctx) {
+      if (this.drawWithPixels) {
+        return this.drawScaledPixels(ctx);
+      } else {
+        return Patches.__super__.draw.call(this, ctx);
+      }
+    };
+
+    Patches.prototype.patchIndex = function(x, y) {
+      return x - this.minX + this.numX * (this.maxY - y);
+    };
+
+    Patches.prototype.patchXY = function(x, y) {
+      return this[this.patchIndex(x, y)];
+    };
+
+    Patches.prototype.clamp = function(x, y) {
+      return [u.clamp(x, this.minX - .5, this.maxX + .5), u.clamp(y, this.minY - .5, this.maxY + .5)];
+    };
+
+    Patches.prototype.wrap = function(x, y) {
+      return [u.wrap(x, this.minX - .5, this.maxX + .5), u.wrap(y, this.minY - .5, this.maxY + .5)];
+    };
+
+    Patches.prototype.coord = function(x, y) {
+      if (this.isTorus) {
+        return this.wrap(x, y);
+      } else {
+        return this.clamp(x, y);
+      }
+    };
+
+    Patches.prototype.patch = function(x, y) {
+      var _ref;
+      _ref = this.coord(x, y), x = _ref[0], y = _ref[1];
+      x = u.clamp(Math.round(x), this.minX, this.maxX);
+      y = u.clamp(Math.round(y), this.minY, this.maxY);
+      return this.patchXY(x, y);
+    };
+
+    Patches.prototype.patchAtPixel = function(x, y) {
+      x = Math.floor(x / this.size) + this.minX;
+      y = this.maxY - Math.floor(y / this.size);
+      x = u.clamp(x, this.minX, this.maxX);
+      y = u.clamp(y, this.minY, this.maxY);
+      return this.patchXY(x, y);
+    };
+
+    Patches.prototype.randomPt = function() {
+      return [u.randomFloat2(this.minX - .5, this.maxX + .5), u.randomFloat2(this.minY - .5, this.maxY + .5)];
+    };
+
+    Patches.prototype.toBits = function(p) {
+      return p * this.size;
+    };
+
+    Patches.prototype.fromBits = function(b) {
+      return b / this.size;
+    };
+
+    Patches.prototype.patchRect = function(p, dx, dy, meToo) {
+      var pnext, rect, x, y, _i, _j, _ref, _ref1, _ref2, _ref3;
+      if (meToo == null) {
+        meToo = false;
+      }
+      if ((p.pRect != null) && p.pRect.radius === dx) {
+        return p.pRect;
+      }
+      rect = [];
+      for (y = _i = _ref = p.y - dy, _ref1 = p.y + dy; _i <= _ref1; y = _i += 1) {
+        for (x = _j = _ref2 = p.x - dx, _ref3 = p.x + dx; _j <= _ref3; x = _j += 1) {
+          if (this.isTorus || ((this.minX <= x && x <= this.maxX) && (this.minY <= y && y <= this.maxY))) {
+            if (this.isTorus) {
+              if (x < this.minX) {
+                x += this.numX;
+              }
+              if (x > this.maxX) {
+                x -= this.numX;
+              }
+              if (y < this.minY) {
+                y += this.numY;
+              }
+              if (y > this.maxY) {
+                y -= this.numY;
+              }
+            }
+            pnext = this.patchXY(x, y);
+            if (pnext == null) {
+              u.error("patchRect: x,y out of bounds, see console.log");
+              console.log("x " + x + " y " + y + " p.x " + p.x + " p.y " + p.y + " dx " + dx + " dy " + dy);
+            }
+          } else {
+            pnext = null;
+          }
+          if (meToo || p !== pnext) {
+            rect.push(pnext);
+          }
+        }
+      }
+      return this.asSet(rect);
+    };
+
+    Patches.prototype.installDrawing = function(img, ctx) {
+      if (ctx == null) {
+        ctx = ABM.contexts.drawing;
+      }
+      u.setIdentity(ctx);
+      ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
+      return ctx.restore();
+    };
+
+    Patches.prototype.importDrawing = function(imageSrc, f) {
+      return u.importImage(imageSrc, function(img) {
+        var ctx;
+        ctx = ABM.drawing;
+        u.setIdentity(ctx);
+        ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.restore();
+        if (f != null) {
+          return f();
+        }
+      });
+    };
+
+    Patches.prototype.pixelByteIndex = function(p) {
+      return 4 * p.id;
+    };
+
+    Patches.prototype.pixelWordIndex = function(p) {
+      return p.id;
+    };
+
+    Patches.prototype.installColors = function(img) {
+      var data, i, p, _i, _len, _results;
+      this.pixelsCtx.drawImage(img, 0, 0, this.numX, this.numY);
+      data = this.pixelsCtx.getImageData(0, 0, this.numX, this.numY).data;
+      _results = [];
+      for (_i = 0, _len = this.length; _i < _len; _i++) {
+        p = this[_i];
+        i = this.pixelByteIndex(p);
+        _results.push(p.color = [data[i++], data[i++], data[i]]);
+      }
+      return _results;
+    };
+
+    Patches.prototype.importColors = function(imageSrc, f) {
+      var _this = this;
+      return u.importImage(imageSrc, function(img) {
+        _this.installColors(img);
+        if (f != null) {
+          return f();
+        }
+      });
+    };
+
+    Patches.prototype.drawScaledPixels = function(ctx, pSet) {
+      if (pSet == null) {
+        pSet = this;
+      }
+      if (this.pixelsData32 != null) {
+        return this.drawScaledPixels32(ctx, pSet);
+      } else {
+        return this.drawScaledPixels8(ctx, pSet);
+      }
+    };
+
+    Patches.prototype.drawScaledPixels8 = function(ctx, pSet) {
+      var c, data, i, j, p, _i, _j, _len;
+      data = this.pixelsData;
+      for (_i = 0, _len = pSet.length; _i < _len; _i++) {
+        p = pSet[_i];
+        i = this.pixelByteIndex(p);
+        c = p.color;
+        for (j = _j = 0; _j <= 2; j = ++_j) {
+          data[i + j] = c[j];
+        }
+        data[i + 3] = c.length === 4 ? c[3] : 255;
+      }
+      this.pixelsCtx.putImageData(this.pixelsImageData, 0, 0);
+      if (this.size === 1) {
+        return;
+      }
+      return ctx.drawImage(this.pixelsCtx.canvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
+    };
+
+    Patches.prototype.drawScaledPixels32 = function(ctx, pSet) {
+      var a, c, data, i, p, _i, _len;
+      data = this.pixelsData32;
+      for (_i = 0, _len = pSet.length; _i < _len; _i++) {
+        p = pSet[_i];
+        i = this.pixelWordIndex(p);
+        c = p.color;
+        a = c.length === 4 ? c[3] : 255;
+        if (this.pixelsAreLittleEndian) {
+          data[i] = (a << 24) | (c[2] << 16) | (c[1] << 8) | c[0];
+        } else {
+          data[i] = (c[0] << 24) | (c[1] << 16) | (c[2] << 8) | a;
+        }
+      }
+      this.pixelsCtx.putImageData(this.pixelsImageData, 0, 0);
+      if (this.size === 1) {
+        return;
+      }
+      return ctx.drawImage(this.pixelsCtx.canvas, 0, 0, ctx.canvas.width, ctx.canvas.height);
+    };
+
+    Patches.prototype.diffuse = function(v, rate, c) {
+      var dv, dv8, n, nn, p, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref;
+      if (this[0]._diffuseNext == null) {
+        for (_i = 0, _len = this.length; _i < _len; _i++) {
+          p = this[_i];
+          p._diffuseNext = 0;
+        }
+      }
+      for (_j = 0, _len1 = this.length; _j < _len1; _j++) {
+        p = this[_j];
+        dv = p[v] * rate;
+        dv8 = dv / 8;
+        nn = p.n.length;
+        p._diffuseNext += p[v] - dv + (8 - nn) * dv8;
+        _ref = p.n;
+        for (_k = 0, _len2 = _ref.length; _k < _len2; _k++) {
+          n = _ref[_k];
+          n._diffuseNext += dv8;
+        }
+      }
+      for (_l = 0, _len3 = this.length; _l < _len3; _l++) {
+        p = this[_l];
+        p[v] = p._diffuseNext;
+        p._diffuseNext = 0;
+        if (c) {
+          p.scaleColor(c, p[v]);
+        }
+      }
+      return null;
+    };
+
+    return Patches;
+
+  })(ABM.AgentSet);
+
+  ABM.Agent = (function() {
+    Agent.prototype.color = null;
+
+    Agent.prototype.shape = "default";
+
+    Agent.prototype.breed = null;
+
+    Agent.prototype.hidden = false;
+
+    Agent.prototype.size = 1;
+
+    Agent.prototype.penDown = false;
+
+    Agent.prototype.penSize = 1;
+
+    Agent.prototype.heading = null;
+
+    Agent.prototype.sprite = null;
+
+    Agent.prototype.cacheLinks = false;
+
+    function Agent() {
+      this.x = this.y = 0;
+      if (this.color == null) {
+        this.color = u.randomColor();
+      }
+      if (this.heading == null) {
+        this.heading = u.randomFloat(Math.PI * 2);
+      }
+      this.p = ABM.patches.patch(this.x, this.y);
+      if (this.p.agents != null) {
+        this.p.agents.push(this);
+      }
+      if (this.cacheLinks) {
+        this.links = [];
+      }
+    }
+
+    Agent.prototype.changeBreed = function(newBreed) {
+      var _this = this;
+      if (this.id == null) {
+        u.error("changeBreed: not in agentSet");
+      }
+      if (this.hasOwnProperty("breed")) {
+        u.error("changeBreed: breed illegally set");
+      }
+      if (this.breed === newBreed) {
+        u.error("changeBreed: breed==newBreed");
+      }
+      this.die();
+      return newBreed.create(1, function(a) {
+        return a.setXY(_this.x, _this.y);
+      });
+    };
+
+    Agent.prototype.scaleColor = function(c, s) {
+      if (!this.hasOwnProperty("color")) {
+        this.color = u.clone(this.color);
+      }
+      return u.scaleColor(c, s, this.color);
+    };
+
+    Agent.prototype.toString = function() {
+      return "{id:" + this.id + " xy:" + (u.aToFixed([this.x, this.y])) + " c:" + this.color + " h: " + (this.heading.toFixed(2)) + "}";
+    };
+
+    Agent.prototype.setXY = function(x, y) {
+      var drawing, p, x0, y0, _ref, _ref1;
+      if (this.penDown) {
+        _ref = [this.x, this.y], x0 = _ref[0], y0 = _ref[1];
+      }
+      _ref1 = ABM.patches.coord(x, y), this.x = _ref1[0], this.y = _ref1[1];
+      p = this.p;
+      this.p = ABM.patches.patch(this.x, this.y);
+      if ((p.agents != null) && p !== this.p) {
+        u.removeItem(p.agents, this);
+        this.p.agents.push(this);
+      }
+      if (this.penDown) {
+        drawing = ABM.drawing;
+        drawing.strokeStyle = u.colorStr(this.color);
+        drawing.lineWidth = ABM.patches.fromBits(this.penSize);
+        drawing.beginPath();
+        drawing.moveTo(x0, y0);
+        drawing.lineTo(x, y);
+        return drawing.stroke();
+      }
+    };
+
+    Agent.prototype.moveTo = function(a) {
+      return this.setXY(a.x, a.y);
+    };
+
+    Agent.prototype.forward = function(d) {
+      return this.setXY(this.x + d * Math.cos(this.heading), this.y + d * Math.sin(this.heading));
+    };
+
+    Agent.prototype.rotate = function(rad) {
+      return this.heading = u.wrap(this.heading + rad, 0, Math.PI * 2);
+    };
+
+    Agent.prototype.draw = function(ctx) {
+      var rad, shape;
+      shape = ABM.shapes[this.shape];
+      rad = shape.rotate ? this.heading : 0;
+      if ((this.sprite != null) || this.breed.useSprites) {
+        if (this.sprite == null) {
+          this.setSprite();
+        }
+        return ABM.shapes.drawSprite(ctx, this.sprite, this.x, this.y, this.size, rad);
+      } else {
+        return ABM.shapes.draw(ctx, shape, this.x, this.y, this.size, rad, this.color);
+      }
+    };
+
+    Agent.prototype.setSprite = function(sprite) {
+      var s;
+      if ((s = sprite) != null) {
+        this.sprite = s;
+        this.color = s.color;
+        this.shape = s.shape;
+        return this.size = s.size;
+      } else {
+        if (this.color == null) {
+          this.color = u.randomColor;
+        }
+        return this.sprite = ABM.shapes.shapeToSprite(this.shape, this.color, this.size);
+      }
+    };
+
+    Agent.prototype.stamp = function() {
+      return this.draw(ABM.drawing);
+    };
+
+    Agent.prototype.distanceXY = function(x, y) {
+      if (ABM.patches.isTorus) {
+        return u.torusDistance(this.x, this.y, x, y, ABM.patches.numX, ABM.patches.numY);
+      } else {
+        return u.distance(this.x, this.y, x, y);
+      }
+    };
+
+    Agent.prototype.distance = function(o) {
+      return this.distanceXY(o.x, o.y);
+    };
+
+    Agent.prototype.torusPtXY = function(x, y) {
+      return u.torusPt(this.x, this.y, x, y, ABM.patches.numX, ABM.patches.numY);
+    };
+
+    Agent.prototype.torusPt = function(o) {
+      return this.torusPtXY(o.x, o.y);
+    };
+
+    Agent.prototype.face = function(o) {
+      return this.heading = this.towards(o);
+    };
+
+    Agent.prototype.towardsXY = function(x, y) {
+      if (ABM.patches.isTorus) {
+        return u.torusRadsToward(this.x, this.y, x, y, ABM.patches.numX, ABM.patches.numY);
+      } else {
+        return u.radsToward(this.x, this.y, x, y);
+      }
+    };
+
+    Agent.prototype.towards = function(o) {
+      return this.towardsXY(o.x, o.y);
+    };
+
+    Agent.prototype.die = function() {
+      var l, _i, _len, _ref;
+      this.breed.remove(this);
+      _ref = this.myLinks();
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        l = _ref[_i];
+        l.die();
+      }
+      if (this.p.agents != null) {
+        u.removeItem(this.p.agents, this);
+      }
+      return null;
+    };
+
+    Agent.prototype.hatch = function(num, breed, init) {
+      var _this = this;
+      if (num == null) {
+        num = 1;
+      }
+      if (breed == null) {
+        breed = ABM.agents;
+      }
+      if (init == null) {
+        init = function() {};
+      }
+      return breed.create(num, function(a) {
+        var k, v;
+        a.setXY(_this.x, _this.y);
+        for (k in _this) {
+          if (!__hasProp.call(_this, k)) continue;
+          v = _this[k];
+          if (k !== "id") {
+            a[k] = v;
+          }
+        }
+        init(a);
+        return a;
+      });
+    };
+
+    Agent.prototype.inCone = function(aset, cone, radius, meToo) {
+      if (meToo == null) {
+        meToo = false;
+      }
+      return aset.inCone(this.p, this.heading, cone, radius, meToo);
+    };
+
+    Agent.prototype.otherEnd = function(l) {
+      if (l.end1 === this) {
+        return l.end2;
+      } else {
+        return l.end1;
+      }
+    };
+
+    Agent.prototype.myLinks = function() {
+      var l, _ref;
+      return (_ref = this.links) != null ? _ref : (function() {
+        var _i, _len, _ref1, _results;
+        _ref1 = ABM.links;
+        _results = [];
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          l = _ref1[_i];
+          if ((l.end1 === this) || (l.end2 === this)) {
+            _results.push(l);
+          }
+        }
+        return _results;
+      }).call(this);
+    };
+
+    Agent.prototype.linkNeighbors = function() {
+      var l, _i, _len, _ref, _results;
+      _ref = this.myLinks();
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        l = _ref[_i];
+        _results.push(this.otherEnd(l));
+      }
+      return _results;
+    };
+
+    Agent.prototype.myInLinks = function() {
+      var l, _i, _len, _ref, _results;
+      _ref = this.myLinks();
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        l = _ref[_i];
+        if (l.end2 === this) {
+          _results.push(l);
+        }
+      }
+      return _results;
+    };
+
+    Agent.prototype.inLinkNeighbors = function() {
+      var l, _i, _len, _ref, _results;
+      _ref = this.myLinks();
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        l = _ref[_i];
+        if (l.end2 === this) {
+          _results.push(l.end1);
+        }
+      }
+      return _results;
+    };
+
+    Agent.prototype.myOutLinks = function() {
+      var l, _i, _len, _ref, _results;
+      _ref = this.myLinks();
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        l = _ref[_i];
+        if (l.end1 === this) {
+          _results.push(l);
+        }
+      }
+      return _results;
+    };
+
+    Agent.prototype.outLinkNeighbors = function() {
+      var l, _i, _len, _ref, _results;
+      _ref = this.myLinks();
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        l = _ref[_i];
+        if (l.end1 === this) {
+          _results.push(l.end2);
+        }
+      }
+      return _results;
+    };
+
+    return Agent;
+
+  })();
+
+  ABM.Agents = (function(_super) {
+    __extends(Agents, _super);
+
+    function Agents() {
+      Agents.__super__.constructor.apply(this, arguments);
+      this.useSprites = false;
+    }
+
+    Agents.prototype.cacheLinks = function() {
+      return ABM.Agent.prototype.cacheLinks = true;
+    };
+
+    Agents.prototype.setDefaultColor = function(color) {
+      return this.agentClass.prototype.color = color;
+    };
+
+    Agents.prototype.setDefaultShape = function(shape) {
+      return this.agentClass.prototype.shape = shape;
+    };
+
+    Agents.prototype.setDefaultSize = function(size) {
+      return this.agentClass.prototype.size = size;
+    };
+
+    Agents.prototype.setDefaultHeading = function(heading) {
+      return this.agentClass.prototype.heading = heading;
+    };
+
+    Agents.prototype.setDefaultHidden = function(hidden) {
+      return this.agentClass.prototype.hidden = hidden;
+    };
+
+    Agents.prototype.setDefaultSprite = function(sprite) {
+      this.setDefaultColor(sprite.color);
+      this.setDefaultShape(sprite.shape);
+      this.setDefaultSize(sprite.size);
+      return this.agentClass.prototype.sprite = sprite;
+    };
+
+    Agents.prototype.setDefaultPen = function(size, down) {
+      if (down == null) {
+        down = false;
+      }
+      this.agentClass.prototype.penSize = size;
+      return this.agentClass.prototype.penDown = down;
+    };
+
+    Agents.prototype.setUseSprites = function(useSprites) {
+      this.useSprites = useSprites != null ? useSprites : true;
+    };
+
+    Agents.prototype["in"] = function(array) {
+      var o;
+      return this.asSet((function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = array.length; _i < _len; _i++) {
+          o = array[_i];
+          if (o.breed === this) {
+            _results.push(o);
+          }
+        }
+        return _results;
+      }).call(this));
+    };
+
+    Agents.prototype.create = function(num, init) {
+      var i, _i, _results;
+      if (init == null) {
+        init = function() {};
+      }
+      _results = [];
+      for (i = _i = 1; _i <= num; i = _i += 1) {
+        _results.push((function(o) {
+          init(o);
+          return o;
+        })(this.add(new this.agentClass)));
+      }
+      return _results;
+    };
+
+    Agents.prototype.clear = function() {
+      while (this.any()) {
+        this.last().die();
+      }
+      return null;
+    };
+
+    Agents.prototype.inPatches = function(patches) {
+      var array, p, _i, _len;
+      array = [];
+      for (_i = 0, _len = patches.length; _i < _len; _i++) {
+        p = patches[_i];
+        array.push.apply(array, p.agentsHere());
+      }
+      if (this.mainSet != null) {
+        return this["in"](array);
+      } else {
+        return this.asSet(array);
+      }
+    };
+
+    Agents.prototype.inRect = function(a, dx, dy, meToo) {
+      var rect;
+      if (meToo == null) {
+        meToo = false;
+      }
+      rect = ABM.patches.patchRect(a.p, dx, dy, true);
+      rect = this.inPatches(rect);
+      if (!meToo) {
+        u.removeItem(rect, a);
+      }
+      return rect;
+    };
+
+    Agents.prototype.inCone = function(a, heading, cone, radius, meToo) {
+      var as;
+      if (meToo == null) {
+        meToo = false;
+      }
+      as = this.inRect(a, radius, radius, true);
+      return as.inCone(a, heading, cone, radius, meToo);
+    };
+
+    Agents.prototype.inRadius = function(a, radius, meToo) {
+      var as;
+      if (meToo == null) {
+        meToo = false;
+      }
+      as = this.inRect(a, radius, radius, true);
+      return as.inRadius(a, radius, meToo);
+    };
+
+    return Agents;
+
+  })(ABM.AgentSet);
+
+  ABM.Link = (function() {
+    Link.prototype.breed = null;
+
+    Link.prototype.color = [130, 130, 130];
+
+    Link.prototype.thickness = 2;
+
+    Link.prototype.hidden = false;
+
+    function Link(end1, end2) {
+      this.end1 = end1;
+      this.end2 = end2;
+      if (this.end1.links != null) {
+        this.end1.links.push(this);
+        this.end2.links.push(this);
+      }
+    }
+
+    Link.prototype.draw = function(ctx) {
+      var pt;
+      ctx.save();
+      ctx.strokeStyle = u.colorStr(this.color);
+      ctx.lineWidth = ABM.patches.fromBits(this.thickness);
+      ctx.beginPath();
+      if (!ABM.patches.isTorus) {
+        ctx.moveTo(this.end1.x, this.end1.y);
+        ctx.lineTo(this.end2.x, this.end2.y);
+      } else {
+        pt = this.end1.torusPt(this.end2);
+        ctx.moveTo(this.end1.x, this.end1.y);
+        ctx.lineTo.apply(ctx, pt);
+        if (pt[0] !== this.end2.x || pt[1] !== this.end2.y) {
+          pt = this.end2.torusPt(this.end1);
+          ctx.moveTo(this.end2.x, this.end2.y);
+          ctx.lineTo.apply(ctx, pt);
+        }
+      }
+      ctx.closePath();
+      ctx.stroke();
+      return ctx.restore();
+    };
+
+    Link.prototype.die = function() {
+      this.breed.remove(this);
+      if (this.end1.links != null) {
+        u.removeItem(this.end1.links, this);
+      }
+      if (this.end2.links != null) {
+        u.removeItem(this.end2.links, this);
+      }
+      return null;
+    };
+
+    Link.prototype.bothEnds = function() {
+      return [this.end1, this.end2];
+    };
+
+    Link.prototype.length = function() {
+      return this.end1.distance(this.end2);
+    };
+
+    Link.prototype.otherEnd = function(a) {
+      if (this.end1 === a) {
+        return this.end2;
+      } else {
+        return this.end1;
+      }
+    };
+
+    return Link;
+
+  })();
+
+  ABM.Links = (function(_super) {
+    __extends(Links, _super);
+
+    function Links() {
+      Links.__super__.constructor.apply(this, arguments);
+    }
+
+    Links.prototype.setDefaultColor = function(color) {
+      return this.agentClass.prototype.color = color;
+    };
+
+    Links.prototype.setDefaultThickness = function(thickness) {
+      return this.agentClass.prototype.thickness = thickness;
+    };
+
+    Links.prototype.setDefaultHidden = function(hidden) {
+      return this.agentClass.prototype.hidden = hidden;
+    };
+
+    Links.prototype.create = function(from, to, init) {
+      var a, _i, _len, _results;
+      if (init == null) {
+        init = function() {};
+      }
+      if (to.length == null) {
+        to = [to];
+      }
+      _results = [];
+      for (_i = 0, _len = to.length; _i < _len; _i++) {
+        a = to[_i];
+        _results.push((function(o) {
+          init(o);
+          return o;
+        })(this.add(new this.agentClass(from, a))));
+      }
+      return _results;
+    };
+
+    Links.prototype.clear = function() {
+      while (this.any()) {
+        this.last().die();
+      }
+      return null;
+    };
+
+    Links.prototype.allEnds = function() {
+      var l, n, _i, _len;
+      n = this.asSet([]);
+      for (_i = 0, _len = this.length; _i < _len; _i++) {
+        l = this[_i];
+        n.push(l.end1, l.end2);
+      }
+      return n;
+    };
+
+    Links.prototype.nodes = function() {
+      return this.allEnds().sortById().uniq();
+    };
+
+    Links.prototype.layoutCircle = function(list, radius, startAngle, direction) {
+      var a, dTheta, i, _i, _len;
+      if (startAngle == null) {
+        startAngle = Math.PI / 2;
+      }
+      if (direction == null) {
+        direction = -1;
+      }
+      dTheta = 2 * Math.PI / list.length;
+      for (i = _i = 0, _len = list.length; _i < _len; i = ++_i) {
+        a = list[i];
+        a.setXY(0, 0);
+        a.heading = startAngle + direction * dTheta * i;
+        a.forward(radius);
+      }
+      return null;
+    };
+
+    return Links;
+
+  })(ABM.AgentSet);
+
+  ABM.Animator = (function() {
+    function Animator(model, rate, multiStep, drawRate) {
+      this.model = model;
+      this.rate = rate != null ? rate : 30;
+      this.multiStep = multiStep != null ? multiStep : false;
+      this.drawRate = drawRate != null ? drawRate : 30;
+      this.animateDraws = __bind(this.animateDraws, this);
+      this.animateSteps = __bind(this.animateSteps, this);
+      this.reset();
+    }
+
+    Animator.prototype.setRate = function(rate, multiStep) {
+      this.multiStep = multiStep != null ? multiStep : false;
+      if (this.drawRate === this.rate) {
+        this.drawRate = rate;
+      }
+      this.rate = rate;
+      return this.resetAnim();
+    };
+
+    Animator.prototype.setDrawRate = function(drawRate) {
+      this.drawRate = drawRate;
+      return this.resetAnim();
+    };
+
+    Animator.prototype.start = function() {
+      if (!this.animStop) {
+        return;
+      }
+      this.resetAnim();
+      this.animStop = false;
+      return this.animate();
+    };
+
+    Animator.prototype.resetAnim = function() {
+      this.startMS = this.now();
+      this.startTick = this.ticks;
+      return this.startDraw = this.draws;
+    };
+
+    Animator.prototype.stop = function() {
+      this.animStop = true;
+      if (this.animHandle != null) {
+        cancelAnimFrame(this.animHandle);
+      }
+      if (this.timeoutHandle != null) {
+        clearTimeout(this.timeoutHandle);
+      }
+      if (this.intervalHandle != null) {
+        clearInterval(this.intervalHandle);
+      }
+      return this.animHandle = this.timerHandle = this.intervalHandle = null;
+    };
+
+    Animator.prototype.reset = function() {
+      this.stop();
+      return this.ticks = this.draws = 0;
+    };
+
+    Animator.prototype.step = function() {
+      this.ticks++;
+      return this.model.step();
+    };
+
+    Animator.prototype.drawInProgress = false;
+
+    Animator.prototype.draw = function() {
+      var _this = this;
+      if (!this.drawInProgress) {
+        this.drawInProgress = true;
+        setTimeout(function() {
+          _this.draws++;
+          _this.model.draw();
+          return _this.drawInProgress = false;
+        }, 1);
+        return true;
+      }
+      return false;
+    };
+
+    Animator.prototype.once = function() {
+      this.step();
+      return this.draw();
+    };
+
+    Animator.prototype.now = function() {
+      if ((typeof performance !== "undefined" && performance !== null ? performance.now : void 0) != null) {
+        return performance.now();
+      } else {
+        return Date.now();
+      }
+    };
+
+    Animator.prototype.ms = function() {
+      return this.now() - this.startMS;
+    };
+
+    Animator.prototype.ticksPerSec = function() {
+      var elapsed;
+      if ((elapsed = this.ticks - this.startTick) === 0) {
+        return 0;
+      } else {
+        return Math.round(elapsed * 1000 / this.ms());
+      }
+    };
+
+    Animator.prototype.drawsPerSec = function() {
+      var elapsed;
+      if ((elapsed = this.draws - this.startDraw) === 0) {
+        return 0;
+      } else {
+        return Math.round(elapsed * 1000 / this.ms());
+      }
+    };
+
+    Animator.prototype.toString = function() {
+      return "ticks: " + this.ticks + ", draws: " + this.draws + ", rate: " + this.rate + "/" + this.drawRate + " " + (this.ticksPerSec()) + "/" + (this.drawsPerSec());
+    };
+
+    Animator.prototype.animateSteps = function() {
+      this.step();
+      if (!this.animStop) {
+        return this.timeoutHandle = setTimeout(this.animateSteps, 1000.0 / this.rate);
+      }
+    };
+
+    Animator.prototype.animateDraws = function() {
+      if (!this.multiStep && this.ticksPerSec() <= this.rate) {
+        this.step();
+      }
+      if (this.drawsPerSec() <= this.drawRate) {
+        this.draw();
+      }
+      if (!this.animStop) {
+        return this.animHandle = requestAnimFrame(this.animateDraws);
+      }
+    };
+
+    Animator.prototype.animate = function() {
+      if (this.multiStep) {
+        this.animateSteps();
+      }
+      return this.animateDraws();
+    };
+
+    return Animator;
+
+  })();
+
+  ABM.Model = (function() {
+    Model.prototype.contextsInit = {
+      patches: {
+        z: 0,
+        ctx: "2d"
+      },
+      drawing: {
+        z: 1,
+        ctx: "2d"
+      },
+      links: {
+        z: 2,
+        ctx: "2d"
+      },
+      agents: {
+        z: 3,
+        ctx: "2d"
+      },
+      spotlight: {
+        z: 4,
+        ctx: "2d"
+      }
+    };
+
+    function Model(div, size, minX, maxX, minY, maxY, isTorus, hasNeighbors) {
+      var k, v, _ref;
+      this.div = div;
+      if (isTorus == null) {
+        isTorus = true;
+      }
+      if (hasNeighbors == null) {
+        hasNeighbors = true;
+      }
+      ABM.model = this;
+      this.setWorld(size, minX, maxX, minY, maxY, isTorus, hasNeighbors);
+      this.contexts = ABM.contexts = {};
+      _ref = this.contextsInit;
+      for (k in _ref) {
+        if (!__hasProp.call(_ref, k)) continue;
+        v = _ref[k];
+        this.addContext(k, v.z, v.ctx);
+      }
+      this.drawing = ABM.drawing = this.contexts.drawing;
+      this.contexts.spotlight.globalCompositeOperation = "xor";
+      this.anim = new ABM.Animator(this);
+      this.refreshLinks = this.refreshAgents = this.refreshPatches = true;
+      this.patches = ABM.patches = new ABM.Patches(ABM.Patch, "patches");
+      this.agents = ABM.agents = new ABM.Agents(ABM.Agent, "agents");
+      this.links = ABM.links = new ABM.Links(ABM.Link, "links");
+      this.setup();
+    }
+
+    Model.prototype.addContext = function(name, z, ctx) {
+      if (ctx == null) {
+        ctx = "2d";
+      }
+      this.contexts[name] = ctx = u.createLayer(this.div, this.world.width, this.world.height, z, ctx);
+      this.setCtxTransform(ctx);
+      return ctx;
+    };
+
+    Model.prototype.reset = function() {
+      var k, v, _ref;
+      this.anim.reset();
+      this.patches = ABM.patches = new ABM.Patches(ABM.Patch, "patches");
+      this.agents = ABM.agents = new ABM.Agents(ABM.Agent, "agents");
+      this.links = ABM.links = new ABM.Links(ABM.Link, "links");
+      _ref = this.contexts;
+      for (k in _ref) {
+        v = _ref[k];
+        this.setCtxTransform(v);
+      }
+      this.setSpotlight(null);
+      this.contexts.spotlight.globalCompositeOperation = "xor";
+      return u.s.spriteSheets.length = 0;
+    };
+
+    Model.prototype.restart = function() {
+      this.reset();
+      this.setup();
+      return this.start();
+    };
+
+    Model.prototype.setWorld = function(size, minX, maxX, minY, maxY, isTorus, hasNeighbors) {
+      var height, numX, numY, width;
+      if (isTorus == null) {
+        isTorus = true;
+      }
+      if (hasNeighbors == null) {
+        hasNeighbors = true;
+      }
+      numX = maxX - minX + 1;
+      numY = maxY - minY + 1;
+      width = numX * size;
+      height = numY * size;
+      return ABM.world = this.world = {
+        size: size,
+        minX: minX,
+        maxX: maxX,
+        minY: minY,
+        maxY: maxY,
+        numX: numX,
+        numY: numY,
+        width: width,
+        height: height,
+        isTorus: isTorus,
+        hasNeighbors: hasNeighbors
+      };
+    };
+
+    Model.prototype.setCtxTransform = function(ctx) {
+      ctx.canvas.width = this.world.width;
+      ctx.canvas.height = this.world.height;
+      ctx.save();
+      ctx.scale(this.world.size, -this.world.size);
+      return ctx.translate(-(this.world.minX - .5), -(this.world.maxY + .5));
+    };
+
+    Model.prototype.setFastPatches = function() {
+      return this.patches.usePixels();
+    };
+
+    Model.prototype.setCacheAgentsHere = function() {
+      return this.patches.cacheAgentsHere();
+    };
+
+    Model.prototype.setCacheMyLinks = function() {
+      return this.agents.cacheLinks();
+    };
+
+    Model.prototype.setCachePatchRects = function(radius, meToo) {
+      if (meToo == null) {
+        meToo = false;
+      }
+      return this.patches.cacheRect(radius, meToo);
+    };
+
+    Model.prototype.setTextParams = function(agentset, domFont, align, baseline) {
+      if (align == null) {
+        align = "center";
+      }
+      if (baseline == null) {
+        baseline = "middle";
+      }
+      return u.ctxTextParams(this.contexts[agentset.name], domFont, align, baseline);
+    };
+
+    Model.prototype.setLabelParams = function(agentset, color, xy) {
+      return u.ctxLabelParams(this.contexts[agentset.name], color, xy);
+    };
+
+    Model.prototype.setup = function() {};
+
+    Model.prototype.step = function() {};
+
+    Model.prototype.start = function() {
+      return this.anim.start();
+    };
+
+    Model.prototype.stop = function() {
+      return this.anim.stop();
+    };
+
+    Model.prototype.once = function() {
+      return this.anim.once();
+    };
+
+    Model.prototype.draw = function() {
+      if (this.refreshPatches || this.anim.draws === 1) {
+        this.patches.draw(this.contexts.patches);
+      }
+      if (this.refreshLinks || this.anim.draws === 1) {
+        this.links.draw(this.contexts.links);
+      }
+      if (this.refreshAgents || this.anim.draws === 1) {
+        this.agents.draw(this.contexts.agents);
+      }
+      if (this.spotlightAgent != null) {
+        return this.drawSpotlight(this.spotlightAgent, this.contexts.spotlight);
+      }
+    };
+
+    Model.prototype.setSpotlight = function(spotlightAgent) {
+      this.spotlightAgent = spotlightAgent;
+      if (this.spotlightAgent == null) {
+        return u.clearCtx(this.contexts.spotlight);
+      }
+    };
+
+    Model.prototype.drawSpotlight = function(agent, ctx) {
+      u.clearCtx(ctx);
+      u.fillCtx(ctx, [0, 0, 0, 0.6]);
+      ctx.beginPath();
+      ctx.arc(agent.x, agent.y, this.spotlightRadius || 3, 0, 2 * Math.PI, false);
+      return ctx.fill();
+    };
+
+    Model.prototype.createBreeds = function(s, agentClass, breedSet) {
+      var Breed, b, breeds, c, _i, _len, _ref, _ref1;
+      breeds = [];
+      breeds.classes = {};
+      breeds.sets = {};
+      _ref = s.split(" ");
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        b = _ref[_i];
+        c = Breed = (function(_super) {
+          __extends(Breed, _super);
+
+          function Breed() {
+            _ref1 = Breed.__super__.constructor.apply(this, arguments);
+            return _ref1;
+          }
+
+          return Breed;
+
+        })(agentClass);
+        this[b] = new breedSet(c, b, agentClass.prototype.breed);
+        breeds.push(this[b]);
+        breeds.sets[b] = this[b];
+        breeds.classes["" + b + "Class"] = c;
+      }
+      return breeds;
+    };
+
+    Model.prototype.patchBreeds = function(s) {
+      return ABM.patchBreeds = this.createBreeds(s, ABM.Patch, ABM.Patches);
+    };
+
+    Model.prototype.agentBreeds = function(s) {
+      return ABM.agentBreeds = this.createBreeds(s, ABM.Agent, ABM.Agents);
+    };
+
+    Model.prototype.linkBreeds = function(s) {
+      return ABM.linkBreeds = this.createBreeds(s, ABM.Link, ABM.Links);
+    };
+
+    Model.prototype.asSet = function(a) {
+      return ABM.AgentSet.asSet(a);
+    };
+
+    Model.prototype.setRootVars = function() {
+      root.ps = this.patches;
+      root.p0 = this.patches[0];
+      root.as = this.agents;
+      root.a0 = this.agents[0];
+      root.ls = this.links;
+      root.l0 = this.links[0];
+      root.dr = this.drawing;
+      root.u = ABM.util;
+      root.sh = ABM.shapes;
+      root.app = this;
+      root.cx = this.contexts;
+      root.ab = ABM.agentBreeds;
+      root.lb = ABM.linkBreeds;
+      root.an = this.anim;
+      root.wd = ABM.world;
+      root.gl = this.globals;
+      root.root = root;
+      return null;
+    };
+
+    return Model;
+
+  })();
+
+}).call(this);
+
+/*
+//@ sourceMappingURL=agentscript.map
+*/
+
+;/*!
+ * jQuery UI Touch Punch 0.2.3
+ *
+ * Copyright 2011–2014, Dave Furfero
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ *
+ * Depends:
+ *  jquery.ui.widget.js
+ *  jquery.ui.mouse.js
+ */
+!function(a){function f(a,b){if(!(a.originalEvent.touches.length>1)){a.preventDefault();var c=a.originalEvent.changedTouches[0],d=document.createEvent("MouseEvents");d.initMouseEvent(b,!0,!0,window,1,c.screenX,c.screenY,c.clientX,c.clientY,!1,!1,!1,!1,0,null),a.target.dispatchEvent(d)}}if(a.support.touch="ontouchend"in document,a.support.touch){var e,b=a.ui.mouse.prototype,c=b._mouseInit,d=b._mouseDestroy;b._touchStart=function(a){var b=this;!e&&b._mouseCapture(a.originalEvent.changedTouches[0])&&(e=!0,b._touchMoved=!1,f(a,"mouseover"),f(a,"mousemove"),f(a,"mousedown"))},b._touchMove=function(a){e&&(this._touchMoved=!0,f(a,"mousemove"))},b._touchEnd=function(a){e&&(f(a,"mouseup"),f(a,"mouseout"),this._touchMoved||f(a,"click"),e=!1)},b._mouseInit=function(){var b=this;b.element.bind({touchstart:a.proxy(b,"_touchStart"),touchmove:a.proxy(b,"_touchMove"),touchend:a.proxy(b,"_touchEnd")}),c.call(b)},b._mouseDestroy=function(){var b=this;b.element.unbind({touchstart:a.proxy(b,"_touchStart"),touchmove:a.proxy(b,"_touchMove"),touchend:a.proxy(b,"_touchEnd")}),d.call(b)}}}(jQuery);
+!function(e){"object"==typeof exports?module.exports=e():"function"==typeof define&&define.amd?define(e):"undefined"!=typeof window?window.LabGrapher=e():"undefined"!=typeof global?global.LabGrapher=e():"undefined"!=typeof self&&(self.LabGrapher=e())}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+module.exports.numberWidthUsingFormatter = function(elem, cx, cy, fontSizeInPixels, numberStr) {
+  var testSVG,
+      testText,
+      bbox,
+      width,
+      height,
+      node;
+
+  testSVG = elem.append("svg")
+    .attr("width",  cx)
+    .attr("height", cy)
+    .attr("class", "graph");
+
+  testText = testSVG.append('g')
+    .append("text")
+      .attr("class", "axis")
+      .attr("x", -fontSizeInPixels/4 + "px")
+      .attr("dy", ".35em")
+      .attr("text-anchor", "end")
+      .text(numberStr);
+
+  node = testText.node();
+
+  // This code is sometimes called by tests that use d3's jsdom-based mock SVG DOm, which
+  // doesn't implement getBBox.
+  if (node.getBBox) {
+    bbox = testText.node().getBBox();
+    width = bbox.width;
+    height = bbox.height;
+  } else {
+    width = 0;
+    height = 0;
+  }
+
+  testSVG.remove();
+  return [width, height];
+};
+
+module.exports.axisProcessDrag = function(dragstart, currentdrag, domain) {
+  var originExtent, maxDragIn,
+      newdomain = domain,
+      origin = 0,
+      axis1 = domain[0],
+      axis2 = domain[1],
+      extent = axis2 - axis1;
+  if (currentdrag !== 0) {
+    if  ((axis1 >= 0) && (axis2 > axis1)) {                 // example: (20, 10, [0, 40]) => [0, 80]
+      origin = axis1;
+      originExtent = dragstart-origin;
+      maxDragIn = originExtent * 0.4 + origin;
+      if (currentdrag > maxDragIn) {
+        change = originExtent / (currentdrag-origin);
+        extent = axis2 - origin;
+        newdomain = [axis1, axis1 + (extent * change)];
+      }
+    } else if ((axis1 < 0) && (axis2 > 0)) {                // example: (20, 10, [-40, 40])       => [-80, 80]
+      origin = 0;                                           //          (-0.4, -0.2, [-1.0, 0.4]) => [-1.0, 0.4]
+      originExtent = dragstart-origin;
+      maxDragIn = originExtent * 0.4 + origin;
+      if ((dragstart >= 0 && currentdrag > maxDragIn) || (dragstart  < 0  && currentdrag < maxDragIn)) {
+        change = originExtent / (currentdrag-origin);
+        newdomain = [axis1 * change, axis2 * change];
+      }
+    } else if ((axis1 < 0) && (axis2 < 0)) {                // example: (-60, -50, [-80, -40]) => [-120, -40]
+      origin = axis2;
+      originExtent = dragstart-origin;
+      maxDragIn = originExtent * 0.4 + origin;
+      if (currentdrag < maxDragIn) {
+        change = originExtent / (currentdrag-origin);
+        extent = axis1 - origin;
+        newdomain = [axis2 + (extent * change), axis2];
+      }
+    }
+  }
+  newdomain[0] = +newdomain[0].toPrecision(5);
+  newdomain[1] = +newdomain[1].toPrecision(5);
+  return newdomain;
+};
+
+},{}],2:[function(require,module,exports){
+var axis = require('./axis');
+var tooltips = {
+  autoscale: "Show all data (autoscale)",
+  selection: "Select data for export"
+};
+
+module.exports = function Graph(idOrElement, options, message) {
+  var api = {},   // Public API object to be returned.
+
+      // D3 selection of the containing DOM element the graph is placed in
+      elem,
+
+      // Regular representation of containing DOM element the graph is placed in
+      node,
+
+      // JQuerified version of DOM element
+      $node,
+
+      // Size of containing DOM element
+      cx, cy,
+
+      // Calculated padding between edges of DOM container and interior plot area of graph.
+      padding,
+
+      // Object containing width and height in pixels of interior plot area of graph
+      size,
+
+      // D3 objects representing SVG elements/containers in graph
+      svg,
+      vis,
+      plot,
+      viewbox,
+      title,
+      xlabel,
+      ylabel,
+      selectedRulerX,
+      selectedRulerY,
+
+      // Strings used as tooltips when labels are visible but are truncated because
+      // they are too big to be rendered into the space the graph allocates
+      titleTooltip,
+
+      // Instantiated D3 scale functions
+      // currently either d3.scale.linear, d3.scale.log, or d3.scale.pow
+      xScale,
+      yScale,
+
+      // The approximate number of gridlines in the plot, passed to d3.scale.ticks() function
+      xTickCount,
+      yTickCount,
+
+      // Instantiated D3 line function: d3.svg.line()
+      line,
+
+      // numeric format functions wrapping the d3.format() functions
+      fx,
+      fy,
+
+      // Instantiated D3 numeric format functions: d3.format()
+      fx_d3,
+      fy_d3,
+
+      // Function for stroke styling of major and minor grid lines
+      gridStroke = function(d) { return d ? "#ccc" : "#666"; },
+
+      // Functions for translation of grid lines and associated numeric labels
+      tx = function(d) { return "translate(" + xScale(d) + ",0)"; },
+      ty = function(d) { return "translate(0," + yScale(d) + ")"; },
+
+      // Div created and placed with z-index above all other graph layers that holds
+      // graph action/mode buttons.
+      buttonLayer,
+      selectionButton,
+
+      // div created above everything but the button layer for holding annotations
+      annotationLayer,
+
+      // Div created and placed with z-index under all other graph layers
+      background,
+
+      // Optional string which can be displayed in background of interior plot area of graph.
+      notification,
+
+      // Optonal set of annotations that can be added dynamically to call out features of a graph
+      annotations = [],
+
+      // An array of strings holding 0 or more lines for the title of the graph
+      titles = [],
+
+      // D3 selection containing canvas
+      graphCanvas,
+
+      // HTML5 Canvas object containing just plotted lines
+      gcanvas,
+      gctx,
+      canvasFillStyle = "rgba(255,255,255, 0.0)",
+
+      // The style of the cursor when hovering over a sample.point marker.
+      // The cursor changes depending on the operations that can be performed.
+      markerCursorStyle,
+
+      // Metrics calculated to support layout of titles, axes as
+      // well as text and numeric labels for axes.
+      fontSizeInPixels,
+      halfFontSizeInPixels,
+      quarterFontSizeInPixels,
+      titleFontSizeInPixels,
+      axisFontSizeInPixels,
+      xlabelFontSizeInPixels,
+      ylabelFontSizeInPixels,
+
+      // Array objects containing width and height of X and Y axis labels
+      xlabelMetrics,
+      ylabelMetrics,
+
+      // Width of widest numeric labels on X and Y axes
+      xAxisNumberWidth,
+      yAxisNumberWidth,
+
+      // Height of numeric labels on X and Y axes
+      xAxisNumberHeight,
+      yAxisNumberHeight,
+
+      // Padding necessary for X and Y axis labels to leave enough room for numeric labels
+      xAxisVerticalPadding,
+      yAxisHorizontalPadding,
+
+      // Padding necessary between right side of interior plot and edge of graph so
+      // make room for numeric lanel on right edge of X axis.
+      xAxisLabelHorizontalPadding,
+
+      // Baselines calculated for positioning of X and Y axis labels.
+      xAxisLabelBaseline,
+      yAxisLabelBaseline,
+
+      // Thickness of draggable areas for rescaling axes, these surround numeric labels
+      xAxisDraggableHeight,
+      yAxisDraggableWidth,
+
+      // D3 SVG rects used to implement axis dragging
+      xAxisDraggable,
+      yAxisDraggable,
+
+      // Strings used as tooltips when numeric axis draggables are visible but responsive
+      // layout system has removed the axis labels because of small size of graph.
+      xAxisDraggableTooltip,
+      yAxisDraggableTooltip,
+
+      // Used to calculate styles for markers appearing on samples/points (normally circles)
+      markerRadius,
+      markerStrokeWidth,
+
+      // Stroke width used for lines in graph
+      lineWidth,
+
+      // Used to categorize size of graphs in responsive layout mode where
+      // certain graph chrome is removed when graph is rendered smaller.
+      sizeType = {
+        category: "medium",
+        value: 3,
+        icon: 120,
+        tiny: 240,
+        small: 480,
+        medium: 960,
+        large: 1920
+      },
+
+      // State variables indicating whether an axis drag operation is in place.
+      // NaN values are used to indicate operation not in progress and
+      // checked like this: if (!isNaN(downx)) { resacle operation in progress }
+      //
+      // When drag/rescale operation is occuring values contain plot
+      // coordinates of start of drag (0 is a valid value).
+      downx = NaN,
+      downy = NaN,
+
+      // State variable indicating whether a data point is being dragged.
+      // When data point drag operation is occuring value contain two element
+      // array wiith plot coordinates of drag position.
+      draggedPoint = null,
+
+      // When a data point is selected contains two element array wiith plot coordinates
+      // of selected data point.
+      selected = null,
+
+      // An array of data points in the plot which are near the cursor.
+      // Normally used to temporarily display data point markers when cursor
+      // is nearby when markAllDataPoints is disabled.
+      selectable = [],
+
+      // An array containing two-element arrays consisting of X and Y values for samples/points
+      points = [],
+
+      // Consumers of points that have been added by user clicks
+      pointListeners = [],
+
+      // An array containing 1 or more points arrays to be plotted. Data is not indexed here
+      // and sorted when "sortPoints" option is enabled.
+      pointArray,
+
+      // Keeps the same set of points like pointArray, but data is not sorted, but provides
+      // indexing instead.
+      pointArrayIndexed,
+
+      // Current extent of points plotted by graph.
+      pointsXMin,
+      pointsXMax,
+      pointsYMin,
+      pointsYMax,
+
+      // Index into points array for current sample/point.
+      // Normally references data point last added.
+      // Current sample can refer to earlier points. This is
+      // represented in the view by using a desaturated styling for
+      // plotted data after te currentSample.
+      currentSample,
+
+      // When graphing data samples as opposed to [x, y] data pairs contains
+      // the fixed time interval between subsequent samples.
+      sampleInterval,
+
+      // Normally data sent to graph as samples starts at an X value of 0
+      // A different starting x value can be set
+      dataSampleStart,
+
+      // The default options for a graph
+      default_options = {
+        // Enables the button layer with: AutoScale ...
+        showButtons:    true,
+
+        // Responsive Layout provides pregressive removal of
+        // graph elements when size gets smaller
+        responsiveLayout: false,
+
+        // Font sizes for graphs are normally specified using ems.
+        // When fontScaleRelativeToParent to true the font-size of the
+        // containing element is set based on the size of the containing
+        // element. hs means whn the containing element is smaller the
+        // foint-size of the labels in thegraph will be smaller.
+        fontScaleRelativeToParent: true,
+
+        enableAutoScaleButton: true,
+        enableAxisScaling: true,
+
+        enableSelectionButton: false,
+        clearSelectionOnLeavingSelectMode: false,
+
+        //
+        // dataType can be either 'points or 'samples'
+        //
+        dataType: 'points',
+        //
+        // dataType: 'points'
+        //
+        // Arrays of two-element arrays of x, y data pairs, this is the internal
+        // format the graphers uses to represent data.
+        dataPoints:      [],
+        //
+        // dataType: 'samples'
+        //
+        // An array of samples (or an array or arrays of samples)
+        dataSamples:     [],
+        // The constant time interval between sample values
+        sampleInterval:  1,
+        // Normally data sent to graph as samples starts at an X value of 0
+        // A different starting x value can be set
+        dataSampleStart: 0,
+
+        // If true then all points added to graph will be sorted by X coordinate.
+        sortPoints:      true,
+
+        // title can be a string or an array of strings, if an
+        // array of strings each element is on a separate line.
+        title:          "graph",
+
+        // The labels for the axes, these are separate from the numeric labels.
+        xlabel:         "x-axis",
+        ylabel:         "y-axis",
+
+        // Initial extent of the X and Y axes.
+        xmax:            10,
+        xmin:            0,
+        ymax:            10,
+        ymin:            0,
+
+        // Auto-scaling of X axis when at least one point exceeds current domain.
+        autoScaleX:       true,
+        autoScaleY:       true,
+        autoScalePadding: 0.3,
+
+        // Approximate values for how many gridlines should appear on the axes.
+        xTickCount:      10,
+        yTickCount:      10,
+
+        // The formatter strings used to convert numbers into strings.
+        // see: https://github.com/mbostock/d3/wiki/Formatting#wiki-d3_format
+        xFormatter:      ".3s",
+        yFormatter:      ".3s",
+
+        // Scale type: options are:
+        //   linear: https://github.com/mbostock/d3/wiki/Quantitative-Scales#wiki-linear
+        //   log:    https://github.com/mbostock/d3/wiki/Quantitative-Scales#wiki-log
+        //   pow:    https://github.com/mbostock/d3/wiki/Quantitative-Scales#wiki-pow
+        xscale:         'linear',
+        yscale:         'linear',
+
+        // Used when scale type is set to "pow"
+        xscaleExponent:  0.5,
+        yscaleExponent:  0.5,
+
+        // How many samples/points over which a graph shift should take place
+        // when the data being plotted gets close to the edge of the X axis.
+        axisShift:       10,
+
+        // selectablePoints: false,
+
+        // true if data points should be marked ... currently marked with a circle.
+        markAllDataPoints:   false,
+
+        // only show circles when hovering near them with the mouse or
+        // tapping near then on a tablet
+        markNearbyDataPoints: false,
+
+        // number of circles to show on each side of the central point
+        extraCirclesVisibleOnHover: 2,
+
+        // true to show dashed horizontal and vertical rulers when a circle is selected
+        showRulersOnSelection: false,
+
+        // width of the line used for plotting
+        lineWidth:      2.0,
+
+        // Enable values of data points to be changed by selecting and dragging.
+        dataChange:      false,
+
+        // Enables adding of data to a graph by option/alt clicking in the graph.
+        addData:         false,
+
+        // Set value to a string and it will be rendered in background of graph.
+        notification:    false,
+
+        // Render lines between samples/points
+        lines:           true,
+
+        // Render vertical bars extending up to samples/points
+        bars:            false,
+
+        // Callback, called after autoscale button is clicked
+        onAutoscale:     function() {},
+
+        // The R, G, and B values to be used to plot samples in each data channel. This default can
+        // be overridden at construction time, but the caller must provide colors for each channel.
+        // If there are n channels and m < n provided colors, the last n - m channels will be drawn
+        // using the last color in the list
+        dataColors: [
+          [160,   0,   0],         // channel 0   (red)
+          [ 44, 160,   0],         // channel 1   (green-yellow)
+          [ 44,   0, 160]          // channels 2+ (blue-purple)
+        ]
+      },
+
+      // brush selection variables
+      selection_region = {
+        xmin: null,
+        xmax: null,
+        ymin: null,
+        ymax: null
+      },
+      has_selection = false,
+      selection_visible = false,
+      selection_enabled = true,
+      selection_listener,
+      brush_element,
+      brush_control;
+
+
+  // ------------------------------------------------------------
+  //
+  // Initialization
+  //
+  // ------------------------------------------------------------
+
+  function initialize(idOrElement, opts, mesg) {
+    if (opts || !options) {
+      options = setupOptions(opts);
+    }
+
+    initializeLayout(idOrElement, mesg);
+
+    options.xrange = options.xmax - options.xmin;
+    options.yrange = options.ymax - options.ymin;
+
+    if (Object.prototype.toString.call(options.title) === "[object Array]") {
+      titles = options.title;
+    } else {
+      titles = [options.title];
+    }
+    titles.reverse();
+
+    // use local variables for both access speed and for responsive over-riding
+    sampleInterval = options.sampleInterval;
+    dataSampleStart = options.dataSampleStart;
+    lineWidth = options.lineWidth;
+
+    size = {
+      "width":  120,
+      "height": 120
+    };
+
+    setupScales();
+
+    fx_d3 = d3.format(options.xFormatter);
+    fy_d3 = d3.format(options.yFormatter);
+
+    // Wrappers around certain d3 formatters to prevent problems like this:
+    //   scale = d3.scale.linear().domain([-.7164, .7164])
+    //   scale.ticks(10).map(d3.format('.3r'))
+    //   => ["-0.600", "-0.400", "-0.200", "-0.0000000000000000888", "0.200", "0.400", "0.600"]
+
+    fx = function(num) {
+      var domain = xScale.domain(),
+          onePercent = Math.abs((domain[1] - domain[0])*0.01);
+      if (Math.abs(0+num) < onePercent) {
+        num = 0;
+      }
+      return fx_d3(num);
+    };
+
+    fy = function(num) {
+      var domain = yScale.domain(),
+          onePercent = Math.abs((domain[1] - domain[0])*0.01);
+      if (Math.abs(0+num) < onePercent) {
+        num = 0;
+      }
+      return fy_d3(num);
+    };
+
+    xTickCount = options.xTickCount;
+    yTickCount = options.yTickCount;
+
+    pointsXMin = pointsYMin = Infinity;
+    pointsXMax = pointsYMax = -Infinity;
+    pointArray = [];
+    switch(options.dataType) {
+      case "fake":
+      points = fakeDataPoints();
+      pointArray = [points];
+      break;
+
+      case 'points':
+      resetDataPoints(options.dataPoints);
+      break;
+
+      case 'samples':
+      resetDataSamples(options.dataSamples, sampleInterval, dataSampleStart);
+      break;
+    }
+
+    selectable = [];
+    selected = null;
+
+    setCurrentSample(points.length);
+  }
+
+  function initializeLayout(idOrElement, mesg) {
+    if (idOrElement) {
+      // d3.select works both for element ID (e.g. "#grapher")
+      // and for DOM element.
+      elem = d3.select(idOrElement);
+      node = elem.node();
+      $node = $(node);
+      // cx = $node.width();
+      // cy = $node.height();
+      cx = elem.property("clientWidth");
+      cy = elem.property("clientHeight");
+    }
+
+    if (mesg) {
+      message = mesg;
+    }
+
+    if (svg !== undefined) {
+      svg.remove();
+      svg = undefined;
+    }
+
+    if (background !== undefined) {
+      background.remove();
+      background = undefined;
+    }
+
+    if (graphCanvas !== undefined) {
+      graphCanvas.remove();
+      graphCanvas = undefined;
+    }
+
+    if (options.dataChange) {
+      markerCursorStyle = "ns-resize";
+    } else {
+      markerCursorStyle = "crosshair";
+    }
+
+    scale();
+
+    // drag axis logic
+    downx = NaN;
+    downy = NaN;
+    draggedPoint = null;
+  }
+
+  function scale(w, h) {
+    if (!w && !h) {
+      cx = Math.max(elem.property("clientWidth"), 60);
+      cy = Math.max(elem.property("clientHeight"),60);
+    } else {
+      cx = w;
+      node.style.width =  cx +"px";
+      if (!h) {
+        node.style.height = "100%";
+        h = elem.property("clientHeight");
+        cy = h;
+        node.style.height = cy +"px";
+      } else {
+        cy = h;
+        node.style.height = cy +"px";
+      }
+    }
+    calculateSizeType();
+  }
+
+  function calculateLayout() {
+    scale();
+
+    fontSizeInPixels = parseFloat($node.css("font-size"));
+
+    if (!options.fontScaleRelativeToParent) {
+      $node.css("font-size", 0.5 + sizeType.value/6 + 'em');
+    }
+
+    fontSizeInPixels = parseFloat($node.css("font-size"));
+
+    halfFontSizeInPixels = fontSizeInPixels/2;
+    quarterFontSizeInPixels = fontSizeInPixels/4;
+
+    if (svg === undefined) {
+      titleFontSizeInPixels =  fontSizeInPixels;
+      axisFontSizeInPixels =   fontSizeInPixels;
+      xlabelFontSizeInPixels = fontSizeInPixels;
+      ylabelFontSizeInPixels = fontSizeInPixels;
+    } else {
+      titleFontSizeInPixels =  parseFloat($("svg.graph text.title").css("font-size"));
+      axisFontSizeInPixels =   parseFloat($("svg.graph text.axis").css("font-size"));
+      xlabelFontSizeInPixels = parseFloat($("svg.graph text.xlabel").css("font-size"));
+      ylabelFontSizeInPixels = parseFloat($("svg.graph text.ylabel").css("font-size"));
+    }
+    updateAxesAndSize();
+
+    updateScales();
+
+    line = d3.svg.line()
+        .x(function(d, i) { return xScale(points[i][0]); })
+        .y(function(d, i) { return yScale(points[i][1]); });
+  }
+
+  function setupOptions(options) {
+    if (options) {
+      for(var p in default_options) {
+        if (options[p] === undefined) {
+          options[p] = default_options[p];
+        }
+      }
+    } else {
+      options = default_options;
+    }
+    if (options.axisShift < 1) options.axisShift = 1;
+
+    // Clone dataColors array so that it's effectively immutable
+    for (var i = 0, len = options.dataColors.length; i < len; i++) {
+      options.dataColors[i] = options.dataColors[i].slice();
+    }
+    return options;
+  }
+
+  function updateAxesAndSize() {
+    if (xScale === undefined) {
+      xlabelMetrics = [fontSizeInPixels, fontSizeInPixels];
+      ylabelMetrics = [fontSizeInPixels*2, fontSizeInPixels];
+    } else {
+      xlabelMetrics = axis.numberWidthUsingFormatter(elem, cx, cy, axisFontSizeInPixels,
+        longestNumber(xScale.ticks(xTickCount), fx));
+
+      ylabelMetrics = axis.numberWidthUsingFormatter(elem, cx, cy, axisFontSizeInPixels,
+        longestNumber(yScale.ticks(yTickCount), fy));
+    }
+
+    xAxisNumberWidth  = xlabelMetrics[0];
+    xAxisNumberHeight = xlabelMetrics[1];
+
+    xAxisLabelHorizontalPadding = xAxisNumberWidth * 0.6;
+    xAxisDraggableHeight = xAxisNumberHeight * 1.1;
+    xAxisVerticalPadding = xAxisDraggableHeight + xAxisNumberHeight*1.3;
+    xAxisLabelBaseline = xAxisVerticalPadding-xAxisNumberHeight/3;
+
+    yAxisNumberWidth  = ylabelMetrics[0];
+    yAxisNumberHeight = ylabelMetrics[1];
+
+    yAxisDraggableWidth    = yAxisNumberWidth + xAxisNumberHeight/4;
+    yAxisHorizontalPadding = yAxisDraggableWidth + yAxisNumberHeight;
+    yAxisLabelBaseline     = -(yAxisDraggableWidth+yAxisNumberHeight/4);
+
+    switch(sizeType.value) {
+      case 0:         // icon
+      padding = {
+        "top":    halfFontSizeInPixels,
+        "right":  halfFontSizeInPixels,
+        "bottom": fontSizeInPixels,
+        "left":   fontSizeInPixels
+      };
+      break;
+
+      case 1:         // tiny
+      padding = {
+        "top":    options.title  ? titleFontSizeInPixels*1.8 : fontSizeInPixels,
+        "right":  halfFontSizeInPixels,
+        "bottom": fontSizeInPixels,
+        "left":   fontSizeInPixels
+      };
+      break;
+
+      case 2:         // small
+      padding = {
+        "top":    options.title  ? titleFontSizeInPixels*1.8 : fontSizeInPixels,
+        "right":  xAxisLabelHorizontalPadding,
+        "bottom": axisFontSizeInPixels*1.25,
+        "left":   yAxisNumberWidth*1.25
+      };
+      xTickCount = Math.max(6, options.xTickCount/2);
+      yTickCount = Math.max(6, options.yTickCount/2);
+      break;
+
+      case 3:         // medium
+      padding = {
+        "top":    options.title  ? titleFontSizeInPixels*1.8 : fontSizeInPixels,
+        "right":  xAxisLabelHorizontalPadding,
+        "bottom": options.xlabel ? xAxisVerticalPadding : axisFontSizeInPixels*1.25,
+        "left":   options.ylabel ? yAxisHorizontalPadding : yAxisNumberWidth
+      };
+      break;
+
+      default:         // large
+      padding = {
+        "top":    options.title  ? titleFontSizeInPixels*1.8 : fontSizeInPixels,
+        "right":  xAxisLabelHorizontalPadding,
+        "bottom": options.xlabel ? xAxisVerticalPadding : axisFontSizeInPixels*1.25,
+        "left":   options.ylabel ? yAxisHorizontalPadding : yAxisNumberWidth
+      };
+      break;
+    }
+
+    if (sizeType.value > 2 ) {
+      padding.top += (titles.length-1) * sizeType.value/3 * sizeType.value/3 * fontSizeInPixels;
+    } else {
+      titles = [titles[0]];
+    }
+
+    size.width  = Math.max(cx - padding.left - padding.right, 60);
+    size.height = Math.max(cy - padding.top  - padding.bottom, 60);
+  }
+
+  function calculateSizeType() {
+    if (options.responsiveLayout) {
+      if (cx <= sizeType.icon) {
+        sizeType.category = 'icon';
+        sizeType.value = 0;
+      } else if (cx <= sizeType.tiny) {
+        sizeType.category = 'tiny';
+        sizeType.value = 1;
+      } else if (cx <= sizeType.small) {
+        sizeType.category = 'small';
+        sizeType.value = 2;
+      } else if (cx <= sizeType.medium) {
+        sizeType.category = 'medium';
+        sizeType.value = 3;
+      } else {
+        sizeType.category = 'large';
+        sizeType.value = 4;
+      }
+    } else {
+      sizeType.category = 'large';
+      sizeType.value = 4;
+    }
+  }
+
+  function longestNumber(array, formatter, precision) {
+    var longest = 0,
+        index = 0,
+        str,
+        len,
+        i;
+    precision = precision || 5;
+    for (i = 0; i < array.length; i++) {
+      str = formatter(+array[i].toPrecision(precision));
+      str = str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+      len = str.length;
+      if (len > longest) {
+        longest = len;
+        index = i;
+      }
+    }
+    return formatter(array[index]);
+  }
+
+  // Setup xScale, yScale, making sure that options.xmax/xmin/ymax/ymin always reflect changes to
+  // the relevant domains.
+  function setupScales() {
+    function domainObservingScale(scale, callback) {
+      var domain = scale.domain;
+      var nice = scale.nice;
+      scale.domain = function() {
+        var result = domain.apply(scale, arguments);
+        if (arguments.length) {
+          callback();
+        }
+        return result;
+      };
+      scale.nice = function() {
+        var result = nice.apply(scale, arguments);
+        callback();
+        return result;
+      };
+      return scale;
+    }
+
+    xScale = domainObservingScale(d3.scale[options.xscale](), function() {
+      options.xmin = xScale.domain()[0];
+      options.xmax = xScale.domain()[1];
+    });
+    yScale = domainObservingScale(d3.scale[options.yscale](), function() {
+      options.ymin = yScale.domain()[0];
+      options.ymax = yScale.domain()[1];
+    });
+    updateScales();
+  }
+
+  function updateScales() {
+    updateXScale();
+    updateYScale();
+  }
+
+  // Update the x-scale.
+  function updateXScale() {
+    xScale.domain([options.xmin, options.xmax])
+          .range([0, size.width]);
+  }
+
+  // Update the y-scale.
+  function updateYScale() {
+    yScale.domain([options.ymin, options.ymax])
+          .range([size.height, 0]);
+  }
+
+  function fakeDataPoints() {
+    var yrange2 = options.yrange / 2,
+        yrange4 = yrange2 / 2,
+        pnts;
+
+    options.datacount = size.width/30;
+    options.xtic = options.xrange / options.datacount;
+    options.ytic = options.yrange / options.datacount;
+
+    pnts = d3.range(options.datacount).map(function(i) {
+      return [i * options.xtic + options.xmin, options.ymin + yrange4 + Math.random() * yrange2 ];
+    });
+    return pnts;
+  }
+
+  function setCurrentSample(samplePoint) {
+    if (typeof samplePoint === "number") {
+      currentSample = samplePoint;
+    } else if (samplePoint === "last") {
+      currentSample = 0;
+      pointArray.forEach(function (arr) {
+        if (arr.length > currentSample) {
+          currentSample = arr.length ;
+        }
+      });
+    }
+    if (typeof currentSample !== "number") {
+      currentSample = points.length-1;
+    }
+    return currentSample;
+  }
+
+  // converts data samples into an array of points
+  function indexedData(samples, interval, start) {
+    var i = 0,
+        pnts = [];
+    interval = interval || 1;
+    start = start || 0;
+    for (i = 0; i < samples.length;  i++) {
+      pnts.push([i * interval + start, samples[i]]);
+    }
+    return pnts;
+  }
+
+  //
+  // Update notification message
+  //
+  function notify(mesg) {
+    message = mesg;
+    if (mesg) {
+      notification.text(mesg);
+    } else {
+      notification.text('');
+    }
+  }
+
+
+  function createButtonLayer() {
+    buttonLayer = elem.append("div");
+
+    buttonLayer
+      .attr("class", "button-layer")
+      .style("z-index", 3);
+
+    if (options.enableAutoScaleButton) {
+      buttonLayer.append('a')
+          .attr({
+            "class": "autoscale-button",
+            "title": tooltips.autoscale
+          })
+          .on("click", function() {
+            autoscale(true);
+            redraw();
+          })
+          .append("i")
+            .attr("class", "icon-picture");
+    }
+
+    if (options.enableSelectionButton) {
+      selectionButton = buttonLayer.append('a');
+      selectionButton.attr({
+            "class": "selection-button",
+            "title": tooltips.selection
+          })
+          .on("click", function() {
+            toggleSelection();
+          })
+          .append("i")
+            .attr("class", "icon-cut");
+    }
+
+    resizeButtonLayer();
+  }
+
+  function resizeButtonLayer() {
+    buttonLayer
+      .style({
+        "width":   fontSizeInPixels*1.75 + "px",
+        "height":  fontSizeInPixels*1.25 + "px",
+        "top":     padding.top + halfFontSizeInPixels + "px",
+        "left":    padding.left + (size.width - fontSizeInPixels*2.0) + "px"
+      });
+  }
+
+  function createAnnotationLayer() {
+    annotationLayer = elem.append("div");
+
+    annotationLayer
+      .attr("class", "annotation-layer")
+      .style("z-index", 3);
+
+    resizeAnnotationLayer();
+  }
+
+  function resizeAnnotationLayer() {
+    annotationLayer
+      .style({
+        "width": size.width + "px",
+        "height": size.height + "px",
+        "top": padding.top + "px",
+        "left": padding.left + "px"
+      });
+  }
+
+  // ------------------------------------------------------------
+  //
+  // Rendering
+  //
+  // ------------------------------------------------------------
+
+  //
+  // Render a new graph by creating the SVG and Canvas elements
+  //
+  function renderNewGraph() {
+    svg = elem.append("svg")
+        .attr("width",  cx)
+        .attr("height", cy)
+        .attr("class", "graph")
+        .style('z-index', 2);
+        // .attr("tabindex", tabindex || 0);
+
+    vis = svg.append("g")
+        .attr("transform", "translate(" + padding.left + "," + padding.top + ")");
+
+    plot = vis.append("rect")
+      .attr("class", "plot")
+      .attr("width", size.width)
+      .attr("height", size.height)
+      .attr("pointer-events", "all")
+      .attr("fill", "rgba(255,255,255,0)")
+      .on("mousemove", plotMousemove)
+      .on("mousedown", plotDrag)
+      .on("touchstart", plotDrag);
+
+    plot.call(d3.behavior.zoom().x(xScale).y(yScale).on("zoom", redraw));
+
+    background = elem.append("div")
+        .attr("class", "background")
+        .style({
+          "width":   size.width + "px",
+          "height":  size.height + "px",
+          "top":     padding.top + "px",
+          "left":    padding.left + "px",
+          "z-index": 0
+        });
+
+    createGraphCanvas();
+
+    viewbox = vis.append("svg")
+      .attr("class", "viewbox")
+      .attr("top", 0)
+      .attr("left", 0)
+      .attr("width", size.width)
+      .attr("height", size.height)
+      .attr("viewBox", "0 0 "+size.width+" "+size.height);
+
+    selectedRulerX = viewbox.append("line")
+      .attr("stroke", gridStroke)
+      .attr("stroke-dasharray", "2,2")
+      .attr("y1", 0)
+      .attr("y2", size.height)
+      .attr("x1", function() { return selected === null ? 0 : selected[0]; } )
+      .attr("x2", function() { return selected === null ? 0 : selected[0]; } )
+      .attr("class", "ruler hidden");
+
+    selectedRulerY = viewbox.append("line")
+      .attr("stroke", gridStroke)
+      .attr("stroke-dasharray", "2,2")
+      .attr("x1", 0)
+      .attr("x2", size.width)
+      .attr("y1", function() { return selected === null ? 0 : selected[1]; } )
+      .attr("y2", function() { return selected === null ? 0 : selected[1]; } )
+      .attr("class", "ruler hidden");
+
+    yAxisDraggable = svg.append("rect")
+      .attr("class", "draggable-axis")
+      .attr("x", padding.left-yAxisDraggableWidth)
+      .attr("y", padding.top)
+      .attr("rx", yAxisNumberHeight/6)
+      .attr("width", yAxisDraggableWidth)
+      .attr("height", size.height)
+      .attr("pointer-events", "all")
+      .style("cursor", "row-resize")
+      .on("mousedown", yAxisDrag)
+      .on("touchstart", yAxisDrag);
+
+    yAxisDraggableTooltip = yAxisDraggable.append("title");
+
+    xAxisDraggable = svg.append("rect")
+      .attr("class", "draggable-axis")
+      .attr("x", padding.left)
+      .attr("y", size.height+padding.top)
+      .attr("rx", yAxisNumberHeight/6)
+      .attr("width", size.width)
+      .attr("height", xAxisDraggableHeight)
+      .attr("pointer-events", "all")
+      .style("cursor", "col-resize")
+      .on("mousedown", xAxisDrag)
+      .on("touchstart", xAxisDrag);
+
+    xAxisDraggableTooltip = xAxisDraggable.append("title");
+
+    if (sizeType.value <= 2 && options.ylabel) {
+      xAxisDraggableTooltip.text(options.xlabel);
+    }
+
+    if (sizeType.catefory && options.ylabel) {
+      yAxisDraggableTooltip.text(options.ylabel);
+    }
+
+    adjustAxisDraggableFill();
+
+    brush_element = viewbox.append("g")
+          .attr("class", "brush");
+
+    // add Chart Title
+    if (options.title && sizeType.value > 0) {
+      title = vis.selectAll("text")
+        .data(titles, function(d) { return d; });
+      title.enter().append("text")
+          .attr("class", "title")
+          .text(function(d) { return d; })
+          .attr("x", function() { return size.width/2 - Math.min(size.width, getComputedTextLength(this))/2; })
+          .attr("dy", function(d, i) { return -i * titleFontSizeInPixels - halfFontSizeInPixels + "px"; });
+      titleTooltip = title.append("title")
+          .text("");
+    } else if (options.title) {
+      titleTooltip = plot.append("title")
+          .text(options.title);
+    }
+
+    // Add the x-axis label
+    if (sizeType.value > 2) {
+      xlabel = vis.append("text")
+          .attr("class", "axis")
+          .attr("class", "xlabel")
+          .text(options.xlabel)
+          .attr("x", size.width/2)
+          .attr("y", size.height)
+          .attr("dy", xAxisLabelBaseline + "px")
+          .style("text-anchor","middle");
+    }
+
+    // add y-axis label
+    if (sizeType.value > 2) {
+      ylabel = vis.append("g").append("text")
+          .attr("class", "axis")
+          .attr("class", "ylabel")
+          .text( options.ylabel)
+          .style("text-anchor","middle")
+          .attr("transform","translate(" + yAxisLabelBaseline + " " + size.height/2+") rotate(-90)");
+      if (sizeType.category === "small") {
+        yAxisDraggable.append("title")
+          .text(options.ylabel);
+      }
+    }
+
+    d3.select(node)
+        .on("mousemove.drag", mousemove)
+        .on("touchmove.drag", mousemove)
+        .on("mouseup.drag",   mouseup)
+        .on("touchend.drag",  mouseup);
+
+    notification = vis.append("text")
+        .attr("class", "graph-notification")
+        .text(message)
+        .attr("x", size.width/2)
+        .attr("y", size.height/2)
+        .style("text-anchor","middle");
+
+    updateMarkers();
+    updateRulers();
+  }
+
+  //
+  // Repaint an existing graph by rescaling/updating the SVG and Canvas elements
+  //
+  function repaintExistingGraph() {
+    vis
+      .attr("width",  cx)
+      .attr("height", cy)
+      .attr("transform", "translate(" + padding.left + "," + padding.top + ")");
+
+    plot
+      .attr("width", size.width)
+      .attr("height", size.height);
+
+    background
+      .style({
+        "width":   size.width + "px",
+        "height":  size.height + "px",
+        "top":     padding.top + "px",
+        "left":    padding.left + "px",
+        "z-index": 0
+      });
+
+    viewbox
+        .attr("top", 0)
+        .attr("left", 0)
+        .attr("width", size.width)
+        .attr("height", size.height)
+        .attr("viewBox", "0 0 "+size.width+" "+size.height);
+
+    yAxisDraggable
+        .attr("x", padding.left-yAxisDraggableWidth)
+        .attr("y", padding.top-yAxisNumberHeight/2)
+        .attr("width", yAxisDraggableWidth)
+        .attr("height", size.height+yAxisNumberHeight);
+
+    xAxisDraggable
+        .attr("x", padding.left)
+        .attr("y", size.height+padding.top)
+        .attr("width", size.width)
+        .attr("height", xAxisDraggableHeight);
+
+    adjustAxisDraggableFill();
+
+    if (options.title && sizeType.value > 0) {
+      title
+          .attr("x", function() { return size.width/2 - Math.min(size.width, getComputedTextLength(this))/2; })
+          .attr("dy", function(d, i) { return -i * titleFontSizeInPixels - halfFontSizeInPixels + "px"; });
+      titleTooltip
+          .text("");
+    } else if (options.title) {
+      titleTooltip
+          .text(options.title);
+    }
+
+    if (options.xlabel && sizeType.value > 2) {
+      xlabel
+          .attr("x", size.width/2)
+          .attr("y", size.height)
+          .attr("dy", xAxisLabelBaseline + "px");
+      xAxisDraggableTooltip
+          .text("");
+    } else {
+      xAxisDraggableTooltip
+          .text(options.xlabel);
+    }
+
+    if (options.ylabel && sizeType.value > 2) {
+      ylabel
+          .attr("transform","translate(" + yAxisLabelBaseline + " " + size.height/2+") rotate(-90)");
+      yAxisDraggableTooltip
+          .text("");
+    } else {
+      yAxisDraggableTooltip
+        .text(options.ylabel);
+    }
+
+    notification
+      .attr("x", size.width/2)
+      .attr("y", size.height/2);
+
+    vis.selectAll("g.x").remove();
+    vis.selectAll("g.y").remove();
+
+    if (has_selection && selection_visible) {
+      updateBrushElement();
+    }
+
+    updateMarkers();
+    updateRulers();
+    resizeCanvas();
+  }
+
+  function getComputedTextLength(el) {
+    if (el.getComputedTextLength) {
+      return el.getComputedTextLength();
+    } else {
+      return 100;
+    }
+  }
+
+  function adjustAxisDraggableFill() {
+    if (sizeType.value <= 1) {
+      xAxisDraggable
+        .style({
+          "fill":       "rgba(196, 196, 196, 0.2)"
+        });
+      yAxisDraggable
+        .style({
+          "fill":       "rgba(196, 196, 196, 0.2)"
+        });
+    } else {
+      xAxisDraggable
+        .style({
+          "fill":       null
+        });
+      yAxisDraggable
+        .style({
+          "fill":       null
+        });
+    }
+  }
+
+  //
+  // Redraw the plot and axes when plot is translated or axes are re-scaled
+  //
+  function redraw() {
+    updateAxesAndSize();
+    repaintExistingGraph();
+    // Regenerate x-ticks
+    var gx = vis.selectAll("g.x")
+        .data(xScale.ticks(xTickCount), String)
+        .attr("transform", tx);
+
+    var gxe = gx.enter().insert("g", "a")
+        .attr("class", "x")
+        .attr("transform", tx);
+
+    gxe.append("line")
+        .attr("stroke", gridStroke)
+        .attr("y1", 0)
+        .attr("y2", size.height);
+
+    if (sizeType.value > 1) {
+      gxe.append("text")
+          .attr("class", "axis")
+          .attr("y", size.height)
+          .attr("dy", axisFontSizeInPixels + "px")
+          .attr("text-anchor", "middle")
+          .text(fx)
+          .on("mouseover", function() { d3.select(this).style("font-weight", "bold");})
+          .on("mouseout",  function() { d3.select(this).style("font-weight", "normal");});
+    }
+
+    gx.exit().remove();
+
+    // Regenerate y-ticks
+    var gy = vis.selectAll("g.y")
+        .data(yScale.ticks(yTickCount), String)
+        .attr("transform", ty);
+
+    var gye = gy.enter().insert("g", "a")
+        .attr("class", "y")
+        .attr("transform", ty)
+        .attr("background-fill", "#FFEEB6");
+
+    gye.append("line")
+        .attr("stroke", gridStroke)
+        .attr("x1", 0)
+        .attr("x2", size.width);
+
+    if (sizeType.value > 1) {
+      if (options.yscale === "log") {
+        var gye_length = gye[0].length;
+        if (gye_length > 100) {
+          gye = gye.filter(function(d) { return !!d.toString().match(/(\.[0]*|^)[1]/);});
+        } else if (gye_length > 50) {
+          gye = gye.filter(function(d) { return !!d.toString().match(/(\.[0]*|^)[12]/);});
+        } else {
+          gye = gye.filter(function(d) {
+            return !!d.toString().match(/(\.[0]*|^)[125]/);});
+        }
+      }
+      gye.append("text")
+          .attr("class", "axis")
+          .attr("x", -axisFontSizeInPixels/4 + "px")
+          .attr("dy", ".35em")
+          .attr("text-anchor", "end")
+          .style("cursor", "ns-resize")
+          .text(fy)
+          .on("mouseover", function() { d3.select(this).style("font-weight", "bold");})
+          .on("mouseout",  function() { d3.select(this).style("font-weight", "normal");});
+    }
+
+    gy.exit().remove();
+
+    // For now, only annotations are of annotation.type === 'line' are supported
+    // so only generate attribute hash for lines and assume that we can directly
+    // append svg nodes of annotation.type
+
+    function annotationAttributes(d) {
+      switch(d.type) {
+      case "line":
+        return {
+          stroke: d.data.hasOwnProperty("stroke") ? d.data.stroke : "#f00",
+          x1: d.data.hasOwnProperty('x1') ? xScale(d.data.x1) : 0,
+          x2: d.data.hasOwnProperty('x2') ? xScale(d.data.x2) : size.width,
+          y1: d.data.hasOwnProperty('y1') ? yScale(d.data.y1) : 0,
+          y2: d.data.hasOwnProperty('y2') ? yScale(d.data.y2) : size.height
+        };
+      }
+      return {};
+    }
+
+    var annotationsSelection = vis.selectAll("g.annotation")
+      .data(annotations);
+
+    // create annotation objects if necessary
+    annotationsSelection.enter()
+      .append("g")
+      .attr("class", "annotation")
+      .each(function(d,i){
+        d3.select(this).append(d.type);
+      });
+
+    // update annotation attributes to reflect current graph state
+    annotationsSelection.each(function(d,i){
+      d3.select(this.children[0]).attr(annotationAttributes(d));
+    });
+
+    annotationsSelection.exit().remove();
+
+    plot.call(d3.behavior.zoom().x(xScale).y(yScale).on("zoom", redraw));
+    update();
+  }
+
+  // ------------------------------------------------------------
+  //
+  // Rendering: Updating samples/data points in the plot
+  //
+  // ------------------------------------------------------------
+
+
+  //
+  // Update plotted data, optionally pass in new samplePoint
+  //
+  function update(samplePoint) {
+    setCurrentSample(samplePoint);
+    updateCanvasFromPoints(currentSample);
+    updateMarkers();
+    if (d3.event && d3.event.keyCode) {
+      d3.event.preventDefault();
+      d3.event.stopPropagation();
+    }
+  }
+
+  // samplePoint is optional argument
+  function updateOrRescale(samplePoint) {
+    setCurrentSample(samplePoint);
+
+    if (autoscale()) {
+      redraw();
+    } else {
+      update(currentSample);
+    }
+  }
+
+  function circleClasses(d) {
+    var cs = [];
+    if (d === selected) {
+      cs.push("selected");
+    }
+    if (cs.length === 0) {
+      return null;
+    } else {
+      return cs.join(" ");
+    }
+  }
+
+  function updateMarkerRadius() {
+    var d = xScale.domain(),
+        r = xScale.range();
+    markerRadius = (r[1] - r[0]) / ((d[1] - d[0]));
+    markerRadius = Math.min(Math.max(markerRadius, 4), 8);
+    markerStrokeWidth = markerRadius/3;
+  }
+
+  function updateMarkers() {
+    var marker,
+        markedPoints = null;
+    if (options.markAllDataPoints && sizeType.value > 1) {
+      markedPoints = [];
+      markedPoints = markedPoints.concat.apply(markedPoints, pointArray);
+    } else if (options.markNearbyDataPoints && sizeType.value > 1) {
+      markedPoints = selectable.slice(0);
+      if (selected !== null && markedPoints.indexOf(selected) === -1) {
+        markedPoints.push(selected);
+      }
+    }
+    if (markedPoints !== null) {
+      updateMarkerRadius();
+      marker = vis.select("svg").selectAll("circle").data(markedPoints);
+      marker.enter().append("circle")
+          .attr("class", circleClasses)
+          .attr("cx",    function(d) { return xScale(d[0]); })
+          .attr("cy",    function(d) { return yScale(d[1]); })
+          .attr("r", markerRadius)
+          .style("stroke-width", markerStrokeWidth)
+          .style("cursor", markerCursorStyle)
+          .on("mousedown.drag",  dataPointDrag)
+          .on("touchstart.drag", dataPointDrag)
+          .append("title")
+          .text(function(d) { return "( " + fx(d[0]) + ", " + fy(d[1]) + " )"; });
+
+      marker
+          .attr("class", circleClasses)
+          .attr("cx",    function(d) { return xScale(d[0]); })
+          .attr("cy",    function(d) { return yScale(d[1]); })
+          .select("title")
+          .text(function(d) { return "( " + fx(d[0]) + ", " + fy(d[1]) + " )"; });
+
+      marker.exit().remove();
+    }
+
+    updateRulers();
+  }
+
+  function updateRulers() {
+    if (options.showRulersOnSelection && selected !== null) {
+      selectedRulerX
+        .attr("y1", 0)
+        .attr("y2", size.height)
+        .attr("x1", function() { return selected === null ? 0 : xScale(selected[0]); } )
+        .attr("x2", function() { return selected === null ? 0 : xScale(selected[0]); } )
+        .attr("class", function() { return "ruler" + (selected === null ? " hidden" : ""); } );
+
+      selectedRulerY
+        .attr("x1", 0)
+        .attr("x2", size.width)
+        .attr("y1", function() { return selected === null ? 0 : yScale(selected[1]); } )
+        .attr("y2", function() { return selected === null ? 0 : yScale(selected[1]); } )
+        .attr("class", function() { return "ruler" + (selected === null ? " hidden" : ""); } );
+    } else {
+      selectedRulerX.attr("class", "ruler hidden");
+      selectedRulerY.attr("class", "ruler hidden");
+    }
+  }
+
+
+  // ------------------------------------------------------------
+  //
+  // UI Interaction: Plot dragging and translation; Axis re-scaling
+  //
+  // ------------------------------------------------------------
+
+  function plotMousemove() {
+    if (options.markNearbyDataPoints) {
+      var mousePoint = d3.mouse(vis.node()),
+          translatedMousePointX = xScale.invert(Math.max(0, Math.min(size.width, mousePoint[0]))),
+          p,
+          idx, pMin, pMax,
+          i;
+      // highlight the central point, and also points to the left and right
+      // TODO Handle multiple data sets/lines
+      selectable = [];
+      for (i = 0; i < pointArray.length; i++) {
+        points = pointArray[i];
+        p = findClosestPointByX(translatedMousePointX, i);
+        if (p !== null) {
+          idx = points.indexOf(p);
+          pMin = idx - (options.extraCirclesVisibleOnHover);
+          pMax = idx + (options.extraCirclesVisibleOnHover + 1);
+          if (pMin < 0) { pMin = 0; }
+          if (pMax > points.length - 1) { pMax = points.length; }
+          selectable = selectable.concat(points.slice(pMin, pMax));
+        }
+      }
+      update();
+    }
+  }
+
+  function findClosestPointByX(x, line) {
+    if (typeof(line) === "undefined" || line === null) { line = 0; }
+    // binary search through points.
+    // This assumes points is sorted ascending by x value, which for realTime graphs is true.
+    points = pointArray[line];
+    if (points.length === 0) { return null; }
+    var min = 0,
+        max = points.length - 1,
+        mid, p1, p2, p3;
+    while (min < max) {
+      mid = Math.floor((min + max)/2.0);
+      if (points[mid][0] < x) {
+        min = mid + 1;
+      } else {
+        max = mid;
+      }
+    }
+
+    // figure out which point is actually closest.
+    // we have to compare 3 points, to account for floating point rounding errors.
+    // if the mouse moves off the left edge of the graph, p1 may not exist.
+    // if the mouse moves off the right edge of the graph, p3 may not exist.
+    p1 = points[mid - 1];
+    p2 = points[mid];
+    p3 = points[mid + 1];
+    if (typeof(p1) !== "undefined" && Math.abs(p1[0] - x) <= Math.abs(p2[0] - x)) {
+      return p1;
+    } else if (typeof(p3) === "undefined" || Math.abs(p2[0] - x) <= Math.abs(p3[0] - x)) {
+      return p2;
+    } else {
+      return p3;
+    }
+  }
+
+  function plotDrag() {
+    if(options.enableAxisScaling) {
+      var p;
+      d3.event.preventDefault();
+      d3.select('body').style("cursor", "move");
+      if (d3.event.altKey) {
+        plot.style("cursor", "nesw-resize");
+        if (d3.event.shiftKey && options.addData) {
+          p = d3.mouse(vis.node());
+          var newpoint = [];
+          newpoint[0] = xScale.invert(Math.max(0, Math.min(size.width,  p[0])));
+          newpoint[1] = yScale.invert(Math.max(0, Math.min(size.height, p[1])));
+          points.push(newpoint);
+          pointListeners.forEach(function(callback) {
+            callback.call(null,newpoint);
+          });
+          points.sort(function(a, b) {
+            if (a[0] < b[0]) { return -1; }
+            if (a[0] > b[0]) { return  1; }
+            return 0;
+          });
+          selected = newpoint;
+          update();
+        } else {
+          p = d3.mouse(vis.node());
+          downx = xScale.invert(p[0]);
+          downy = yScale.invert(p[1]);
+          draggedPoint = false;
+          d3.event.stopPropagation();
+        }
+        // d3.event.stopPropagation();
+      }
+    }
+  }
+
+  function falseFunction() {
+    return false;
+  }
+
+  function xAxisDrag() {
+    if(options.enableAxisScaling) {
+      node.focus();
+      document.onselectstart = falseFunction;
+      d3.event.preventDefault();
+      var p = d3.mouse(vis.node());
+      downx = xScale.invert(p[0]);
+    }
+  }
+
+  function yAxisDrag() {
+    if(options.enableAxisScaling) {
+      node.focus();
+      d3.event.preventDefault();
+      document.onselectstart = falseFunction;
+      var p = d3.mouse(vis.node());
+      downy = yScale.invert(p[1]);
+    }
+  }
+
+  function dataPointDrag(d) {
+    node.focus();
+    d3.event.preventDefault();
+    document.onselectstart = falseFunction;
+    if (selected === d) {
+      selected = draggedPoint = null;
+    } else {
+      selected = draggedPoint = d;
+    }
+    update();
+  }
+
+  function mousemove() {
+    var p = d3.mouse(vis.node()),
+        points,
+        index,
+        px,
+        x,
+        nextPoint,
+        prevPoint,
+        minusHalf,
+        plusHalf;
+
+    // t = d3.event.changedTouches;
+
+    document.onselectstart = function() { return true; };
+    d3.event.preventDefault();
+    if (draggedPoint) {
+      if (options.dataChange) {
+        draggedPoint[1] = yScale.invert(Math.max(0, Math.min(size.height, p[1])));
+      } else {
+        pointArray.forEach(function (arr) {
+          var i = arr.indexOf(draggedPoint);
+          if (i !== -1) {
+            points = arr;
+            index = i;
+          }
+        });
+
+        if (index && index < (points.length-1)) {
+          px = xScale.invert(p[0]);
+          x = draggedPoint[0];
+          nextPoint = points[index+1];
+          prevPoint = points[index-1];
+          minusHalf = x - (x - prevPoint[0])/2;
+          plusHalf =  x + (nextPoint[0] - x)/2;
+          if (px < minusHalf) {
+            draggedPoint = prevPoint;
+            selected = draggedPoint;
+          } else if (px > plusHalf) {
+            draggedPoint = nextPoint;
+            selected = draggedPoint;
+          }
+        }
+      }
+      update();
+    }
+
+    if (!isNaN(downx)) {
+      d3.select('body').style("cursor", "col-resize");
+      plot.style("cursor", "col-resize");
+      xScale.domain(axis.axisProcessDrag(downx, xScale.invert(p[0]), xScale.domain()));
+      updateMarkerRadius();
+      redraw();
+      d3.event.stopPropagation();
+    }
+
+    if (!isNaN(downy)) {
+      d3.select('body').style("cursor", "row-resize");
+      plot.style("cursor", "row-resize");
+      yScale.domain(axis.axisProcessDrag(downy, yScale.invert(p[1]), yScale.domain()));
+      redraw();
+      d3.event.stopPropagation();
+    }
+  }
+
+  function mouseup() {
+    d3.select('body').style("cursor", "auto");
+    plot.style("cursor", "auto");
+    document.onselectstart = function() { return true; };
+    if (!isNaN(downx)) {
+      redraw();
+      downx = NaN;
+    }
+    if (!isNaN(downy)) {
+      redraw();
+      downy = NaN;
+    }
+    draggedPoint = null;
+  }
+
+  //------------------------------------------------------
+  //
+  // Autoscale
+  //
+  // ------------------------------------------------------------
+
+  /**
+    If there are more than 1 data points, scale axes. Default behavior is to expand domain only when
+    corresponding "autoScaleX" and "autoScaleY" options are set to true.
+
+    However if you pass <true> as an argument, it will enforce scaling of axes so the fit data.
+  */
+  function autoscale(fit) {
+    var maxPointsLen = -Infinity;
+    var domainXChanged;
+    var domainYChanged;
+    var ret;
+
+    pointArray.forEach(function (arr) {
+      if (arr.length > maxPointsLen) maxPointsLen = arr.length;
+    });
+
+    if (maxPointsLen >= 0) {
+      if (options.autoScaleX || fit) {
+        var xPadding = fit ? 0.05 : options.autoScalePadding;
+        domainXChanged = scaleAxis("x", pointsXMin, pointsXMax, xPadding, fit);
+      }
+      if (options.autoScaleY || fit) {
+        var yPadding = fit ? 0.05 : options.autoScalePadding;
+        domainYChanged = scaleAxis("y", pointsYMin, pointsYMax, yPadding, fit);
+      }
+      ret = domainXChanged || domainYChanged;
+    } else {
+      ret = undefined;
+    }
+
+    // Only call callback if there's what we think of as an "autoscale was clicked" event, which
+    // specifically means the case that fit == true
+    if (fit) {
+      options.onAutoscale.call(null);
+    }
+
+    return ret;
+  }
+
+  function scaleAxis(axis, minVal, maxVal, padding, fit) {
+    // axis argument is expected to be "x" or "y".
+    var scale = axis === "x" ? xScale : yScale;
+    var dMin = scale.domain()[0];
+    var dMax = scale.domain()[1];
+    var domainChanged = false;
+    // Like Math.pow but returns a value with the same sign as x: pow(-1, 0.5) -> -1
+    var pow = function(x, exponent) {
+      return x < 0 ? -Math.pow(-x, exponent) : Math.pow(x, exponent);
+    };
+    // Convert min, max to a linear scale, and set 'transform' to the function that
+    // converts the new min, max to the relevant scale.
+    var transform;
+    switch (options[axis + "scale"]) {
+      case 'linear':
+        transform = function(x) { return x; };
+        break;
+      case 'log':
+        minVal = Math.log(minVal) / Math.log(10);
+        maxVal = Math.log(maxVal) / Math.log(10);
+        transform = function(x) { return Math.pow(10, x); };
+        break;
+      case 'pow':
+        var scaleExponent = options[axis + "scaleExponent"];
+        minVal = pow(minVal, scaleExponent);
+        maxVal = pow(maxVal, scaleExponent);
+        transform = function(x) { return pow(x, 1 / scaleExponent); };
+        break;
+    }
+
+    // When there is one point, maxVal - minVal will be 0. Then try to use current domain of scale.
+    var pad = maxVal - minVal !== 0 ? (maxVal - minVal) * padding : (dMax - dMin) * padding;
+    if (maxVal > dMax || fit) {
+      dMax = maxVal + pad;
+      domainChanged = true;
+    }
+    if (minVal < dMin || fit) {
+      dMin = minVal - pad;
+      domainChanged = true;
+    }
+    if (domainChanged) {
+      scale.domain([transform(dMin), transform(dMax)]).nice();
+    }
+    return domainChanged;
+  }
+
+  // ------------------------------------------------------------
+  //
+  // Brush Selection
+  //
+  // ------------------------------------------------------------
+
+  function toggleSelection() {
+    if (!selectionVisible()) {
+      // The graph model defaults to visible=false and enabled=true.
+      // Reset these so that this first click turns on selection correctly.
+      selectionEnabled(false);
+      selectionVisible(true);
+    }
+    if (!!selectionEnabled()) {
+      if (options.clearSelectionOnLeavingSelectMode || selectionDomain() === []) {
+        selectionDomain(null);
+      }
+      selectionEnabled(false);
+    } else {
+      if (selectionDomain() == null) {
+        selectionDomain([]);
+      }
+      selectionEnabled(true);
+    }
+  }
+
+  /**
+    Set or get the selection domain (i.e., the range of x values that are selected).
+
+    Valid domain specifiers:
+      null     no current selection (selection is turned off)
+      []       a current selection exists but is empty (has_selection is true)
+      [x1, x2] the region between x1 and x2 is selected. Any data points between
+               x1 and x2 (inclusive) would be considered to be selected.
+
+    Default value is null.
+  */
+  function selectionDomain(a) {
+
+    if (!arguments.length) {
+      if (!has_selection) {
+        return null;
+      }
+      if (selection_region.xmax === Infinity && selection_region.xmin === Infinity ) {
+        return [];
+      }
+      return [selection_region.xmin, selection_region.xmax];
+    }
+
+    // setter
+
+    if (a === null) {
+      has_selection = false;
+    }
+    else if (a.length === 0) {
+      has_selection = true;
+      selection_region.xmin = Infinity;
+      selection_region.xmax = Infinity;
+    }
+    else {
+      has_selection = true;
+      selection_region.xmin = a[0];
+      selection_region.xmax = a[1];
+    }
+
+    updateBrushElement();
+
+    if (selection_listener) {
+      selection_listener(selectionDomain());
+    }
+    return api;
+  }
+
+  /**
+    Get whether the graph currently has a selection region. Default value is false.
+
+    If true, it would be valid to filter the data points to return a subset within the selection
+    region, although this region may be empty!
+
+    If false the graph is not considered to have a selection region.
+
+    Note that even if has_selection is true, the selection region may not be currently shown,
+    and if shown, it may be empty.
+  */
+  function hasSelection() {
+    return has_selection;
+  }
+
+  /**
+    Set or get the visibility of the selection region. Default value is false.
+
+    Has no effect if the graph does not currently have a selection region
+    (selection_domain is null).
+
+    If the selection_enabled property is true, the user will also be able to interact
+    with the selection region.
+  */
+  function selectionVisible(val) {
+    if (!arguments.length) {
+      return selection_visible;
+    }
+
+    // setter
+    val = !!val;
+    if (selection_visible !== val) {
+      selection_visible = val;
+      updateBrushElement();
+    }
+    return api;
+  }
+
+  /**
+    Set or get whether user manipulation of the selection region should be enabled
+    when a selection region exists and is visible. Default value is true.
+
+    Setting the value to true has no effect unless the graph has a selection region
+    (selection_domain is non-null) and the region is visible (selection_visible is true).
+    However, the selection_enabled setting is honored whenever those properties are
+    subsequently updated.
+
+    Setting the value to false does not affect the visibility of the selection region,
+    and does not affect the ability to change the region by calling selectionDomain().
+
+    Note that graph panning and zooming are disabled while selection manipulation is enabled.
+  */
+  function selectionEnabled(val) {
+    if (!arguments.length) {
+      return selection_enabled;
+    }
+
+    // setter
+    val = !!val;
+    if (selection_enabled !== val) {
+      selection_enabled = val;
+
+      if (selectionButton) {
+        if (val) {
+          selectionButton.attr("style", "color: #aa0000;");
+        } else {
+          selectionButton.attr("style", "");
+        }
+      }
+
+      updateBrushElement();
+    }
+    return api;
+  }
+
+  /**
+    Set or get the listener to be called when the selection_domain changes.
+
+    Both programatic and interactive updates of the selection region result in
+    notification of the listener.
+
+    The listener is called with the new selection_domain value in the first argument.
+  */
+  function selectionListener(cb) {
+    if (!arguments.length) {
+      return selection_listener;
+    }
+    // setter
+    selection_listener = cb;
+    return api;
+  }
+
+  function brushListener() {
+    var extent;
+    if (selection_enabled) {
+      // Note there is a brush.empty() method, but it still reports true after the
+      // brush extent has been programatically updated.
+      extent = brush_control.extent();
+      selectionDomain( extent[0] !== extent[1] ? extent : [] );
+    }
+  }
+
+  function updateBrushElement() {
+    if (has_selection && selection_visible) {
+      brush_control = brush_control || d3.svg.brush()
+        .x(xScale)
+        .extent([selection_region.xmin || 0, selection_region.xmax || 0])
+        .on("brush", brushListener);
+
+      brush_element
+        .call(brush_control.extent([selection_region.xmin || 0, selection_region.xmax || 0]))
+        .style('display', 'inline')
+        .style('pointer-events', selection_enabled ? 'all' : 'none')
+        .selectAll("rect")
+          .attr("height", size.height);
+
+    } else {
+      brush_element.style('display', 'none');
+    }
+  }
+
+  // ------------------------------------------------------------
+  //
+  // Canvas-based plotting
+  //
+  // ------------------------------------------------------------
+
+  function createGraphCanvas() {
+    graphCanvas = elem.append("canvas");
+    gcanvas = graphCanvas.node();
+    resizeCanvas();
+  }
+
+  function resizeCanvas() {
+    graphCanvas
+      .attr("class", "overlay")
+      .style({
+        "position": "absolute",
+        "width":    size.width + "px",
+        "height":   size.height + "px",
+        "top":      padding.top + "px",
+        "left":     padding.left + "px",
+        "z-index": 1
+      });
+    gcanvas = graphCanvas.node();
+    gcanvas.width = size.width;
+    gcanvas.height = size.height;
+    gcanvas.top = padding.top;
+    gcanvas.left = padding.left;
+    setupCanvasContext();
+    updateCanvasFromPoints(currentSample);
+  }
+
+  function clearCanvas() {
+    if (gcanvas.getContext) {
+      gcanvas.width = gcanvas.width;
+      gctx.lineWidth = lineWidth;
+      gctx.fillStyle = canvasFillStyle;
+      gctx.fillRect(0, 0, gcanvas.width, gcanvas.height);
+      gctx.strokeStyle = "rgba(255,65,0, 1.0)";
+    }
+  }
+
+  function setupCanvasContext() {
+    if (gcanvas.getContext) {
+      gctx = gcanvas.getContext( '2d' );
+      gctx.globalCompositeOperation = "source-over";
+      gctx.lineWidth = lineWidth;
+      gctx.fillStyle = canvasFillStyle;
+      gctx.fillRect(0, 0, gcanvas.width, gcanvas.height);
+      gctx.strokeStyle = "rgba(255,65,0, 1.0)";
+    }
+  }
+
+  //
+  // Update Canvas plotted data from [x, y] data points
+  //
+  function updateCanvasFromPoints(samplePoint) {
+    var i, j, len,
+        dx,
+        px, py,
+        index,
+        yOrigin = yScale(0.00001),
+        lines = options.lines,
+        bars = options.bars,
+        pointsLength,
+        numberOfLines = pointArray.length,
+        xAxisStart,
+        xAxisEnd,
+        pointStop,
+        start;
+
+    // hack for lack of canvas support in jsdom tests
+    if (typeof gcanvas.getContext === "undefined" ) { return; }
+
+    setCurrentSample(samplePoint);
+    clearCanvas();
+    gctx.fillRect(0, 0, gcanvas.width, gcanvas.height);
+    gctx.lineWidth = lineWidth;
+    xAxisStart = xScale.domain()[0];
+    xAxisEnd =   xScale.domain()[1];
+    start = Math.max(0, xAxisStart);
+    if (lines) {
+      for (i = 0; i < numberOfLines; i++) {
+        points = pointArray[i];
+        pointsLength = points.length;
+        if (pointsLength === 0) {
+          continue;
+        } else if (pointsLength === 1) {
+          // Draw just single point.
+          setFillColor(i);
+          gctx.fillRect(xScale(points[0][0]), yScale(points[0][1]), lineWidth, lineWidth);
+          continue;
+        }
+        index = 0;
+        // find first point >= xAxisStart
+        for (j = 0; j < pointsLength; j++) {
+          if (points[j][0] >= xAxisStart) { break; }
+          index++;
+        }
+        if (index >= pointsLength) { continue; }
+        if (index > 0) { index--; }
+        px = xScale(points[index][0]);
+        py = yScale(points[index][1]);
+        setStrokeColor(i);
+        gctx.beginPath();
+        gctx.moveTo(px, py);
+        dx = points[index][0];
+        index++;
+        // plot all ... or until one point past xAxisEnd
+        // or until we reach currentSample
+        for (len = Math.min(samplePoint, pointsLength); index < len; index++) {
+          dx = points[index][0];
+          px = xScale(dx);
+          py = yScale(points[index][1]);
+          gctx.lineTo(px, py);
+          if (dx >= xAxisEnd) { break; }
+        }
+        gctx.stroke();
+        // now plot in a desaturated style all the rest of the points
+        // ... or until one point past xAxisEnd
+        if (index < pointsLength && dx < xAxisEnd) {
+          setStrokeColor(i, true);
+          gctx.lineWidth = lineWidth/2;
+          for (;index < pointsLength; index++) {
+            dx = points[index][0];
+            px = xScale(dx);
+            py = yScale(points[index][1]);
+            gctx.lineTo(px, py);
+            if (dx >= xAxisEnd) { break; }
+          }
+          gctx.stroke();
+          gctx.lineWidth = lineWidth;
+        }
+      }
+    } else if (bars) {
+      for (i = 0; i < numberOfLines; i++) {
+        points = pointArray[i];
+        pointsLength = points.length;
+        setStrokeColor(i);
+        pointStop = samplePoint - 1;
+        for (index=start; index < pointStop; index++) {
+          px = xScale(points[index][0]);
+          py = yScale(points[index][1]);
+          if (py === 0) {
+            continue;
+          }
+          gctx.beginPath();
+          gctx.moveTo(px, yOrigin);
+          gctx.lineTo(px, py);
+          gctx.stroke();
+        }
+        pointStop = points.length-1;
+        if (index < pointStop) {
+          setStrokeColor(i, true);
+          for (;index < pointStop; index++) {
+            px = xScale(points[index][0]);
+            py = yScale(points[index][1]);
+            gctx.beginPath();
+            gctx.moveTo(px, yOrigin);
+            gctx.lineTo(px, py);
+            gctx.stroke();
+          }
+        }
+      }
+    } else {
+      for (i = 0; i < numberOfLines; i++) {
+        points = pointArray[i];
+        pointsLength = points.length;
+        index = 0;
+        // find first point >= xAxisStart
+        for (j = 0; j < pointsLength; j++) {
+          if (points[j][0] >= xAxisStart) { break; }
+          index++;
+        }
+        if (index > 0) { --index; }
+        if (index >= pointsLength) { continue; }
+        setFillColor(i);
+        // plot all ... or until one point past xAxisEnd
+        // or until we reach currentSample
+        for (len = Math.min(samplePoint, pointsLength); index < len; index++) {
+          dx = points[index][0];
+          px = xScale(dx);
+          py = yScale(points[index][1]);
+          gctx.fillRect(px, py, lineWidth, lineWidth);
+          if (dx >= xAxisEnd) { break; }
+        }
+        // now plot in a desaturated style all the rest of the points
+        // ... or until one point past xAxisEnd
+        if (index < pointsLength && dx < xAxisEnd) {
+          setFillColor(i, true);
+          for (;index < pointsLength; index++) {
+            dx = points[index][0];
+            px = xScale(dx);
+            py = yScale(points[index][1]);
+            gctx.fillRect(px, py, lineWidth, lineWidth);
+            if (dx >= xAxisEnd) { break; }
+          }
+        }
+      }
+    }
+  }
+
+  function setStrokeColor(i, afterSamplePoint) {
+    gctx.strokeStyle = getDataColor(i, afterSamplePoint ? 0.5 : 1.0);
+  }
+
+  function setFillColor(i, afterSamplePoint) {
+    gctx.fillStyle   = getDataColor(i, afterSamplePoint ? 0.4 : 1.0);
+  }
+
+  function getDataColor(i, opacity) {
+    var colorIndex = Math.min(i, options.dataColors.length);
+    return 'rgba(' +  options.dataColors[colorIndex].slice().concat(opacity).join(',') + ')';
+  }
+
+  // ------------------------------------------------------------
+  //
+  // Adding samples/data points
+  //
+  // ------------------------------------------------------------
+
+  // Add an array of points then update the graph.
+  function addPoints(datapoints) {
+    addDataPoints(datapoints);
+    setCurrentSample("last");
+    updateOrRescale();
+  }
+
+  function replacePoints(datapoints, index) {
+    setDataPoints(datapoints, index);
+    setCurrentSample("last");
+    updateOrRescale();
+  }
+
+  // Add an array of samples then update the graph.
+  function addSamples(datasamples) {
+    addDataSamples(datasamples);
+    setCurrentSample("last");
+    updateOrRescale();
+  }
+
+
+  // Add a point [x, y] by processing sample (Y value) synthesizing
+  // X value from sampleInterval and number of points
+  function addSample(sample) {
+    var index = points.length,
+        xvalue = (index * sampleInterval) + dataSampleStart,
+        point = [ xvalue, sample ];
+    points.push(point);
+    setCurrentSample("last");
+    updateOrRescale();
+  }
+
+  // Add a point [x, y] to points array
+  function addPoint(pnt) {
+    points.push(pnt);
+    setCurrentSample("last");
+    updateOrRescale();
+  }
+
+  function comparePoints(a, b) {
+    if (a[0] < b[0])
+       return -1;
+    if (a[0] > b[0])
+       return 1;
+    return 0;
+  }
+
+  function checkPointsOrder(points, newPointIdx) {
+    if (!options.sortPoints || points.length < 2) return;
+    if (newPointIdx == null) {
+      points.sort(comparePoints);
+      return;
+    }
+    // This function assumes that 'points' array was sorted and one new point was added.
+    // Sort points only when it's really necessary.
+    var newPoint = points[newPointIdx];
+    var prevPoint = points[newPointIdx - 1];
+    var nextPoint = points[newPointIdx + 1];
+    if ((prevPoint && prevPoint[0] > newPoint[0]) ||
+        (nextPoint && newPoint[0] > nextPoint[0])) {
+      points.sort(comparePoints);
+    }
+  }
+
+  function updatePointsExtent(newPoint) {
+    if (newPoint[0] < pointsXMin) pointsXMin = newPoint[0];
+    if (newPoint[1] < pointsYMin) pointsYMin = newPoint[1];
+    if (newPoint[0] > pointsXMax) pointsXMax = newPoint[0];
+    if (newPoint[1] > pointsYMax) pointsYMax = newPoint[1];
+  }
+
+  // Add an array (or arrays) of points.
+  function addDataPoints(datapoints) {
+    var point;
+    var points;
+    var pointsIndexed;
+    for (var i = 0, len = datapoints.length; i < len; i++) {
+      if (datapoints[i] == null) continue;
+      points = pointArray[i];
+      pointsIndexed = pointArrayIndexed[i];
+      if (points == null || pointsIndexed == null) {
+        // Create a new data series dynamically in case of need.
+        points = pointArray[i] = [];
+        pointsIndexed = pointArrayIndexed[i] = [];
+      }
+      point = datapoints[i];
+      points.push(point);
+      pointsIndexed.push(point);
+      updatePointsExtent(point);
+      checkPointsOrder(points, points.length - 1);
+    }
+  }
+
+  function setDataPoints(datapoints, index) {
+    var oldPoint;
+    var newPoint;
+    var points;
+    var pointsIndexed;
+    var pointModified = false;
+    for (var i = 0, len = datapoints.length; i < len; i++) {
+      if (datapoints[i] == null) continue;
+      points = pointArray[i];
+      pointsIndexed = pointArrayIndexed[i];
+      if (points == null || pointsIndexed == null) {
+        // Create a new data series dynamically in case of need.
+        points = pointArray[i] = [];
+        pointsIndexed = pointArrayIndexed[i] = [];
+      }
+      oldPoint = pointsIndexed[index];
+      newPoint = datapoints[i];
+      if (oldPoint == null) {
+        // Create new point.
+        points.push(newPoint);
+        pointsIndexed[index] = newPoint;
+        checkPointsOrder(points, points.length - 1);
+        updatePointsExtent(newPoint);
+      } else {
+        // Update coordinates manually. We can't simply say:
+        // pointsInexed[index] = newPoint;
+        // as then we would have to find old point in unindexed points array and replace it too.
+        // Here we use the fact that both points and indexed points arrays keep references to the
+        // same objects.
+        oldPoint[0] = newPoint[0];
+        oldPoint[1] = newPoint[1];
+        checkPointsOrder(points);
+        pointModified = true;
+      }
+    }
+    if (pointModified) {
+      // Recalculate points extent as old point could contain min/max values.
+      pointsXMin = pointsYMin = Infinity;
+      pointsXMax = pointsYMax = -Infinity;
+      pointArray.forEach(function (points) {
+        points.forEach(updatePointsExtent);
+      });
+    }
+  }
+
+  // Add an array of points by processing an array of samples (Y values)
+  // synthesizing the X value from sampleInterval interval and number of points.
+  function addDataSamples(datasamples) {
+    var start,
+        i;
+    if (Object.prototype.toString.call(datasamples[0]) === "[object Array]") {
+      for (i = 0; i < datasamples.length; i++) {
+        if (!pointArray[i]) { pointArray.push([]); }
+        points = pointArray[i];
+        start = points.length * sampleInterval + dataSampleStart;
+        points.push.apply(points, indexedData(datasamples[i], sampleInterval, start));
+        pointArray[i] = points;
+        points.forEach(updatePointsExtent);
+      }
+      points = pointArray[0];
+    } else {
+      var point;
+      for (i = 0; i < datasamples.length; i++) {
+        if (!pointArray[i]) { pointArray.push([]); }
+        start = pointArray[i].length * sampleInterval + dataSampleStart;
+        point = [start, datasamples[i]];
+        pointArray[i].push(point);
+        updatePointsExtent(point);
+      }
+    }
+  }
+
+  function resetDataPoints(datapoints) {
+
+    function copyNonNull(array) {
+      var ret = [];
+      array.forEach(function(element) {
+        if (element == null || element[0] == null || element[1] == null) return;
+        ret.push(element);
+      });
+      return ret;
+    }
+
+    function copyNonNullKeepIndexing(array) {
+      var ret = [];
+      array.forEach(function(element, idx) {
+        if (element == null || element[0] == null || element[1] == null) return;
+        ret[idx] = element;
+      });
+      return ret;
+    }
+
+    // Each points array should be processed:
+    // - points extent need to be updated,
+    // - points may be sorted if "sortPoints" option is enabled.
+    function processPointsArray(array) {
+      // Update point extent and check if the points array is sorted by X coordinates.
+      function checkPoint(point, idx, array) {
+        updatePointsExtent(point);
+        if (sorted && idx > 0 && point[0] < array[idx - 1][0]) {
+          sorted = false;
+        }
+      }
+      // If options.sortPoints is disabled, we won't executed check in the if statement above.
+      var sorted = options.sortPoints;
+      array.forEach(checkPoint);
+      if (!sorted && options.sortPoints) {
+        array.sort(comparePoints);
+      }
+    }
+
+    pointsXMin = pointsYMin =  Infinity;
+    pointsXMax = pointsYMax = -Infinity;
+    pointArray = [];
+    pointArrayIndexed = [];
+    if (!datapoints || datapoints.length === 0) {
+      pointArray = [[]];
+      pointArrayIndexed = [[]];
+    } else if (Object.prototype.toString.call(datapoints[0]) === "[object Array]") {
+      for (var i = 0; i < datapoints.length; i++) {
+        pointArray.push(copyNonNull(datapoints[i]));
+        pointArrayIndexed.push(copyNonNullKeepIndexing(datapoints[i]));
+        processPointsArray(pointArray[i]);
+      }
+    } else {
+      pointArray = [copyNonNull(points)];
+      pointArrayIndexed = [copyNonNullKeepIndexing(points)];
+      processPointsArray(pointArray[0]);
+    }
+    points = pointArray[0];
+
+    autoscale();
+    setCurrentSample("last");
+  }
+
+  function resetDataSamples(datasamples, interval, start) {
+    pointsXMin = pointsYMin = Infinity;
+    pointsXMax = pointsYMax = -Infinity;
+    pointArray = [];
+    if (Object.prototype.toString.call(datasamples[0]) === "[object Array]") {
+      for (var i = 0; i < datasamples.length; i++) {
+        pointArray.push(indexedData(datasamples[i], interval, start));
+        pointArray[pointArray.length-1].forEach(updatePointsExtent);
+      }
+      points = pointArray[0];
+    } else {
+      points = indexedData(datasamples, interval, start);
+      pointArray = [points];
+      points.forEach(updatePointsExtent);
+    }
+    sampleInterval = interval;
+    dataSampleStart = start;
+  }
+
+
+  function resetSamples(datasamples) {
+    resetDataSamples(datasamples, sampleInterval, dataSampleStart);
+  }
+
+  function deletePoint(i) {
+    if (points.length) {
+      points.splice(i, 1);
+      if (currentSample >= points.length) {
+        currentSample = points.length-1;
+      }
+    }
+  }
+
+  // ------------------------------------------------------------
+  //
+  // Keyboard Handling
+  //
+  // ------------------------------------------------------------
+
+  function registerKeyboardHandler() {
+    svg.node().addEventListener("keydown", function (evt) {
+      if (!selected) return false;
+      if (evt.type === "keydown") {
+        switch (evt.keyCode) {
+          case 8:   // backspace
+          case 46:  // delete
+          if (options.dataChange) {
+            var i = points.indexOf(selected);
+            deletePoint(i);
+            selected = points.length ? points[i > 0 ? i - 1 : 0] : null;
+            update();
+          }
+          evt.preventDefault();
+          evt.stopPropagation();
+          break;
+        }
+        evt.preventDefault();
+      }
+    });
+  }
+
+  // ------------------------------------------------------------
+  //
+  // Graph attribute updaters
+  //
+  // ------------------------------------------------------------
+
+  // update the title
+  function updateTitle() {
+    if (options.title && title) {
+      title.text(options.title);
+    }
+    renderGraph();
+  }
+
+  // update the x-axis label
+  function updateXlabel() {
+    if (options.xlabel && xlabel) {
+      xlabel.text(options.xlabel);
+    }
+    renderGraph();
+  }
+
+  // update the y-axis label
+  function updateYlabel() {
+    if (options.ylabel && ylabel) {
+      ylabel.text(options.ylabel);
+    } else {
+      ylabel.style("display", "none");
+    }
+    renderGraph();
+  }
+
+  // ------------------------------------------------------------
+  //
+  // Main API functions ...
+  //
+  // ------------------------------------------------------------
+
+  function renderGraph() {
+    calculateLayout();
+    if (svg === undefined) {
+      renderNewGraph();
+    } else {
+      repaintExistingGraph();
+    }
+    if (options.showButtons) {
+      if (!buttonLayer) createButtonLayer();
+      resizeButtonLayer();
+    }
+    redraw();
+  }
+
+  function reset(idOrElement, options, message) {
+    if (arguments.length) {
+      initialize(idOrElement, options, message);
+    } else {
+      initialize();
+    }
+    renderGraph();
+    // and then render again using actual size of SVG text elements are
+    renderGraph();
+    redraw();
+    registerKeyboardHandler();
+    return api;
+  }
+
+  function resize(w, h) {
+    scale(w, h);
+    initializeLayout();
+    renderGraph();
+    redraw();
+    return api;
+  }
+
+  //
+  // Public API to instantiated Graph
+  //
+  api = {
+    update:               update,
+    repaint:              renderGraph,
+    reset:                reset,
+    redraw:               redraw,
+    resize:               resize,
+    notify:               notify,
+
+    // selection brush api
+    selectionDomain:      selectionDomain,
+    selectionVisible:     selectionVisible,
+    selectionListener:    selectionListener,
+    selectionEnabled:     selectionEnabled,
+    hasSelection:         hasSelection,
+
+    /**
+      Read only getter for the d3 selection referencing the DOM elements containing the d3
+      brush used to implement selection region manipulation.
+    */
+    brushElement: function() {
+      return brush_element;
+    },
+
+    /**
+      Read-only getter for the d3 brush control (d3.svg.brush() function) used to implement
+      selection region manipulation.
+    */
+    brushControl: function() {
+      return brush_control;
+    },
+
+    /**
+      Read-only getter for the internal listener to the d3 'brush' event.
+    */
+    brushListener: function() {
+      return brushListener;
+    },
+
+    /**
+      Allow consumption of points added to graph through clicking
+      */
+    addPointListener: function(callback) {
+      pointListeners.push(callback);
+    },
+
+    clearPointListeners: function() {
+      pointListeners.length = 0;
+    },
+
+    // specific update functions ???
+    scale:                scale,
+    updateOrRescale:      updateOrRescale,
+
+    xDomain: function(_) {
+      if (!arguments.length) return [options.xmin, options.xmax];
+      options.xmin = _[0];
+      options.xmax = _[1];
+      if (updateXScale) {
+        updateXScale();
+        redraw();
+      }
+      return api;
+    },
+
+    yDomain: function(_) {
+      if (!arguments.length) return [options.ymin, options.ymax];
+      options.ymin = _[0];
+      options.ymax = _[1];
+      if (updateYScale) {
+        updateYScale();
+        redraw();
+      }
+      return api;
+    },
+
+    xmin: function(_) {
+      if (!arguments.length) return options.xmin;
+      options.xmin = _;
+      options.xrange = options.xmax - options.xmin;
+      if (updateXScale) {
+        updateXScale();
+        redraw();
+      }
+      return api;
+    },
+
+    xmax: function(_) {
+      if (!arguments.length) return options.xmax;
+      options.xmax = _;
+      options.xrange = options.xmax - options.xmin;
+      if (updateXScale) {
+        updateXScale();
+        redraw();
+      }
+      return api;
+    },
+
+    ymin: function(_) {
+      if (!arguments.length) return options.ymin;
+      options.ymin = _;
+      options.yrange = options.ymax - options.ymin;
+      if (updateYScale) {
+        updateYScale();
+        redraw();
+      }
+      return api;
+    },
+
+    ymax: function(_) {
+      if (!arguments.length) return options.ymax;
+      options.ymax = _;
+      options.yrange = options.ymax - options.ymin;
+      if (updateYScale) {
+        updateYScale();
+        redraw();
+      }
+      return api;
+    },
+
+    xLabel: function(_) {
+      if (!arguments.length) return options.xlabel;
+      options.xlabel = _;
+      updateXlabel();
+      return api;
+    },
+
+    yLabel: function(_) {
+      if (!arguments.length) return options.ylabel;
+      options.ylabel = _;
+      updateYlabel();
+      return api;
+    },
+
+    title: function(_) {
+      if (!arguments.length) return options.title;
+      options.title = _;
+      updateTitle();
+      return api;
+    },
+
+    width: function(_) {
+      if (!arguments.length) return size.width;
+      size.width = _;
+      return api;
+    },
+
+    height: function(_) {
+      if (!arguments.length) return size.height;
+      size.height = _;
+      return api;
+    },
+
+    elem: function(_) {
+      if (!arguments.length) return elem;
+      elem = d3.select(_);
+      initialize(elem);
+      return api;
+    },
+
+    numberOfPoints: function() {
+      if (points) {
+        return points.length;
+      } else {
+        return false;
+      }
+    },
+
+    addAnnotation: function(annotation) {
+      annotations.push(annotation);
+      redraw();
+    },
+
+    resetAnnotations: function() {
+      annotations.length = 0;
+      redraw();
+    },
+
+    // Programmatically the same actions as clicking the autoscale button. Note that we sometimes
+    // use autoscale internally with its 'fit' argument set to false.
+    autoscale: function() {
+      autoscale(true);
+    },
+
+    // Point data consist of an array (or arrays) of [x,y] arrays.
+    addPoints:     addPoints,
+    replacePoints: replacePoints,
+    addPoint:      addPoint,
+    resetPoints:   resetDataPoints,
+
+    // Sample data consists of an array (or an array or arrays) of samples.
+    // The interval between samples is assumed to have already been set
+    // by specifying options.sampleInterval when creating the graph.
+    addSamples:    addSamples,
+    addSample:     addSample,
+    resetSamples:  resetSamples
+
+  };
+
+  // Initialization.
+  initialize(idOrElement, options, message);
+
+  if (node) {
+    renderGraph();
+    // Render again using actual size of SVG text elements.
+    renderGraph();
+  }
+
+  return api;
+};
+
+},{"./axis":1}],3:[function(require,module,exports){
+module.exports = require('./lib/graph');
+
+},{"./lib/graph":2}]},{},[3])
+(3)
+});
+;
 
 //# sourceMappingURL=vendor.js.map
