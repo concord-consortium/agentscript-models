@@ -1,4 +1,10 @@
-SKY_COLOR = [131, 216, 240]
+SKY_TOP_COLOR = [41, 129, 187]
+SKY_BTM_COLOR = [188, 230, 251]
+SKY_COLOR_CHANGE = [
+  SKY_BTM_COLOR[0]-SKY_TOP_COLOR[0],
+  SKY_BTM_COLOR[1]-SKY_TOP_COLOR[1],
+  SKY_BTM_COLOR[2]-SKY_TOP_COLOR[2],
+]
 
 LIGHT_LAND_COLOR = [135, 79, 49]
 DARK_LAND_COLOR = [105, 49, 19]
@@ -154,7 +160,7 @@ class ErosionEngine
 
   convertLandToSky: (p) ->
       p.type = SKY
-      p.color = SKY_COLOR
+      p.color = @_calculateSkyColor(p.y)
       @removeLandProperties p
 
   erode: ->
@@ -361,5 +367,15 @@ class ErosionEngine
         count++
         if p.x < 0 then ret[1]++ else ret[2]++
     ret
+
+  _calculateSkyColor: (y)->
+    # simple linear gradient
+    pct = 1-(y-@patches.minY)/(@patches.maxY-@patches.minY)
+
+    result = [
+      pct*SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[0],
+      pct*SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[1],
+      pct*SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[2]
+    ]
 
 window.ErosionEngine = ErosionEngine
