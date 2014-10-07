@@ -157,14 +157,14 @@ label.title {
 
 #zone-1 {
   top: 200px;
-  left: 130px;
-  color: rgb(0, 139, 255);
+  left: 20px;
+  color: rgb(255, 255, 255);
 }
 
 #zone-2 {
   top: 200px;
-  left: 450px;
-  color: rgb(161, 255, 0);
+  left: 565px;
+  color: rgb(255, 255, 255);
 }
 
 #slope-sliders {
@@ -221,7 +221,7 @@ label.title {
 }
 
 #quality-key .good {
-  background-color: rgb(88, 41, 10);
+  background-color: rgb(60, 51, 47);
 }
 #quality-key .medium {
   background-color: rgb(135, 79, 49);

@@ -15,6 +15,7 @@
       <img id="brown-grass-1-sprite" src="img/brown-grass-1.png" />
       <img id="brown-grass-2-sprite" src="img/brown-grass-2.png" />
       <img id="wheat-1-sprite" src="img/wheat-1.png" />
+      <img id="wheat-2-sprite" src="img/wheat-2.png" />
       <img id="tree-1-sprite" src="img/tree-1.png" />
       <img id="tree-2-sprite" src="img/tree-2.png" />
       <img id="tree-3-sprite" src="img/tree-3.png" />
@@ -152,6 +153,11 @@
         window.model = new LandManagementModel("layers", 2.75, -114, 114, -40, 40, false);
         window.model.showErosion = false;
         window.model.showSoilQuality = true;
+
+        // make sure we repaint the surface soil
+        window.model.updateSurfacePatches();
+        window.model.draw();
+
         initControls();
 
         // Will fail if run offline, but that shouldn't be a problem.

@@ -376,23 +376,27 @@ $(document).on(LandManagementModel.STEP_INTERVAL_ELAPSED, function() {
 });
 
 ;require.register("src/erosion-engine", function(exports, require, module) {
-var DARK_LAND_COLOR, ErosionEngine, GOOD_SOIL_COLOR, LAND, LIGHT_LAND_COLOR, MAGENTA, ORANGE, POOR_SOIL_COLOR, SKY, SKY_COLOR, TERRACE_COLOR;
+var BASE_LAND_COLOR, ErosionEngine, LAND, MAGENTA, MEDIUM_SOIL_COLOR, ORANGE, POOR_SOIL_COLOR, SKY, SKY_BTM_COLOR, SKY_COLOR_CHANGE, SKY_TOP_COLOR, TERRACE_COLOR, TOP_LAND_COLOR;
 
-SKY_COLOR = [131, 216, 240];
+SKY_TOP_COLOR = [41, 129, 187];
 
-LIGHT_LAND_COLOR = [135, 79, 49];
+SKY_BTM_COLOR = [188, 230, 251];
 
-DARK_LAND_COLOR = [105, 49, 19];
+SKY_COLOR_CHANGE = [SKY_BTM_COLOR[0] - SKY_TOP_COLOR[0], SKY_BTM_COLOR[1] - SKY_TOP_COLOR[1], SKY_BTM_COLOR[2] - SKY_TOP_COLOR[2]];
+
+TOP_LAND_COLOR = [60, 51, 47];
+
+BASE_LAND_COLOR = [211, 109, 62];
 
 TERRACE_COLOR = [60, 60, 60];
 
-GOOD_SOIL_COLOR = [88, 41, 10];
+MEDIUM_SOIL_COLOR = [135, 79, 49];
 
 POOR_SOIL_COLOR = [193, 114, 7];
 
-MAGENTA = [255, 50, 185];
+MAGENTA = [164, 105, 189];
 
-ORANGE = [255, 195, 50];
+ORANGE = [216, 72, 40];
 
 SKY = "sky";
 
@@ -476,7 +480,7 @@ ErosionEngine = (function() {
       _ref1 = [surfacePatch.x, surfacePatch.y], x = _ref1[0], y = _ref1[1];
       for (i = _j = 0, _ref2 = this.INITIAL_TOPSOIL_DEPTH; 0 <= _ref2 ? _j < _ref2 : _j > _ref2; i = 0 <= _ref2 ? ++_j : --_j) {
         p = this.patches.patch(x, y - i);
-        newColor = p.isTerrace ? TERRACE_COLOR : p.isTopsoil ? this.showErosion && p.eroded ? p.zone === 1 ? ORANGE : MAGENTA : this.showSoilQuality ? (zone = p.x <= 0 ? 0 : 1, p.quality < this.soilQuality[zone] ? p.quality += 0.001 : void 0, p.quality > this.soilQuality[zone] ? p.quality -= 0.001 : void 0, p.quality < 0.5 ? POOR_SOIL_COLOR : p.quality > 1.5 ? GOOD_SOIL_COLOR : LIGHT_LAND_COLOR) : LIGHT_LAND_COLOR : void 0;
+        newColor = p.isTerrace ? TERRACE_COLOR : p.isTopsoil ? this.showErosion && p.eroded ? p.zone === 1 ? ORANGE : MAGENTA : this.showSoilQuality ? (zone = p.x <= 0 ? 0 : 1, p.quality < this.soilQuality[zone] ? p.quality += 0.001 : void 0, p.quality > this.soilQuality[zone] ? p.quality -= 0.001 : void 0, p.quality < 0.5 ? POOR_SOIL_COLOR : p.quality > 1.5 ? TOP_LAND_COLOR : MEDIUM_SOIL_COLOR) : TOP_LAND_COLOR : void 0;
         if (newColor != null) {
           p.color = newColor;
         }
@@ -540,12 +544,12 @@ ErosionEngine = (function() {
     p.isTerrace = false;
     p.stability = 1;
     p.quality = 1;
-    return p.color = p.isTopsoil ? LIGHT_LAND_COLOR : DARK_LAND_COLOR;
+    return p.color = p.isTopsoil ? TOP_LAND_COLOR : BASE_LAND_COLOR;
   };
 
   ErosionEngine.prototype.convertLandToSky = function(p) {
     p.type = SKY;
-    p.color = SKY_COLOR;
+    p.color = this._calculateSkyColor(p.y);
     return this.removeLandProperties(p);
   };
 
@@ -777,6 +781,12 @@ ErosionEngine = (function() {
     return ret;
   };
 
+  ErosionEngine.prototype._calculateSkyColor = function(y) {
+    var pct, result;
+    pct = 1 - (y - this.patches.minY) / (this.patches.maxY - this.patches.minY);
+    return result = [pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[0], pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[1], pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[2]];
+  };
+
   return ErosionEngine;
 
 })();
@@ -785,13 +795,17 @@ window.ErosionEngine = ErosionEngine;
 });
 
 ;require.register("src/land-generator", function(exports, require, module) {
-var DARK_LAND_COLOR, LAND, LIGHT_LAND_COLOR, LandGenerator, SKY, SKY_COLOR, TERRACE_COLOR;
+var BASE_LAND_COLOR, LAND, LandGenerator, SKY, SKY_BTM_COLOR, SKY_COLOR_CHANGE, SKY_TOP_COLOR, TERRACE_COLOR, TOP_LAND_COLOR;
 
-SKY_COLOR = [131, 216, 240];
+SKY_TOP_COLOR = [41, 129, 187];
 
-LIGHT_LAND_COLOR = [135, 79, 49];
+SKY_BTM_COLOR = [188, 230, 251];
 
-DARK_LAND_COLOR = [105, 49, 19];
+SKY_COLOR_CHANGE = [SKY_BTM_COLOR[0] - SKY_TOP_COLOR[0], SKY_BTM_COLOR[1] - SKY_TOP_COLOR[1], SKY_BTM_COLOR[2] - SKY_TOP_COLOR[2]];
+
+TOP_LAND_COLOR = [60, 51, 47];
+
+BASE_LAND_COLOR = [211, 109, 62];
 
 TERRACE_COLOR = [60, 60, 60];
 
@@ -823,7 +837,7 @@ LandGenerator = (function() {
         p = this.patches.patch(x, y);
         p.zone = p.x <= 0 ? 1 : 2;
         if (p.y > this.landShapeFunction(p.x)) {
-          p.color = SKY_COLOR;
+          p.color = this._calculateSkyColor(p.y);
           p.type = SKY;
           _ref4 = this.landPropertyNames;
           for (_k = 0, _len = _ref4.length; _k < _len; _k++) {
@@ -833,7 +847,7 @@ LandGenerator = (function() {
         } else {
           p.isTopsoil = p.y > this.landShapeFunction(p.x) - this.INITIAL_TOPSOIL_DEPTH;
           p.stability = p.isTopsoil ? 1 : 0.2;
-          p.color = DARK_LAND_COLOR;
+          p.color = BASE_LAND_COLOR;
           p.type = LAND;
           p.eroded = false;
           p.direction = 0;
@@ -886,6 +900,12 @@ LandGenerator = (function() {
     } else {
       return amplitude * Math.sin(u.degToRad(x - 10));
     }
+  };
+
+  LandGenerator.prototype._calculateSkyColor = function(y) {
+    var pct, result;
+    pct = 1 - (y - this.patches.minY) / (this.patches.maxY - this.patches.minY);
+    return result = [pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[0], pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[1], pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[2]];
   };
 
   return LandGenerator;
@@ -1042,14 +1062,13 @@ PlantEngine = (function() {
     this.agentBreeds("grass trees wheat");
     this.trees.setDefaultShape("arrow");
     this.trees.setDefaultColor([0, 255, 0]);
-    this.addImage("tree1", "tree-1-sprite", 39, 70);
-    this.addImage("tree2", "tree-2-sprite", 29, 80);
-    this.addImage("tree3", "tree-3-sprite", 39, 80);
-    this.addImage("grass1", "grass-1-sprite", 39, 80);
-    this.addImage("grass2", "grass-2-sprite", 39, 80);
-    this.addImage("browngrass1", "brown-grass-1-sprite", 39, 80);
-    this.addImage("browngrass2", "brown-grass-2-sprite", 39, 80);
-    return this.addImage("wheat1", "wheat-1-sprite", 39, 80);
+    this.addImage("tree1", "tree-1-sprite", 50, 106);
+    this.addImage("tree2", "tree-2-sprite", 53, 97);
+    this.addImage("tree3", "tree-3-sprite", 56, 95);
+    this.addImage("grass1", "grass-1-sprite", 15, 45);
+    this.addImage("grass2", "grass-2-sprite", 11, 45);
+    this.addImage("wheat1", "wheat-1-sprite", 16, 84);
+    return this.addImage("wheat2", "wheat-2-sprite", 16, 84);
   };
 
   PlantEngine.prototype.addImage = function(name, id, width, height, scale) {
@@ -1471,7 +1490,7 @@ PlantEngine = (function() {
       isAffectedByPoorWaterAfterPlanting: true,
       mortalityInPoorWater: 0.15,
       shapes: ["grass1", "grass2"],
-      hasBrownVariant: true
+      hasBrownVariant: false
     },
     wheat: {
       quantity: 19,
@@ -1488,7 +1507,7 @@ PlantEngine = (function() {
       maximumPrecipitation: 450,
       isAffectedByPoorWaterAfterPlanting: false,
       mortalityInPoorWater: 0.5,
-      shapes: ["wheat1"]
+      shapes: ["wheat1", "wheat2"]
     }
   };
 
