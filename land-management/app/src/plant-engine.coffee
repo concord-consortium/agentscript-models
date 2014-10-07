@@ -14,14 +14,15 @@ class PlantEngine
     @trees.setDefaultShape "arrow"
     @trees.setDefaultColor [0,255,0]
 
-    @addImage "tree1", "tree-1-sprite", 39, 70
-    @addImage "tree2", "tree-2-sprite", 29, 80
-    @addImage "tree3", "tree-3-sprite", 39, 80
-    @addImage "grass1", "grass-1-sprite", 39, 80
-    @addImage "grass2", "grass-2-sprite", 39, 80
-    @addImage "browngrass1", "brown-grass-1-sprite", 39, 80
-    @addImage "browngrass2", "brown-grass-2-sprite", 39, 80
-    @addImage "wheat1", "wheat-1-sprite", 39, 80
+    @addImage "tree1", "tree-1-sprite", 50, 106
+    @addImage "tree2", "tree-2-sprite", 53, 97
+    @addImage "tree3", "tree-3-sprite", 56, 95
+    @addImage "grass1", "grass-1-sprite", 15, 45
+    @addImage "grass2", "grass-2-sprite", 11, 45
+    # @addImage "browngrass1", "brown-grass-1-sprite", 39, 80
+    # @addImage "browngrass2", "brown-grass-2-sprite", 39, 80
+    @addImage "wheat1", "wheat-1-sprite", 16, 84
+    @addImage "wheat2", "wheat-2-sprite", 16, 84
 
 
   addImage: (name, id, width, height, scale) ->
@@ -327,7 +328,7 @@ class PlantEngine
       isAffectedByPoorWaterAfterPlanting: true
       mortalityInPoorWater: 0.15
       shapes: ["grass1", "grass2"]
-      hasBrownVariant: true
+      hasBrownVariant: false
     wheat:
       quantity: 19
       inRows: true
@@ -343,6 +344,6 @@ class PlantEngine
       maximumPrecipitation: 450
       isAffectedByPoorWaterAfterPlanting: false
       mortalityInPoorWater: 0.5
-      shapes: ["wheat1"]
+      shapes: ["wheat1","wheat2"]
 
 window.PlantEngine = PlantEngine
