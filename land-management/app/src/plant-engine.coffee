@@ -287,7 +287,8 @@ class PlantEngine
         # while conservative tilled maintains current quality levels
         if intensive[zone] then quality -= 0.02
       else if managementPlan[zone] is "bare"
-        # hold soil quality steady
+        # quality decreases most rapidly of all
+        quality -= 0.03
       else
         quality += 0.01
       quality = Math.max(Math.min(quality, 2), 0)
