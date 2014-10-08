@@ -784,7 +784,7 @@ ErosionEngine = (function() {
   ErosionEngine.prototype._calculateSkyColor = function(y) {
     var pct, result;
     pct = 1 - (y - this.patches.minY) / (this.patches.maxY - this.patches.minY);
-    return result = [pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[0], pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[1], pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[2]];
+    return result = [pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[0], pct * SKY_COLOR_CHANGE[1] + SKY_TOP_COLOR[1], pct * SKY_COLOR_CHANGE[2] + SKY_TOP_COLOR[2]];
   };
 
   return ErosionEngine;
@@ -905,7 +905,7 @@ LandGenerator = (function() {
   LandGenerator.prototype._calculateSkyColor = function(y) {
     var pct, result;
     pct = 1 - (y - this.patches.minY) / (this.patches.maxY - this.patches.minY);
-    return result = [pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[0], pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[1], pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[2]];
+    return result = [pct * SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[0], pct * SKY_COLOR_CHANGE[1] + SKY_TOP_COLOR[1], pct * SKY_COLOR_CHANGE[2] + SKY_TOP_COLOR[2]];
   };
 
   return LandGenerator;
