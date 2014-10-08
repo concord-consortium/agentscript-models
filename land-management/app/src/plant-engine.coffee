@@ -24,6 +24,7 @@ class PlantEngine
     @addImage "wheat1", "wheat-1-sprite", 16, 84
     @addImage "wheat2", "wheat-2-sprite", 16, 84
 
+    @soilQuality = [1,1]
 
   addImage: (name, id, width, height, scale) ->
     image = document.getElementById(id)
