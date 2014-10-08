@@ -388,7 +388,7 @@ TOP_LAND_COLOR = [60, 51, 47];
 
 BASE_LAND_COLOR = [211, 109, 62];
 
-TERRACE_COLOR = [60, 60, 60];
+TERRACE_COLOR = [87, 94, 97];
 
 MEDIUM_SOIL_COLOR = [135, 79, 49];
 
@@ -807,7 +807,7 @@ TOP_LAND_COLOR = [60, 51, 47];
 
 BASE_LAND_COLOR = [211, 109, 62];
 
-TERRACE_COLOR = [60, 60, 60];
+TERRACE_COLOR = [87, 94, 97];
 
 SKY = "sky";
 
@@ -1068,7 +1068,8 @@ PlantEngine = (function() {
     this.addImage("grass1", "grass-1-sprite", 15, 45);
     this.addImage("grass2", "grass-2-sprite", 11, 45);
     this.addImage("wheat1", "wheat-1-sprite", 16, 84);
-    return this.addImage("wheat2", "wheat-2-sprite", 16, 84);
+    this.addImage("wheat2", "wheat-2-sprite", 16, 84);
+    return this.soilQuality = [1, 1];
   };
 
   PlantEngine.prototype.addImage = function(name, id, width, height, scale) {
