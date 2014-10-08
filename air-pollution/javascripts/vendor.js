@@ -38357,7 +38357,8 @@ $.widget( "ui.tooltip", {
       ctx.canvas.height = this.world.height;
       ctx.save();
       ctx.scale(this.world.size, -this.world.size);
-      return ctx.translate(-(this.world.minX - .5), -(this.world.maxY + .5));
+      ctx.translate(-(this.world.minX - .5), -(this.world.maxY + .5));
+      return ctx.msImageSmoothingEnabled = false;
     };
 
     Model.prototype.setFastPatches = function() {

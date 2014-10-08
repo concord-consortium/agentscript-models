@@ -1847,6 +1847,7 @@ class ABM.Model
     ctx.save()
     ctx.scale @world.size, -@world.size
     ctx.translate -(@world.minX-.5), -(@world.maxY+.5)
+    ctx.msImageSmoothingEnabled = false
   
 
 #### Optimizations:
