@@ -95,9 +95,8 @@ class LandGenerator
 
     result = [
       pct*SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[0],
-      pct*SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[1],
-      pct*SKY_COLOR_CHANGE[0] + SKY_TOP_COLOR[2]
+      pct*SKY_COLOR_CHANGE[1] + SKY_TOP_COLOR[1],
+      pct*SKY_COLOR_CHANGE[2] + SKY_TOP_COLOR[2]
     ]
-
 
 window.LandGenerator = LandGenerator
