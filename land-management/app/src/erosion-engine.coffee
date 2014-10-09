@@ -59,7 +59,7 @@ class ErosionEngine
         (p = p.n[6]) while p.type is LAND and p.n[6]?.type is LAND
       else
         y = @patches.maxY
-        y-- while (p = @patches.patch(x, y)).type isnt LAND and y > @patches.minY
+        y-- while (p = @patches.patchXY(x, y)).type isnt LAND and y > @patches.minY
       @_lastKnownSurface[x-@patches.minX] = p
 
     @_lastKnownSurface
@@ -280,10 +280,10 @@ class ErosionEngine
     leftHeight  = bottom
     rightHeight = bottom
 
-    while leftHeight < top and @patches.patch(leftEdge, leftHeight).type is LAND
+    while leftHeight < top and @patches.patchXY(leftEdge, leftHeight).type is LAND
       leftHeight++
 
-    while rightHeight < top and @patches.patch(rightEdge, rightHeight).type is LAND
+    while rightHeight < top and @patches.patchXY(rightEdge, rightHeight).type is LAND
       rightHeight++
 
     slope = (rightHeight - leftHeight) / (rightEdge - leftEdge)
