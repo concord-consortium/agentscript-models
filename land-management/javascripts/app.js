@@ -459,7 +459,7 @@ ErosionEngine = (function() {
         }
       } else {
         y = this.patches.maxY;
-        while ((p = this.patches.patch(x, y)).type !== LAND && y > this.patches.minY) {
+        while ((p = this.patches.patchXY(x, y)).type !== LAND && y > this.patches.minY) {
           y--;
         }
       }
@@ -669,10 +669,10 @@ ErosionEngine = (function() {
     _ref = this.getBoxAroundPoint(x, y, 3, 5), leftEdge = _ref[0], rightEdge = _ref[1], top = _ref[2], bottom = _ref[3];
     leftHeight = bottom;
     rightHeight = bottom;
-    while (leftHeight < top && this.patches.patch(leftEdge, leftHeight).type === LAND) {
+    while (leftHeight < top && this.patches.patchXY(leftEdge, leftHeight).type === LAND) {
       leftHeight++;
     }
-    while (rightHeight < top && this.patches.patch(rightEdge, rightHeight).type === LAND) {
+    while (rightHeight < top && this.patches.patchXY(rightEdge, rightHeight).type === LAND) {
       rightHeight++;
     }
     return slope = (rightHeight - leftHeight) / (rightEdge - leftEdge);
@@ -969,6 +969,7 @@ LandManagementModel = (function(_super) {
   LandManagementModel.prototype.setup = function() {
     this.setFastPatches();
     this.anim.setRate(100, true);
+    this.anim.setDrawRate(30);
     this.setCacheAgentsHere();
     this.setupLand();
     this.setupPlants();
