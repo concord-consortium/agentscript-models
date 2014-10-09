@@ -75,7 +75,9 @@ class AirPollutionModel extends ABM.Model
 
     @setCacheAgentsHere()
 
-    factoryImg = document.getElementById('factory-sprite')
+    factoryImg = new Image()
+    factoryImg.src = 'img/air-pollution-factory.png'
+    factoryImg.onload = => @anim.draw()
 
     ABM.shapes.add "factory", false, (ctx) =>
       ctx.scale 1, -1
@@ -278,7 +280,7 @@ class AirPollutionModel extends ABM.Model
 
     @factories.create @maxNumFactories, (f) =>
       pos = @FACTORY_SPAWN_POS[@factories.length-1]
-      f.moveTo @patches.patchXY pos.x, pos.y
+      f.moveTo @patches.patchXY(pos.x, pos.y)
       f.size = pos.size
       f.createTick = @anim.ticks || 0
 
