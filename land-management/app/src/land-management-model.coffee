@@ -19,6 +19,7 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
   setup: ->
     @setFastPatches()
     @anim.setRate 100, true
+    @anim.setDrawRate 30
 
     @setCacheAgentsHere()
     @setupLand()
