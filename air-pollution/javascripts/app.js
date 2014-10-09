@@ -557,7 +557,13 @@ AirPollutionModel = (function(_super) {
     })(this));
     this.patches.importDrawing("img/air-pollution-bg.png");
     this.setCacheAgentsHere();
-    factoryImg = document.getElementById('factory-sprite');
+    factoryImg = new Image();
+    factoryImg.src = 'img/air-pollution-factory.png';
+    factoryImg.onload = (function(_this) {
+      return function() {
+        return _this.anim.draw();
+      };
+    })(this);
     ABM.shapes.add("factory", false, (function(_this) {
       return function(ctx) {
         ctx.scale(1, -1);
