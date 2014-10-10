@@ -5,12 +5,11 @@ mixOf = (base, mixins...) ->
       Mixed::[name] = method
   Mixed
 
-
 class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine, PlantEngine
 
-  dateString: 'Jan 2013'
-  initialYear: 2013
-  year: 2013
+  dateString: 'Jan ' + (new Date().getFullYear())
+  initialYear: new Date().getFullYear()
+  year: new Date().getFullYear()
   month: 0
   monthLength: 100
   monthStrings: "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ")

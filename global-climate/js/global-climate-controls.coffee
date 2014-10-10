@@ -244,14 +244,14 @@ setupGraphs = ->
       title:  title
       xlabel: "Time (year)"
       ylabel: "Temperature (°C)"
-      xmax:   2020
-      xmin:   2013
+      xmax:   new Date().getFullYear() + 7
+      xmin:   new Date().getFullYear()
       ymax:   ymax
       ymin:   ymin
       xTickCount: 4
       yTickCount: 5
       xFormatter: "d"
-      dataSampleStart: 2013
+      dataSampleStart: new Date().getFullYear()
       sampleInterval: 1/300
       realTime: true
       fontScaleRelativeToParent: true
@@ -275,14 +275,14 @@ setupGraphs = ->
         title:  title
         xlabel: "Time (year)"
         ylabel: "Concentration"
-        xmax:   2020
-        xmin:   2013
+        xmax:   new Date().getFullYear() + 7
+        xmin:   new Date().getFullYear()
         ymax:   ymax
         ymin:   0
         xTickCount: 4
         yTickCount: 5
         xFormatter: "d"
-        dataSampleStart: 2013
+        dataSampleStart: new Date().getFullYear()
         sampleInterval: 1/300
         realTime: true
         fontScaleRelativeToParent: true
