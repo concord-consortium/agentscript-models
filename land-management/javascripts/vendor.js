@@ -36885,6 +36885,9 @@ $.widget( "ui.tooltip", {
     isString: function(obj) {
       return !!(obj === '' || (obj && obj.charCodeAt && obj.substr));
     },
+    isEarlyIE: function() {
+      return navigator.appVersion.indexOf("MSIE 9") !== -1 || navigator.appVersion.indexOf("MSIE 10") !== -1;
+    },
     randomInt: function(max) {
       return Math.floor(Math.random() * max);
     },
@@ -37851,11 +37854,21 @@ $.widget( "ui.tooltip", {
     __extends(AgentSet, _super);
 
     AgentSet.asSet = function(a, setType) {
-      var _ref;
+      var prop, proto, _ref;
       if (setType == null) {
         setType = ABM.AgentSet;
       }
-      a.__proto__ = (_ref = setType.prototype) != null ? _ref : setType.constructor.prototype;
+      proto = (_ref = setType.prototype) != null ? _ref : setType.constructor.prototype;
+      if (Object.setPrototypeOf != null) {
+        a = Object.setPrototypeOf(a, proto);
+      } else {
+        a.__proto__ = proto;
+        if (ABM.util.isEarlyIE()) {
+          for (prop in proto) {
+            a[prop] = proto[prop];
+          }
+        }
+      }
       return a;
     };
 

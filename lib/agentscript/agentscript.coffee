@@ -48,7 +48,10 @@ ABM.util = u =
     !!(obj and obj.constructor and obj.call and obj.apply)
   isString: (obj) -> 
     !!(obj is '' or (obj and obj.charCodeAt and obj.substr))
-  
+  isEarlyIE: ->
+    return navigator.appVersion.indexOf("MSIE 9") isnt -1 or
+           navigator.appVersion.indexOf("MSIE 10") isnt -1
+
 # ### Numeric Operations
 
   # Return random int in [0,max) or [min,max)
@@ -706,7 +709,16 @@ class ABM.AgentSet extends Array
   #     ABM.AgentSet.asSet(evens)
   #     randomEven = evens.oneOf()
   @asSet: (a, setType = ABM.AgentSet) ->
-    a.__proto__ = setType.prototype ? setType.constructor.prototype # setType.__proto__
+    proto = setType.prototype ? setType.constructor.prototype # setType.__proto__
+    if Object.setPrototypeOf?
+      a = Object.setPrototypeOf a, proto
+    else
+      a.__proto__ = proto
+      if ABM.util.isEarlyIE()
+        # IE 9/10 fix - copy object methods from the protype to the new object, since
+        # __proto__ doesn't work.
+        for prop of proto
+          a[prop] = proto[prop]
     a
 
   

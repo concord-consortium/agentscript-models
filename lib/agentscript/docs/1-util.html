@@ -188,7 +188,10 @@ See <a href="http://goo.gl/L0umK">underscore.coffee</a></p>
   <span class="hljs-attribute">isFunction</span>: <span class="hljs-function"><span class="hljs-params">(obj)</span> -&gt;</span> 
     !!(obj <span class="hljs-keyword">and</span> obj.constructor <span class="hljs-keyword">and</span> obj.call <span class="hljs-keyword">and</span> obj.apply)
   <span class="hljs-attribute">isString</span>: <span class="hljs-function"><span class="hljs-params">(obj)</span> -&gt;</span> 
-    !!(obj <span class="hljs-keyword">is</span> <span class="hljs-string">''</span> <span class="hljs-keyword">or</span> (obj <span class="hljs-keyword">and</span> obj.charCodeAt <span class="hljs-keyword">and</span> obj.substr))</pre></div></div>
+    !!(obj <span class="hljs-keyword">is</span> <span class="hljs-string">''</span> <span class="hljs-keyword">or</span> (obj <span class="hljs-keyword">and</span> obj.charCodeAt <span class="hljs-keyword">and</span> obj.substr))
+  <span class="hljs-attribute">isEarlyIE</span>:<span class="hljs-function"> -&gt;</span>
+    <span class="hljs-keyword">return</span> navigator.appVersion.indexOf(<span class="hljs-string">"MSIE 9"</span>) <span class="hljs-keyword">isnt</span> -<span class="hljs-number">1</span> <span class="hljs-keyword">or</span>
+           navigator.appVersion.indexOf(<span class="hljs-string">"MSIE 10"</span>) <span class="hljs-keyword">isnt</span> -<span class="hljs-number">1</span></pre></div></div>
             
         </li>
         

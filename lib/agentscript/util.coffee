@@ -48,7 +48,10 @@ ABM.util = u =
     !!(obj and obj.constructor and obj.call and obj.apply)
   isString: (obj) -> 
     !!(obj is '' or (obj and obj.charCodeAt and obj.substr))
-  
+  isEarlyIE: ->
+    return navigator.appVersion.indexOf("MSIE 9") isnt -1 or
+           navigator.appVersion.indexOf("MSIE 10") isnt -1
+
 # ### Numeric Operations
 
   # Return random int in [0,max) or [min,max)

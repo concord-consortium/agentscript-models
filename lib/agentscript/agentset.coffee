@@ -35,7 +35,16 @@ class ABM.AgentSet extends Array
   #     ABM.AgentSet.asSet(evens)
   #     randomEven = evens.oneOf()
   @asSet: (a, setType = ABM.AgentSet) ->
-    a.__proto__ = setType.prototype ? setType.constructor.prototype # setType.__proto__
+    proto = setType.prototype ? setType.constructor.prototype # setType.__proto__
+    if Object.setPrototypeOf?
+      a = Object.setPrototypeOf a, proto
+    else
+      a.__proto__ = proto
+      if ABM.util.isEarlyIE()
+        # IE 9/10 fix - copy object methods from the protype to the new object, since
+        # __proto__ doesn't work.
+        for prop of proto
+          a[prop] = proto[prop]
     a
 
   
