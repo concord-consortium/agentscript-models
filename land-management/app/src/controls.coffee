@@ -131,6 +131,46 @@ autoscaleBoth = do ->
       autoscaling = false
 
 setupGraphs = ->
+  # Called by appendKeyToGraph to draw the actual lines
+  drawKey = (canvas, labelInfo) ->
+    # center the lines verticaly
+    y = 0.5 * (canvas.height - 20 * (labelInfo.length - 1))
+    ctx = canvas.getContext '2d'
+    ctx.fillStyle = 'black'
+    ctx.font = '12px "Helvetica Neue", Helvetica, sans-serif'
+    ctx.lineWidth = 2
+    for label in labelInfo
+      ctx.strokeStyle = "rgb(#{label.color.join(',')})"
+      ctx.beginPath()
+      ctx.moveTo 10, y
+      ctx.lineTo 60, y
+      ctx.stroke()
+      ctx.fillText label.label, 70, y + 3
+      y += 20
+
+  # add a link that, when clicked, pops up a non-modal, draggable canvas element
+  # that shows labeled lines for the different sample types used by the specified graph.
+  appendKeyToGraph = (graphId, top, labelInfo, keyId = null) ->
+    $graph = $ "##{graphId}"
+    keyId ||= "#{graphId}-key"
+    $graph.append '<a href="#" class="show-key">show key</a>'
+    $graph.find('.show-key').click ->
+      unless $("##{keyId}").length > 0
+        $key = $("<div id=\"#{keyId}\" class=\"key\"><a class=\"icon-remove-sign icon-large\"></a><canvas></canvas></div>").appendTo($(document.body)).draggable()
+        canvas = $key.find('canvas')[0]
+        $key.height 18 * (labelInfo.length + 1)
+        canvas.height = $key.outerHeight()
+        canvas.width = $key.outerWidth()
+        drawKey $key.find('canvas')[0], labelInfo
+
+      $key = $ "##{keyId}"
+      $key.css
+        left: '430px',
+        top: "#{top}px"
+      .show()
+      .on 'click', 'a', ->
+        $(this).parent().hide()
+
   if $('#erosion-graph').length
 
     erosionGraph = LabGrapher('#erosion-graph',
@@ -155,6 +195,11 @@ setupGraphs = ->
       ]
     )
 
+    appendKeyToGraph 'erosion-graph', 10, [
+      { color: DARK_BLUE, label: "Zone 1" },
+      { color: DARK_GREEN, label: "Zone 2" }
+    ], "zone-key"
+
   if $('#topsoil-count-graph').length
     topsoilCountGraph = LabGrapher('#topsoil-count-graph',
       title:  "Amount of Topsoil in Zone"
@@ -177,6 +222,11 @@ setupGraphs = ->
         DARK_GREEN
       ]
     )
+
+    appendKeyToGraph 'topsoil-count-graph', 10, [
+      { color: DARK_BLUE, label: "Zone 1" },
+      { color: DARK_GREEN, label: "Zone 2" }
+    ], "zone-key"
 
 do ->
   # simple exponential smoothing with alpha = 0.3
