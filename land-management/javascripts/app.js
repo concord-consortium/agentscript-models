@@ -301,14 +301,14 @@ setupGraphs = function() {
       title: "Erosion Rates",
       xlabel: "Time (year)",
       ylabel: "Monthly Erosion",
-      xmax: 2020,
-      xmin: 2013,
+      xmax: new Date().getFullYear() + 7,
+      xmin: new Date().getFullYear(),
       ymax: 100,
       ymin: 0,
       xTickCount: 4,
       yTickCount: 5,
       xFormatter: "d",
-      dataSampleStart: 2013,
+      dataSampleStart: new Date().getFullYear(),
       sampleInterval: 1 / 60,
       realTime: true,
       fontScaleRelativeToParent: true,
@@ -321,14 +321,14 @@ setupGraphs = function() {
       title: "Amount of Topsoil in Zone",
       xlabel: "Time (year)",
       ylabel: "Amount of Topsoil",
-      xmax: 2020,
-      xmin: 2013,
+      xmax: new Date().getFullYear() + 7,
+      xmin: new Date().getFullYear(),
       ymax: 1000,
       ymin: 0,
       xTickCount: 4,
       yTickCount: 5,
       xFormatter: "d",
-      dataSampleStart: 2013,
+      dataSampleStart: new Date().getFullYear(),
       sampleInterval: 1 / 60,
       realTime: true,
       fontScaleRelativeToParent: true,
@@ -952,11 +952,11 @@ LandManagementModel = (function(_super) {
     return LandManagementModel.__super__.constructor.apply(this, arguments);
   }
 
-  LandManagementModel.prototype.dateString = 'Jan 2013';
+  LandManagementModel.prototype.dateString = 'Jan ' + (new Date().getFullYear());
 
-  LandManagementModel.prototype.initialYear = 2013;
+  LandManagementModel.prototype.initialYear = new Date().getFullYear();
 
-  LandManagementModel.prototype.year = 2013;
+  LandManagementModel.prototype.year = new Date().getFullYear();
 
   LandManagementModel.prototype.month = 0;
 
