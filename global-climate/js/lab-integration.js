@@ -54,13 +54,24 @@
       }
     });
 
+    function getOutputs() {
+      return {
+        year: model.getFractionalYear(),
+        temperatureChange: model.getTemperature(),
+        co2Concentration: model.getCO2Count()
+      };
+    }
+
+    // Set initial output values.
+    phone.post('outputs', getOutputs());
+
     model.stepCallback = function() {
+      // We could also write:
+      // phone.post('outputs', { ... });
+      // phone.post('tick');
+      // However Lab supports outputs in 'tick' handler too, so we can send only one message.
       phone.post('tick', {
-        properties: {
-          year: model.getFractionalYear(),
-          temperatureChange: model.getTemperature(),
-          co2Concentration: model.getCO2Count()
-        }
+        outputs: getOutputs()
       });
     };
 
