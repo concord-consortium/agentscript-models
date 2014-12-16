@@ -7,50 +7,66 @@
   window.setupLabCommunication = function(model) {
     var phone = iframePhone.getIFrameEndpoint();
 
-    phone.addListener('play', function() {
+    // Register Scripting API functions.
+    function registerModelFunc(name) {
+      phone.addListener(name, function() {
+        model[name]();
+      });
+      phone.post('registerScriptingAPIFunc', name);
+    }
+
+    function registerCustomFunc(name, func) {
+      phone.addListener(name, func);
+      phone.post('registerScriptingAPIFunc', name);
+    }
+
+    registerCustomFunc('play', function() {
       model.start();
       // Notify iframe model that we received 'play' message and reacted appropriately.
       phone.post('play.iframe-model');
     });
-    phone.post('registerScriptingAPIFunc', 'play');
-
-    phone.addListener('stop', function() {
+    registerCustomFunc('stop', function() {
       model.stop();
       // Notify iframe model that we received 'stop' message and reacted appropriately.
       phone.post('stop.iframe-model');
     });
-    phone.post('registerScriptingAPIFunc', 'stop');
+    registerModelFunc('addCO2');
+    registerModelFunc('subtractCO2')
+    registerModelFunc('addCloud');
+    registerModelFunc('subtractCloud');
+    registerModelFunc('erupt');
+    registerModelFunc('addSunraySpotlight');
+    registerModelFunc('addCO2Spotlight');
+    registerModelFunc('removeSpotlight');
 
-    phone.addListener('addCO2', function() {
-      model.addCO2();
-    });
-    phone.post('registerScriptingAPIFunc', 'addCO2');
-
-    phone.addListener('removeCO2', function() {
-      model.subtractCO2();
-    });
-    phone.post('registerScriptingAPIFunc', 'removeCO2');
-
-    phone.addListener('addCloud', function() {
-      model.addCloud();
-    });
-    phone.post('registerScriptingAPIFunc', 'addCloud');
-
-    phone.addListener('removeCloud', function() {
-      model.subtractCloud();
-    });
-    phone.post('registerScriptingAPIFunc', 'removeCloud');
-
-    phone.addListener('erupt', function() {
-      model.erupt();
-    });
-    phone.post('registerScriptingAPIFunc', 'erupt');
-
+    // Properties.
     phone.addListener('set', function (content) {
-      if (content.name === 'albedo') {
-        model.setAlbedo(content.value);
-      } else if (content.name === 'sunBrightness') {
-        model.setSunBrightness(content.value);
+      switch(content.name) {
+        case 'albedo':
+          model.setAlbedo(content.value);
+          break;
+        case 'sunBrightness':
+          model.setSunBrightness(content.value);
+          break;
+        case 'animRate':
+          model.anim.setRate(content.value, false);
+          break;
+        case 'showGases':
+          model.showGases(content.value);
+          break;
+        case 'showRays':
+          model.showRays(content.value);
+          break;
+        case 'showHeat':
+          model.showHeat(content.value);
+          break;
+        case 'hide90':
+          if (content.value) {
+            model.hide90();
+          } else {
+            model.showAll();
+          }
+          break;
       }
     });
 
@@ -77,6 +93,4 @@
 
     phone.initialize();
   };
-
 }());
-
