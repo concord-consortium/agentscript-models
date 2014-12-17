@@ -70,7 +70,10 @@
       return {
         year: model.getFractionalYear(),
         temperatureChange: model.getTemperature(),
-        co2Concentration: model.getCO2Count()
+        co2Concentration: model.getCO2Count(),
+        // Spotlight may be automatically deactivated when an observed agent leaves the model.
+        // Notify Lab model about that using output.
+        spotlightActive: !!climateModel.spotlightAgent
       };
     }
 
