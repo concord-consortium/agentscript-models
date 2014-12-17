@@ -38,9 +38,12 @@
     registerModelFunc('addSunraySpotlight');
     registerModelFunc('addCO2Spotlight');
     registerModelFunc('removeSpotlight');
+    registerModelFunc('hide90');
+    registerModelFunc('showAll');
 
     // Properties.
     phone.addListener('set', function (content) {
+      var spotlight = null;
       switch(content.name) {
         case 'albedo':
           model.setAlbedo(content.value);
@@ -59,13 +62,6 @@
           break;
         case 'showHeat':
           model.showHeat(content.value);
-          break;
-        case 'hide90':
-          if (content.value) {
-            model.hide90();
-          } else {
-            model.showAll();
-          }
           break;
       }
     });
