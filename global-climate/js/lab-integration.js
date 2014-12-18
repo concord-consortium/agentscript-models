@@ -10,7 +10,8 @@
     // Register Scripting API functions.
     function registerModelFunc(name) {
       phone.addListener(name, function() {
-        model[name]();
+        model[name].apply(model, arguments);
+        model.draw();
       });
       phone.post('registerScriptingAPIFunc', name);
     }
@@ -30,6 +31,8 @@
       // Notify iframe model that we received 'stop' message and reacted appropriately.
       phone.post('stop.iframe-model');
     });
+    registerModelFunc('createCO2');
+    registerModelFunc('createVapor');
     registerModelFunc('addCO2');
     registerModelFunc('subtractCO2')
     registerModelFunc('addCloud');
@@ -63,19 +66,46 @@
         case 'showHeat':
           model.showHeat(content.value);
           break;
+        case 'keyLabels':
+          model.restrictKeyLabelsTo = content.value;
+          break;
+        case 'includeWaterVapor':
+          model.setIncludeWaterVapor(content.value);
+          break;
+        case 'oceanAbsorbtionChangable':
+          model.setOceanAbsorbtionChangable(content.value);
+          break;
+        case 'useFixedTemperature':
+          model.setUseFixedTemperature(content.value);
+          break;
+        case 'fixedTemperature':
+          model.setFixedTemperature(content.value);
+          break;
+        case 'oceanTemperature':
+          model.oceanTemperature = content.value;
+          break;
+        case 'nCO2Emission':
+          model.nCO2Emission = content.value;
+          break;
+        case 'vaporPerDegreeModifier':
+          model.vaporPerDegreeModifier = content.value;
+          break;
       }
     });
 
-    function getOutputs() {
-      return {
-        year: model.getFractionalYear(),
-        temperatureChange: model.getTemperature(),
-        co2Concentration: model.getCO2Count(),
-        // Spotlight may be automatically deactivated when an observed agent leaves the model.
-        // Notify Lab model about that using output.
-        spotlightActive: !!climateModel.spotlightAgent
+    var getOutputs = (function(argument) {
+      var _initialTemperature = model.getTemperature();
+      return function getOutputs() {
+        return {
+          year: model.getFractionalYear(),
+          temperatureChange: model.getTemperature() - _initialTemperature,
+          co2Concentration: model.getCO2Count(),
+          // Spotlight may be automatically deactivated when an observed agent leaves the model.
+          // Notify Lab model about that using output.
+          spotlightActive: !!climateModel.spotlightAgent
+        };
       };
-    }
+    }());
 
     // Set initial output values.
     phone.post('outputs', getOutputs());
