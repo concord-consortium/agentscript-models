@@ -31,12 +31,20 @@
       // Notify iframe model that we received 'stop' message and reacted appropriately.
       phone.post('stop.iframe-model');
     });
+    registerCustomFunc('step', function(content) {
+      var steps = content;
+      while (steps--) model.step();
+      model.draw()
+    });
     registerModelFunc('createCO2');
     registerModelFunc('createVapor');
     registerModelFunc('addCO2');
     registerModelFunc('subtractCO2')
     registerModelFunc('addCloud');
     registerModelFunc('subtractCloud');
+    registerModelFunc('updateVapor');
+    registerModelFunc('updateClouds');
+    registerModelFunc('updateIce');
     registerModelFunc('erupt');
     registerModelFunc('addSunraySpotlight');
     registerModelFunc('addCO2Spotlight');
@@ -48,12 +56,17 @@
     // initialTemperature property is used to calculate temperature change outputs (see below).
     var initialTemperature = model.getTemperature();
     phone.addListener('set', function (content) {
-      var spotlight = null;
       switch(content.name) {
         // Due to async nature of iframe communication, Lab needs to setup initial temperature explicitly
         // if it also changes temperatue (e.g. fixedTemperature property) during initial setup.
         case 'initialTemperature':
           initialTemperature = content.value;
+          break;
+        case 'temperature':
+          model.temperature = content.value;
+          break;
+        case 'temperaturePerHeat':
+          model.temperaturePerHeat = content.value;
           break;
         case 'albedo':
           model.setAlbedo(content.value);
@@ -82,6 +95,9 @@
         case 'oceanAbsorbtionChangable':
           model.setOceanAbsorbtionChangable(content.value);
           break;
+        case 'oceanCO2Absorbtion':
+          model.oceanCO2Absorbtion = content.value;
+          break;
         case 'useFixedTemperature':
           model.setUseFixedTemperature(content.value);
           break;
@@ -94,8 +110,23 @@
         case 'nCO2Emission':
           model.nCO2Emission = content.value;
           break;
+        case 'humanEmissionRate':
+          model.setHumanEmissionRate(content.value);
+          break;
         case 'vaporPerDegreeModifier':
           model.vaporPerDegreeModifier = content.value;
+          break;
+        case 'cloudsFormedByVapor':
+          model.cloudsFormedByVapor = content.value;
+          break;
+        case 'icePercent':
+          model.setIcePercent(content.value);
+          break;
+        case 'iceFormedByTemperature':
+          model.iceFormedByTemperature = content.value;
+          break;
+        case 'oceanZeroAbsorbtionTemp':
+          model.oceanZeroAbsorbtionTemp = content.value;
           break;
       }
     });
