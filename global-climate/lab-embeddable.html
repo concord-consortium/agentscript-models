@@ -24,16 +24,33 @@
     <script src="//lab.concord.org/vendor/d3/d3.js"></script>
     <script src="../lib/iframe-phone/dist/iframe-phone.js"></script>
     <script type="text/coffeescript" src="js/global-climate-model.coffee"></script>
+    <script type="text/coffeescript" src="js/global-climate-model-ocean.coffee"></script>
     <script type="text/coffeescript" src="js/global-climate-controls.coffee"></script>
     <script src="js/lab-integration.js"></script>
     <script type="text/javascript">
       var modelLoaded = $.Deferred();
+      var oceanModelLoaded = $.Deferred();
       var controlsLoaded = $.Deferred();
+
+      function hashParam(name) {
+        var hash = document.location.hash.substring(1); // rm #
+        var result = null;
+        if (hash === "") return null;
+        hash.split("&").forEach(function (prop) {
+          var nameValue = prop.split("=");
+          if (nameValue[0] == name) result = nameValue[1];
+        });
+        return result;
+      }
 
       // modelLoaded is resolved when global-climate-model.coffee is compiled and evaluated. Until
       // then, ClimateModel is undefined.
       $.when(modelLoaded, controlsLoaded).done(function() {
-        climateModel = new ClimateModel("layers", 12, -24, 24, -15, 15, true);
+        if (hashParam("ocean")) {
+          climateModel = new OceanClimateModel("layers", 12, -24, 24, -15, 15, true);
+        } else {
+          climateModel = new ClimateModel("layers", 12, -24, 24, -15, 15, true);
+        }
         setupLabCommunication(climateModel);
 
         setFullScreen();
@@ -53,6 +70,7 @@
       <img id="factory-sprite" src="img/climate_factory.png" />
       <img id="volcano-sprite" src="img/climate_volcano.png" />
       <img id="cloud-sprite-1" src="img/climate_cloud_01.png" />
+      <img id="iceberg-sprite" src="img/climate_iceberg.png" />
     </div>
     <div id="content">
       <div id="model">
