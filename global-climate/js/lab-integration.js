@@ -45,9 +45,16 @@
     registerModelFunc('showAll');
 
     // Properties.
+    // initialTemperature property is used to calculate temperature change outputs (see below).
+    var initialTemperature = model.getTemperature();
     phone.addListener('set', function (content) {
       var spotlight = null;
       switch(content.name) {
+        // Due to async nature of iframe communication, Lab needs to setup initial temperature explicitly
+        // if it also changes temperatue (e.g. fixedTemperature property) during initial setup.
+        case 'initialTemperature':
+          initialTemperature = content.value;
+          break;
         case 'albedo':
           model.setAlbedo(content.value);
           break;
@@ -93,19 +100,20 @@
       }
     });
 
-    var getOutputs = (function(argument) {
-      var _initialTemperature = model.getTemperature();
-      return function getOutputs() {
-        return {
-          year: model.getFractionalYear(),
-          temperatureChange: model.getTemperature() - _initialTemperature,
-          co2Concentration: model.getCO2Count(),
-          // Spotlight may be automatically deactivated when an observed agent leaves the model.
-          // Notify Lab model about that using output.
-          spotlightActive: !!climateModel.spotlightAgent
-        };
+    function getOutputs() {
+      return {
+        year: model.getFractionalYear(),
+        temperatureChange: model.getTemperature() - initialTemperature,
+        oceanTemperatureChange: model.oceanTemperature - initialTemperature,
+        CO2Concentration: model.getCO2Count(),
+        airCO2Concentration: model.getAtmosphereCO2Count(),
+        oceanCO2Concentration: model.getOceanCO2Count(),
+        vaporConcentration: model.getVaporCount(),
+        // Spotlight may be automatically deactivated when an observed agent leaves the model.
+        // Notify Lab model about that using output.
+        spotlightActive: !!climateModel.spotlightAgent
       };
-    }());
+    }
 
     // Set initial output values.
     phone.post('outputs', getOutputs());
