@@ -6,6 +6,7 @@
 
   window.setupLabCommunication = function(model) {
     var phone = iframePhone.getIFrameEndpoint();
+    var isOceanModel = typeof(model.getOceanCO2Count) === 'function';
 
     // Register Scripting API functions.
     function registerModelFunc(name) {
@@ -132,19 +133,22 @@
     });
 
     function getOutputs() {
-      return {
+      var result = {
         year: model.getFractionalYear(),
         temperatureChange: model.getTemperature() - initialTemperature,
-        oceanTemperatureChange: model.oceanTemperature - initialTemperature,
         CO2Concentration: model.getCO2Count(),
-        airCO2Concentration: model.getAtmosphereCO2Count(),
-        oceanCO2Concentration: model.getOceanCO2Count(),
-        vaporConcentration: model.getVaporCount(),
         // Spotlight may be automatically deactivated when an observed agent leaves the model.
         // Notify Lab model about that using output.
         spotlightActive: !!climateModel.spotlightAgent
       };
-    }
+      if (isOceanModel) {
+        result.oceanTemperatureChange = model.oceanTemperature - initialTemperature;
+        result.airCO2Concentration = model.getAtmosphereCO2Count();
+        result.oceanCO2Concentration = model.getOceanCO2Count();
+        result.vaporConcentration = model.getVaporCount();
+      }
+      return result;
+    };
 
     // Set initial output values.
     phone.post('outputs', getOutputs());
