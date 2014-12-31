@@ -107,8 +107,8 @@ $(document).ready ->
       drawKey $key.find('canvas')[0]
 
     $key.css
-      left: '5em'
-      top: '5em'
+      left: '1.5em'
+      top: '2.5em'
     .show()
     .on 'click', 'a', -> $(this).parent().hide()
 
