@@ -18,6 +18,9 @@
         left: auto;
         right: 1.5em;
       }
+      body {
+        overflow: hidden;
+      }
     </style>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js"></script>
@@ -59,7 +62,8 @@
 
       function setFullScreen () {
         var windowWidth = $(window).innerWidth();
-        $("#layers canvas").width(windowWidth);
+        var windowHeight = $(window).innerHeight();
+        $("#layers canvas").width(windowWidth).height(windowHeight);
       }
     </script>
     <script src="//shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
