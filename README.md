@@ -37,6 +37,8 @@ Alternately, you can use the Ruby Rackup server in `local-server/` but this requ
 
 To view any of the individual Land Management or Air Pollution models, you first need to build the model using [Brunch](http://brunch.io/). First. `cd` to the root directory for the specific model type -- `land-management/` or `air-pollution/` -- and run `brunch build`, then serve files from the `public` directory _under_ the root directory for the specific model type -- _e.g._, `land-management/public/`. You can use `brunch watch` when in the root directory for the specific model to rerun the build step automatically whenever changes are made to the source files. You may want to ignore the public directories in your text editor so that you don't inadvertently edit built files instead of source files.
 
+Make sure that your `Brunch` version is **>= 1.7.20**! For example Brunch v1.7.19 was breaking the build system. Run `sudo npm install -g brunch` to install the latest available version.
+
 ## Deploying
 
 Then production version of these models are hosted at http://resources.models.concord.org/agentscript/index.html
