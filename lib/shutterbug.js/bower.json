@@ -1,0 +1,23 @@
+{
+  "name": "shutterbug",
+  "version": "0.5.4",
+  "homepage": "https://github.com/concord-consortium/shutterbug.js",
+  "authors": [
+    "Noah Paessel <npaessel@concord.org>",
+    "Piotr Janik <janikpiotrek@gmail.com>"
+  ],
+  "description": "Javascript library for facilitating rendering DOM components in rasterized form.",
+  "main": [
+    "dist/shutterbug.js"
+  ],
+  "ignore": [
+    "app",
+    "vendor",
+    "brunch-config.coffee",
+    "package.json"
+  ],
+  "dependencies": {
+    "jquery": ">= 1.10.1"
+  },
+  "overrides": {}
+}

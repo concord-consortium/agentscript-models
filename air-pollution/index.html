@@ -120,7 +120,6 @@
 
     <script src="javascripts/vendor.js"></script>
     <script src="javascripts/app.js"></script>
-    <script src="//shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
 
     <script>
       require('src/main');
@@ -129,7 +128,7 @@
       var controls = new AirPollutionControls();
       controls.setup();
 
-      new Shutterbug('body', '', null, null);
+      Shutterbug.enable('body');
     </script>
   </body>
 </html>

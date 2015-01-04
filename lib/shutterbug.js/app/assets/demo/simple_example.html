@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+  <head>
+      <title>demo</title>
+      <script type="text/javascript" src="../vendor.js"></script>
+      <script type="text/javascript" src="../shutterbug.js"></script>
+      <link rel="stylesheet" type="text/css" href="main.css"></link>
+      <style type="text/css">
+        #src {
+          color: red;
+        }
+        button {
+          display: block;
+          margin: 5px;
+          font-size: 16px;
+          font-family: monospace;
+        }
+      </style>
+  </head>
+
+  <body>
+    <div id="src">
+      testing..
+    </div>
+    <button class="shutterbug1">Shutterbug.snapshot("#src", "#dst");</button>
+    <button class="shutterbug2">Shutterbug.snapshot("#src", function(url) { alert(url); });</button>
+    <button class="shutterbug3">Shutterbug.snapshot("#src", {dstSelector: "#dst"});</button>
+    <button class="shutterbug4">Shutterbug.snapshot("#src", {done: function(url) { alert(url); }});</button>
+    <button class="shutterbug5">Shutterbug.snapshot({selector: "#src", dstSelector: "#dst"});</button>
+  <div id="dst">
+  </div>
+
+  </body>
+  <script type="text/javascript">
+    $(document).ready(function(e) {
+      $("button").click(function(e) {
+        eval($(e.target).text());
+      });
+    });
+  </script>
+</html>

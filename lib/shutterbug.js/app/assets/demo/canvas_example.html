@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+      <title>demo</title>
+      <script type="text/javascript" src="../vendor.js"></script>
+      <script type="text/javascript" src="../shutterbug.js"></script>
+      <link rel="stylesheet" type="text/css" href="main.css">
+  </head>
+
+  <body>
+    <div>
+      <canvas id="src" width="350" height="350"></canvas>
+    </div>
+    <button class="shutterbug" data-dst="#dst">Snapshot</button>
+    <div id="dst"></div>
+  </body>
+  <script type="text/javascript">
+    $(document).ready(function(e) {
+      var img = new Image();
+      img.onload = function () {
+        var ctx = $("canvas")[0].getContext("2d");
+        ctx.fillStyle = "green";
+        ctx.fillRect(0, 0, 350, 350);
+        ctx.fillStyle = "orange";
+        ctx.fillRect(10, 10, 330, 330);
+        ctx.drawImage(img, 20, 20, 310, 310);
+      };
+      img.src = "The_Scream.jpg";
+
+      $("button.shutterbug").click(function(e) {
+        Shutterbug.snapshot("#src", "#dst", {
+          format: "jpeg",
+          quality: 0.75,
+          done: function(src) {
+            console.log("done handler");
+            console.log(src);
+          },
+          always: function() {
+            console.log("always handler");
+          }
+        });
+      });
+    });
+  </script>
+</html>

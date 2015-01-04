@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+      <title>demo</title>
+      <script type="text/javascript" src="../vendor.js"></script>
+      <script type="text/javascript" src="../shutterbug.js"></script>
+      <link rel="stylesheet" type="text/css" href="main.css"></link>
+      <style type="text/css">
+        #src {
+          color: red;
+        }
+        button {
+          display: block;
+          margin: 5px;
+          font-size: 16px;
+          font-family: monospace;
+        }
+      </style>
+  </head>
+
+  <body>
+    <div>
+      <img src="http://upload.wikimedia.org/wikipedia/commons/2/2d/Snake_River_%285mb%29.jpg" id="src"/>
+      <p> 5MB Photograph By Adumbvoget (Own work) [Public domain], via Wikimedia Commons
+        <a href="http://http://commons.wikimedia.org/wiki/File:Snake_River_(5mb).jpg"> WikiMedia Commons </a>
+      </p>
+    <button class="shutterbug5">Shutterbug.snapshot({server: "//snapshotdev.concord.org/shutterbug", selector: "#src", dstSelector: "#dst"});</button>
+  <div id="dst">
+  </div>
+
+  </body>
+  <script type="text/javascript">
+    $(document).ready(function(e) {
+      $("button").click(function(e) {
+        eval($(e.target).text());
+      });
+    });
+  </script>
+</html>

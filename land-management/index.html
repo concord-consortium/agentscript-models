@@ -139,7 +139,6 @@
 
     <script src="javascripts/vendor.js"></script>
     <script src="javascripts/app.js"></script>
-    <script src="//shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
 
     <script>
       (function() {
@@ -148,8 +147,7 @@
         window.model = new LandManagementModel("layers", 2.75, -114, 114, -40, 40, false);
         initControls();
 
-        // Will fail if run offline, but that shouldn't be a problem.
-        new Shutterbug('body', '', null, null);
+        Shutterbug.enable('body');
       }());
     </script>
 

@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+      <title>demo</title>
+      <script type="text/javascript" src="../vendor.js"></script>
+      <script type="text/javascript" src="../shutterbug.js"></script>
+      <link rel="stylesheet" type="text/css" href="main.css">
+      <style type="text/css">
+        #src {
+          color: red;
+        }
+      </style>
+  </head>
+
+  <body>
+    <iframe id="src1" src="iframe.html" width="300" height="300"></iframe>
+    <button class="shutterbug1" data-dst="#dst">Snapshot</button>
+  <div id="dst1"></div>
+  <body>
+    <iframe id="src2" src="iframe2.html" width="300" height="300"></iframe>
+    <button class="shutterbug2" data-dst="#dst">Snapshot</button>
+  <div id="dst2"></div>
+
+  </body>
+  <script type="text/javascript">
+    $(document).ready(function(e) {
+      $("button.shutterbug1").click(function(e) {
+        Shutterbug.snapshot("#src1", "#dst1");
+      });
+      $("button.shutterbug2").click(function(e) {
+        Shutterbug.snapshot("#src2", "#dst2");
+      });
+    });
+  </script>
+</html>

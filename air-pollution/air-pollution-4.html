@@ -72,7 +72,6 @@
 
     <script src="javascripts/vendor.js"></script>
     <script src="javascripts/app.js"></script>
-    <script src="//shutterbug.herokuapp.com/shutterbug/shutterbug.js"></script>
 
     <script>
       require('src/main');
@@ -89,7 +88,7 @@
       controls.setup();
       $("#wind-slider").slider({ min: -30, max: 30, step:1 });
 
-      new Shutterbug('body', '', null, null);
+      Shutterbug.enable('body');
     </script>
 
   </body>
