@@ -7,3 +7,6 @@
 [submodule "lib/iframe-phone"]
 	path = lib/iframe-phone
 	url = https://github.com/concord-consortium/iframe-phone.git
+[submodule "lib/shutterbug.js"]
+	path = lib/shutterbug.js
+	url = https://github.com/concord-consortium/shutterbug.js.git
