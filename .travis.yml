@@ -1,4 +1,5 @@
 language: ruby
+sudo: false
 rvm:
 - 1.9.3
 script: mkdir -p deploy/agentscript && cp -r !(deploy) deploy/agentscript/
