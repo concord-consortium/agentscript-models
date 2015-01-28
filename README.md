@@ -41,7 +41,7 @@ Make sure that your `Brunch` version is **>= 1.7.20**! For example Brunch v1.7.1
 
 ## Deploying
 
-Then production version of these models are hosted at http://resources.models.concord.org/agentscript/index.html
+Then production version of these models are hosted at https://models-resources.concord.org/agentscript/index.html
 
 A development version can be found at this GitHub Pages site: http://concord-consortium.github.io/agentscript-models/
 
