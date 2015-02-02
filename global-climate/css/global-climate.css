@@ -1,4 +1,8 @@
-body { font: 13px "Helvetica Neue", Helvetica, sans-serif; }
+body {
+  font: 13px "Helvetica Neue", Helvetica, sans-serif;
+  background: #fff;
+}
+
 #content {
   margin: 0em;
   padding: 0em; }
