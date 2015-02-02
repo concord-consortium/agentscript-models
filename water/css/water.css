@@ -1,3 +1,7 @@
+body {
+  background: #fff;
+}
+
 #model {
   position: absolute;
   top: 5px;
