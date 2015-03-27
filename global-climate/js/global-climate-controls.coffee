@@ -274,7 +274,7 @@ setupGraphs = ->
     co2Graph = LabGrapher('#co2-graph',
         title:  title
         xlabel: "Time (year)"
-        ylabel: "Concentration"
+        ylabel: "Greenhouse gases in the model"
         xmax:   new Date().getFullYear() + 7
         xmin:   new Date().getFullYear()
         ymax:   ymax
