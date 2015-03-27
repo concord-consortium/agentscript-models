@@ -299,7 +299,19 @@ class OceanClimateModel extends ClimateModel
         if @nCO2Emission > Math.random()*3
           @createCO2 1, [surfacePatch.x, surfacePatch.y+1], Math.PI/2
 
+  #
+  # Sunlight
+  #
 
+  encounterEarth: ->
+    for a in @sunrays
+      if a? and a.y <= @earthTop
+        if ("#{a.p.color}" is "#{[255,255,255]}" and @iceAlbedo * 100 > u.randomInt(100)) or  # if ice
+           (a.x >= @oceanLeft and 70 > u.randomInt(100)) or                                   # or ocean (always has an albedo of 0.7)
+           (a.x < @oceanLeft and @albedo * 100 > u.randomInt(100))                            # or land
+          @reflectOffHorizontalPlane(a)
+        else
+          @transformToHeat(a)
 
   #
   # Water vapor
