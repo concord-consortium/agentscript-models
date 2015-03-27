@@ -30,6 +30,9 @@ class OceanClimateModel extends ClimateModel
     while @agents.length
       @agents[@agents.length - 1].die()
 
+    # make sure to clear out any co2 from the ocean floor
+    @_clearCtx @contexts.gases
+
     @agentBreeds "vapor"
 
     @vapor.setDefaultShape "circle"
@@ -62,6 +65,12 @@ class OceanClimateModel extends ClimateModel
     @createVapor(5) if @includeVapor
     @createHeat(23)
     @draw()
+
+  _clearCtx: (ctx) ->
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+    ctx.restore()
 
   backgroundImageUrls: ['img/earth.png', 'img/ground.png', 'img/sky.png', 'img/ocean.png']
 
