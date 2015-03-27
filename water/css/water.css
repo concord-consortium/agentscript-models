@@ -191,3 +191,17 @@ span.remove-option {
 *:focus {
   outline: none;
 }
+
+#cc-logo {
+  height: auto;
+  left: 660px;
+  position: absolute;
+  top: 270px;
+  width: 150px;
+}
+#cc-logo.low {
+  top: 320px;
+}
+#cc-logo.lower {
+  top: 480px;
+}

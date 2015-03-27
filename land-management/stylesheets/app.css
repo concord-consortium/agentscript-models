@@ -485,5 +485,12 @@ span.slider-value {
   top: 30px;
 }
 
+#cc-logo {
+  height: auto;
+  left: 790px;
+  position: absolute;
+  top: 512px;
+  width: 150px;
+}
 
 /*# sourceMappingURL=app.css.map*/

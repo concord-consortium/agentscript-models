@@ -209,6 +209,14 @@ body {
   outline: none;
 }
 
+#cc-logo {
+  height: auto;
+  left: 790px;
+  position: absolute;
+  top: 510px;
+  width: 150px;
+}
+
 #output-graphs {
   position: absolute;
   top: 6px;
