@@ -321,8 +321,10 @@ class OceanClimateModel extends ClimateModel
         if a.y <= (-14)
           a.heading = u.randomFloat2(0.1, Math.PI-0.1)
         if a.y <= @earthTop + 1
-          # bounce it off the surface
-          a.heading = Math.abs(a.heading - (2*Math.PI))
+          # bounce it off the surface, but not as a perfect reflection.
+          # use a weighted random, preferring to head straight up.
+          while a.heading < Math.PI/3 or a.heading > Math.PI*2/3
+            a.heading = u.randomNormal(Math.PI/2, Math.PI)
         if a.y >= @skyTop + 1
           a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
 
