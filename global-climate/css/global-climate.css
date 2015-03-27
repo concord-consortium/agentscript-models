@@ -361,6 +361,16 @@ a.show-agents-key:active {
   outline: none;
 }
 
+.disclaimer {
+  color: #666;
+  font-size: .9em;
+  font-style: italic;
+  left: 630px;
+  position: absolute;
+  text-align: right;
+  top: 413px;
+  width: 280px;
+  }
 #cc-logo {
   height: auto;
   left: 778px;
@@ -368,10 +378,19 @@ a.show-agents-key:active {
   top: 460px;
   width: 150px;
 }
-#cc-logo.low {
-  top: 550px;
-}
 #cc-logo.one-col {
   left: 447px;
   top: 475px;
+}
+#footer {
+  clear: both;
+  position: relative;
+}
+#footer .disclaimer {
+  left: 630px;
+  top: 1em;
+  }
+#footer #cc-logo {
+  left: 778px;
+  top: 4.5em;
 }
