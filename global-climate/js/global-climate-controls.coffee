@@ -145,8 +145,8 @@ $('#reset-button').click ->
   temperatureGraph.reset() if temperatureGraph?
   co2Graph.reset() if co2Graph?
   climateModel.setup()
-  $temperatureSlider.slider('value', initialTemperature) if $temperatureSlider
   modelSetup() if modelSetup
+  resetSliders()
 
 $('#add-co2-button').click ->
   climateModel.addCO2()
@@ -230,6 +230,14 @@ autoscaleBoth = do ->
       temperatureGraph?.autoscale()
       co2Graph?.autoscale()
       autoscaling = false
+
+resetSliders = ->
+  $albedoSlider.slider('value', climateModel.getAlbedo()) if $albedoSlider? and climateModel.getAlbedo?
+  $sunSlider.slider('value', climateModel.getSunBrightness()) if $sunSlider? and climateModel.getSunBrightness?
+  $iceSlider.slider('value', climateModel.getIcePercent()) if $iceSlider? and climateModel.getIcePercent?
+  $temperatureSlider.slider('value', initialTemperature) if $temperatureSlider? # maybe climateModel.getTemperature()?
+  $speedSlider.slider('value', climateModel.anim.rate) if $speedSlider?
+  $emissionsSlider.slider('value', climateModel.getHumanEmissionRate()) if $emissionsSlider? and climateModel.getHumanEmissionRate?
 
 setupGraphs = ->
   if $('#temperature-graph').length
