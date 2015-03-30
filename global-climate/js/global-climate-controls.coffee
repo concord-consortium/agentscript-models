@@ -153,6 +153,7 @@ $('#reset-button').click ->
   climateModel.setup()
   modelSetup() if modelSetup
   resetSliders()
+  $('#useIREmit').prop('checked', climateModel.IREmits);
 
 $('#add-co2-button').click ->
   climateModel.addCO2()
