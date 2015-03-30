@@ -29,7 +29,28 @@
 
       $.when(modelLoaded, oceanModelLoaded, controlsLoaded).done(function() {
         climateModel = new OceanClimateModel("layers", 12, -24, 24, -15, 15, true);
-        initControls({oceanModel: true});
+
+        setup = function() {
+          climateModel.oceanAbsorbtionChangable = true;
+          climateModel.cloudsFormedByVapor = true;
+          climateModel.iceFormedByTemperature = true;
+          climateModel.temperature = 4;
+          climateModel.temperaturePerHeat = 0.16;
+          climateModel.vaporPerDegreeModifier = 14;
+          climateModel.setAlbedo(0.31);
+          climateModel.oceanZeroAbsorbtionTemp = 45;
+          climateModel.nCO2Emission = 0.05;
+          climateModel.setHumanEmissionRate(0.5);
+          climateModel.createCO2(15);
+
+          climateModel.updateVapor();
+          climateModel.updateClouds();
+          climateModel.updateIce();
+          climateModel.draw();
+        };
+        setup();
+
+        initControls({setup: setup, oceanModel: true});
       });
     </script>
     <script src="../lib/shutterbug.js/dist/shutterbug.js"></script>
@@ -47,68 +68,25 @@
         <div id="layers"></div>
       </div>
       <div id="controls">
-        <div id='temperature-graph' class="graph"></div>
-        <div id='co2-graph' class="graph"></div>
-        <ul>
-          <li>
-            <button id="add-co2-button">Add CO<sub>2</sub></button>
-            <button id="subtract-co2-button">Remove CO<sub>2</sub></button>
-          </li>
-          <li>
-            <span id="co2-output" class="output digits3"></span>
-          </li>
-          <li class="output">
-            Temperature: <span id="temperature-output"></span>
-          </li>
-        </ul>
-        <ul>
-          <li>
-            <label for="albedo-slider">Albedo:</label>
-            <span class="slider-units">0 <div id="albedo-slider"></div> 1</span>
-          </li>
-        </ul>
+        <p class="show-about-text"><a href="#">About these graphs</a></p>
+        <div id='temperature-graph' class="graph" style="height: 187px;"></div>
+        <div id='co2-graph' class="graph" style="height: 187px;"></div>
         <ul>
           <li>
             <label for="ocean-albedo-slider">Ocean Albedo:</label>
-            <span class="slider-units">0 <div id="ocean-albedo-slider"></div> 1</span> <span class='slider-units' id='ocean-albedo-value'></span>
+            <span class="slider-units">0 <div id="ocean-albedo-slider"></div> 1</span>
           </li>
         </ul>
-        <ul>
+      </div>
+      <div id="model-bottom">
+        <ul style="padding: 0.5em;padding-top:1em;">
           <li>
-            <label for="ice-slider">Ice Cover:</label>
-            <span class="slider-units">0 <div id="ice-slider"></div> 100%</span>
-          </li>
-        </ul>
-        <ul>
-          <li>
-            <label for="sun-brightness-slider">Sun Brightness:</label>
-            <span class="slider-units">0 <div id="sun-brightness-slider"></div> 200</span>
-          </li>
-        </ul>
-        <ul>
-          <li>
-            <label for="human-emissions-slider">Human emissions (% of 2010 levels):</label>
+            <div style="margin-bottom: 1em;">Human emissions (% of 2010 levels):</div>
             <span class="slider-units">0 <div id="human-emissions-slider"></div> 200%</span>
           </li>
-        </ul>
-        <ul>
           <li>
-            <button id="add-clouds-button">Add cloud</button>
-            <button id="subtract-clouds-button">Remove cloud</button>
-          </li>
-          <li>
-            <span id="co2-output" class="output digits3"></span>
-          </li>
-        </ul>
-        <ul>
-          <li>
-            <button id="follow-sunray-button" class="follow-agent">Follow energy packet</button>
-            <button id="follow-co2-button" class="follow-agent">Follow CO<sub>2</sub></button>
-          </li>
-        </ul>
-        <ul>
-          <li>
-            <button id="hide-button">Hide 90% of elements</button>
+            <div style="margin-bottom: 1em;">Ocean albedo:</div>
+            <span class="slider-units">0 <div id="ocean-albedo-slider"></div> 1.0</span> <span class='slider-units' id='ocean-albedo-value'></span>
           </li>
         </ul>
       </div>
