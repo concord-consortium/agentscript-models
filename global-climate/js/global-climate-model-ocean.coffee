@@ -39,6 +39,7 @@ class OceanClimateModel extends ClimateModel
     @vapor.setDefaultColor [0, 0, 255]
 
     # globals
+    @oceanAlbedo = 0.7
     @temperature = 5
     @oceanLeft = -10
     @oceanBottom = -15
@@ -140,6 +141,12 @@ class OceanClimateModel extends ClimateModel
 
     [_x * width + @oceanLeft, Math.atan2(y1 - y0, x1 - x0) - Math.PI / 2]
 
+  setOceanAlbedo: (percent) ->
+    @oceanAlbedo = percent
+    @updateAlbedoOfSurface()
+
+  getOceanAlbedo : ->
+    @oceanAlbedo
 
   setIncludeWaterVapor: (b) ->
     @includeVapor = b
@@ -158,7 +165,7 @@ class OceanClimateModel extends ClimateModel
 
   updateAlbedoOfSurface: ->
     earthAlbedo = (Math.min(Math.floor(a+@albedo*120),255) for a in [96, 155, 96])
-    oceanAlbedo = (Math.min(Math.floor(a+@albedo*120),255) for a in [0, 0, 220])
+    oceanAlbedo = (Math.min(Math.floor(a+@oceanAlbedo*120),255) for a in [0, 0, 220])
     p.color = earthAlbedo for p in @earthSurfacePatches when p.x < @oceanLeft
     p.color = oceanAlbedo for p in @earthSurfacePatches when p.x >= @oceanLeft
 
@@ -307,7 +314,7 @@ class OceanClimateModel extends ClimateModel
     for a in @sunrays
       if a? and a.y <= @earthTop
         if ("#{a.p.color}" is "#{[255,255,255]}" and @iceAlbedo * 100 > u.randomInt(100)) or  # if ice
-           (a.x >= @oceanLeft and 70 > u.randomInt(100)) or                                   # or ocean (always has an albedo of 0.7)
+           (a.x >= @oceanLeft and @oceanAlbedo * 100 > u.randomInt(100)) or                   # or ocean
            (a.x < @oceanLeft and @albedo * 100 > u.randomInt(100))                            # or land
           @reflectOffHorizontalPlane(a)
         else

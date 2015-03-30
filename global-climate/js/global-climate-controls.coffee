@@ -1,4 +1,6 @@
 $albedoSlider      = $ '#albedo-slider'
+$oceanAlbedoSlider = $ '#ocean-albedo-slider'
+$oceanAlbedoValue  = $ '#ocean-albedo-value'
 $sunSlider         = $ '#sun-brightness-slider'
 $iceSlider         = $ '#ice-slider'
 $emissionsSlider   = $ '#human-emissions-slider'
@@ -24,12 +26,19 @@ isOceanTemperatureModel = false
 modelSetup = null
 
 window.initControls = (args) ->
+  isOceanModel = true if args?.oceanModel
+  isOceanTemperatureModel = true if args?.oceanTemperatureModel
+
   $albedoSlider.slider  min: 0, max: 1, step: 0.01, value: climateModel.getAlbedo()
+  $oceanAlbedoSlider.slider  min: 0, max: 1, step: 0.01, value: climateModel.getOceanAlbedo() if isOceanModel
   $sunSlider.slider     min: 0, max: 200, step: 1,  value: climateModel.getSunBrightness()
   $iceSlider.slider     min: 0, max: 1, step: 0.01,  value: climateModel.getIcePercent() if climateModel.getIcePercent
   $temperatureSlider.slider min: 0, max: 20, step: 0.2,  value: climateModel.getTemperature()
   $speedSlider.slider   min: 20, max: 60, step: 2,  value: climateModel.anim.rate
   $emissionsSlider.slider   min: 0, max: 1, step: 0.1,  value: climateModel.getHumanEmissionRate() if climateModel.getHumanEmissionRate
+
+  $oceanAlbedoValue.text "[#{climateModel.getOceanAlbedo()}]" if isOceanModel and $oceanAlbedoValue?
+
   # set up ticks
   ticks =
     25: '50%'
@@ -43,9 +52,6 @@ window.initControls = (args) ->
     marginBottom: '2em'
 
   initialTemperature = climateModel.getTemperature()
-
-  isOceanModel = true if args?.oceanModel
-  isOceanTemperatureModel = true if args?.oceanTemperatureModel
 
   modelSetup = args?.setup
 
@@ -145,8 +151,8 @@ $('#reset-button').click ->
   temperatureGraph.reset() if temperatureGraph?
   co2Graph.reset() if co2Graph?
   climateModel.setup()
-  $temperatureSlider.slider('value', initialTemperature) if $temperatureSlider
   modelSetup() if modelSetup
+  resetSliders()
 
 $('#add-co2-button').click ->
   climateModel.addCO2()
@@ -165,6 +171,10 @@ $('#erupt-button').click ->
 
 $albedoSlider.on 'slide', (event, ui) ->
   climateModel.setAlbedo ui.value
+
+$oceanAlbedoSlider.on 'slide', (event, ui) ->
+  climateModel.setOceanAlbedo ui.value
+  $oceanAlbedoValue.text('[' + ui.value + ']') if $oceanAlbedoValue?
 
 $sunSlider.on 'slide', (event, ui) ->
   climateModel.setSunBrightness ui.value
@@ -230,6 +240,15 @@ autoscaleBoth = do ->
       temperatureGraph?.autoscale()
       co2Graph?.autoscale()
       autoscaling = false
+
+resetSliders = ->
+  $albedoSlider.slider('value', climateModel.getAlbedo()) if $albedoSlider? and climateModel.getAlbedo?
+  $oceanAlbedoSlider.slider('value', climateModel.getOceanAlbedo()) if $oceanAlbedoSlider? and climateModel.getOceanAlbedo?
+  $sunSlider.slider('value', climateModel.getSunBrightness()) if $sunSlider? and climateModel.getSunBrightness?
+  $iceSlider.slider('value', climateModel.getIcePercent()) if $iceSlider? and climateModel.getIcePercent?
+  $temperatureSlider.slider('value', initialTemperature) if $temperatureSlider? # maybe climateModel.getTemperature()?
+  $speedSlider.slider('value', climateModel.anim.rate) if $speedSlider?
+  $emissionsSlider.slider('value', climateModel.getHumanEmissionRate()) if $emissionsSlider? and climateModel.getHumanEmissionRate?
 
 setupGraphs = ->
   if $('#temperature-graph').length
