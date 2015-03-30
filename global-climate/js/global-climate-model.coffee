@@ -42,6 +42,7 @@ class ClimateModel extends ABM.Model
     @showFPS = false
     @humanEmissionRate = 0
     @numFactories = 0
+    @IREmits = false
 
     # import images
     @setCacheAgentsHere()
@@ -214,8 +215,11 @@ class ClimateModel extends ABM.Model
       if a
         a.forward 0.5
         if @CO2.inRadius(a, 1).any()
-          a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
-        if a.heading == -@sunlightHeading && a.y > (14)
+          if @IREmits
+            a.heading = u.randomFloat2(0, Math.PI*2)
+          else
+            a.heading = u.randomFloat2(-Math.PI/4, -Math.PI*3/4)
+        if a.y > (14)
           a.die()
           @setSpotlight null if a is @spotlightAgent
         if a.y <= @earthTop
@@ -455,6 +459,8 @@ class ClimateModel extends ABM.Model
     for a in @heat
       a.hidden = @hidingHeat
 
+  useIREmit: (use) ->
+    @IREmits = !!use
 
   getRandomLocation: (minY, maxY) ->
     [
