@@ -39,7 +39,7 @@ class OceanClimateModel extends ClimateModel
     @vapor.setDefaultColor [0, 0, 255]
 
     # globals
-    @oceanAlbedo = 0.7
+    @oceanAlbedo = @albedo
     @temperature = 5
     @oceanLeft = -10
     @oceanBottom = -15
