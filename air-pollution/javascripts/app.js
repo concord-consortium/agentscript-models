@@ -105,6 +105,7 @@ AirPollutionControls = (function() {
       this.setupGraph();
       this.setupPlayback();
       this.setupSliders();
+      this.setupAirTempIndicator();
       $("#controls").show();
       return this.setupCompleted = true;
     }
@@ -231,18 +232,7 @@ AirPollutionControls = (function() {
       step: 10,
       value: ABM.model.windSpeed,
       slide: function(evt, ui) {
-        var opacity;
-        ABM.model.setWindSpeed(ui.value);
-        if (ui.value > 0) {
-          opacity = 0.5 - (ui.value / 60);
-          return $("#lower-air-temperature").stop().animate({
-            opacity: opacity
-          });
-        } else {
-          return $("#lower-air-temperature").stop().animate({
-            opacity: 1
-          });
-        }
+        return ABM.model.setWindSpeed(ui.value);
       }
     });
     $("#cars-slider").slider({
@@ -353,6 +343,22 @@ AirPollutionControls = (function() {
     });
   };
 
+  AirPollutionControls.prototype.setupAirTempIndicator = function() {
+    return $(document).on(AirPollutionModel.WIND_SPEED_CHANGED, function() {
+      var opacity;
+      if (ABM.model.windSpeed > 0) {
+        opacity = 0.5 - (ABM.model.windSpeed / 60);
+        return $("#lower-air-temperature").stop().animate({
+          opacity: opacity
+        });
+      } else {
+        return $("#lower-air-temperature").stop().animate({
+          opacity: 1
+        });
+      }
+    });
+  };
+
   AirPollutionControls.prototype.startStopModel = function() {
     if (!this.startModel()) {
       return this.stopModel();
@@ -399,6 +405,90 @@ AirPollutionControls = (function() {
 window.AirPollutionControls = AirPollutionControls;
 });
 
+;require.register("src/lab-integration", function(exports, require, module) {
+require('src/model');
+
+require('src/controls');
+
+window.setupLabCommunication = function(model) {
+  var getOutputs, phone, registerCustomFunc, registerModelFunc;
+  phone = iframePhone.getIFrameEndpoint();
+  registerModelFunc = function(name) {
+    phone.addListener(name, function() {
+      model[name].apply(model, arguments);
+      return model.draw();
+    });
+    return phone.post('registerScriptingAPIFunc', name);
+  };
+  registerCustomFunc = function(name, func) {
+    phone.addListener(name, func);
+    return phone.post('registerScriptingAPIFunc', name);
+  };
+  registerCustomFunc('play', function() {
+    model.start();
+    return phone.post('play.iframe-model');
+  });
+  registerCustomFunc('stop', function() {
+    model.stop();
+    return phone.post('stop.iframe-model');
+  });
+  registerCustomFunc('step', function(content) {
+    var steps;
+    steps = content;
+    while (steps--) {
+      model.step();
+    }
+    return model.draw();
+  });
+  phone.addListener('set', function(content) {
+    switch (content.name) {
+      case 'includeSunlight':
+        return model.includeSunlight = content.value;
+      case 'includeInversionLayer':
+        return model.includeInversionLayer = content.value;
+      case 'windSpeed':
+        return model.setWindSpeed(content.value);
+      case 'numCars':
+        return model.setNumCars(content.value);
+      case 'sunlightAmount':
+        return model.setSunlight(content.value);
+      case 'rainRate':
+        return model.setRainRate(content.value);
+      case 'carPollutionRate':
+        return model.carPollutionRate = content.value;
+      case 'carPollutionControl':
+        return model.carPollutionRate = 100 - content.value;
+      case 'electricCarPercentage':
+        return model.setElectricCarPercentage(content.value);
+      case 'numFactories':
+        return model.setNumFactories(content.value);
+      case 'factoryPollutionRate':
+        return model.factoryPollutionRate = content.value;
+      case 'factoryPollutionControl':
+        return model.factoryPollutionRate = 100 - content.value;
+      case 'temperature':
+        return model.temperature = content.value;
+    }
+  });
+  getOutputs = function() {
+    var result;
+    result = {
+      ticks: Math.floor(model.anim.ticks / model.graphSampleInterval),
+      primaryAQI: model.primaryAQI(),
+      secondaryAQI: model.secondaryAQI()
+    };
+    return result;
+  };
+  phone.post('outputs', getOutputs());
+  $(document).on(AirPollutionModel.GRAPH_INTERVAL_ELAPSED, function() {
+    return phone.post('tick', {
+      outputs: getOutputs()
+    });
+  });
+  return phone.initialize();
+};
+});
+
 ;require.register("src/main", function(exports, require, module) {
 require('src/model');
 
@@ -414,6 +504,8 @@ AirPollutionModel = (function(_super) {
   __extends(AirPollutionModel, _super);
 
   AirPollutionModel.GRAPH_INTERVAL_ELAPSED = 'graph-interval-lapsed';
+
+  AirPollutionModel.WIND_SPEED_CHANGED = 'wind-speed-changed';
 
   AirPollutionModel.pollutantColors = {
     primary: [102, 73, 53],
@@ -833,7 +925,8 @@ AirPollutionModel = (function(_super) {
 
   AirPollutionModel.prototype.setWindSpeed = function(windSpeed) {
     this.windSpeed = windSpeed;
-    return this._updateWindDisplay();
+    this._updateWindDisplay();
+    return $(document).trigger(AirPollutionModel.WIND_SPEED_CHANGED);
   };
 
   AirPollutionModel.prototype._updateWindDisplay = function() {

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Air Pollution Model</title>
+    <!-- Style adjustments, so model works fine in fullscreen mode: -->
+    <style>
+      html {
+        height: 100%;
+      }
+      body {
+        height: 100%;
+        overflow: hidden;
+        margin: 0;
+      }
+      #content, #model, #layers, #layers canvas {
+        width: 100%;
+        height: 100%;
+      }
+      #layers {
+        top: 0px;
+        left: 0px;
+      }
+    </style>
+
+    <script src="javascripts/vendor.js"></script>
+    <script src="javascripts/app.js"></script>
+
+    <script>
+      $(document).ready(function() {
+        require('src/lab-integration');
+
+        var APP=new AirPollutionModel("layers", 1, 0, 599, 0, 359, true);
+
+        setupLabCommunication(APP);
+
+        Shutterbug.enable('body');
+      });
+    </script>
+  </head>
+  <body>
+    <div id="content">
+      <div id="model">
+        <canvas id="canvas" >Your browser does not support HTML5 Canvas.</canvas>
+        <div id="layers"></div>
+      </div>
+    </div>
+  </body>
+</html>
