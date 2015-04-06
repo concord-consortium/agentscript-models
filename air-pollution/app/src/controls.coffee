@@ -8,6 +8,7 @@ class AirPollutionControls
       @setupGraph()
       @setupPlayback()
       @setupSliders()
+      @setupAirTempIndicator()
 
       $("#controls").show()
       @setupCompleted = true
@@ -126,11 +127,6 @@ class AirPollutionControls
       value: ABM.model.windSpeed
       slide: (evt, ui)->
         ABM.model.setWindSpeed ui.value
-        if ui.value > 0
-          opacity = 0.5 - (ui.value/60)
-          $("#lower-air-temperature").stop().animate({opacity: opacity})
-        else
-          $("#lower-air-temperature").stop().animate({opacity: 1})
 
     $("#cars-slider").slider
       orientation: 'horizontal'
@@ -225,6 +221,14 @@ class AirPollutionControls
       value: ABM.model.temperature
       slide: (evt, ui)->
         ABM.model.temperature = ui.value
+
+  setupAirTempIndicator: ->
+    $(document).on AirPollutionModel.WIND_SPEED_CHANGED, ->
+      if ABM.model.windSpeed > 0
+        opacity = 0.5 - (ABM.model.windSpeed/60)
+        $("#lower-air-temperature").stop().animate({opacity: opacity})
+      else
+        $("#lower-air-temperature").stop().animate({opacity: 1})
 
   startStopModel: ->
     @stopModel() unless @startModel()

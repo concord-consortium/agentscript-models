@@ -1,5 +1,6 @@
 class AirPollutionModel extends ABM.Model
   @GRAPH_INTERVAL_ELAPSED: 'graph-interval-lapsed'
+  @WIND_SPEED_CHANGED: 'wind-speed-changed'
 
   @pollutantColors =
     primary: [102, 73, 53]
@@ -320,6 +321,7 @@ class AirPollutionModel extends ABM.Model
 
   setWindSpeed: (@windSpeed) ->
     @_updateWindDisplay()
+    $(document).trigger AirPollutionModel.WIND_SPEED_CHANGED
 
   _updateWindDisplay: ->
     for w in @wind

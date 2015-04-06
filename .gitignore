@@ -4,3 +4,4 @@ node_modules/
 **/.DS_Store
 public/
 land-management/public/
+bower_components
