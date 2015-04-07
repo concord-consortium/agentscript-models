@@ -46,6 +46,7 @@ class AirPollutionAerial extends ABM.Model
       @capAgents()
     if @anim.ticks % 20 is 0
       @calculateAirPollution()
+      $(document).trigger 'tick'
 
   createSmoke: ->
     for f in @factories
