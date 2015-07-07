@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Water Model</title>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+  <script src="../lib/agentscript/agentscript.js"></script>
+  <script src="../lib/agentscript/coffee-script.js"></script>
+  <script src="../lib/import-export.coffee" type="text/coffeescript"></script>
+  <script src="../lib/well.coffee" type="text/coffeescript"></script>
+  <script src="../lib/iframe-phone/dist/iframe-phone.js"></script>
+  <script src="js/water-model.coffee" type="text/coffeescript"></script>
+  <script src="js/water-controls.coffee" type="text/coffeescript"></script>
+  <script src="js/lab-integration.coffee" type="text/coffeescript"></script>
+  <script src="../lib/shutterbug.js/dist/shutterbug.js"></script>
+  <script type="text/javascript">Shutterbug.enable('body');</script>
+  <style >
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    #model, #layers, #layers canvas {
+      width: 100%;
+      height: 100%;
+    }
+    #layers {
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+<div id="model">
+  <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+  <div id="layers"></div>
+</div>
+<script>
+  $(document).one('controls-ready', function () {
+    APP = new WaterModel("layers", 2, -200, 199, -65, 64, false);
+    APP.setRootVars();
+    WaterControls.setup();
+  });
+
+  $(document).one('model-ready', function () {
+    setupLabCommunication(APP);
+  });
+</script>
+</body>
+</html>
