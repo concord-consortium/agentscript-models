@@ -167,6 +167,8 @@ class WaterModel extends ABM.Model
     if @anim.ticks % @ticksPerYear is 0
       $(document).trigger @constructor.YEAR_ELAPSED
 
+    # Optional hook to allow application to know a tick has completed.
+    @stepCallback?()
     return true # avoid inadventently returning a large array of things
 
   _setupWater: (agents)->
