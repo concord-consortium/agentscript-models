@@ -1,5 +1,6 @@
 window.setupLabCommunication = (model) ->
   phone = iframePhone.getIFrameEndpoint()
+  optionalOutputs = {}
 
   # Register Scripting API functions.
   registerModelFunc = (name) ->
@@ -29,6 +30,9 @@ window.setupLabCommunication = (model) ->
       model.step()
     model.draw()
 
+  registerModelFunc('addRainSpotlight');
+  registerModelFunc('removeSpotlight');
+
   # Properties.
   phone.addListener 'set', (content) ->
     switch content.name
@@ -38,9 +42,25 @@ window.setupLabCommunication = (model) ->
         model.rainProbability = content.value
       when 'evapProbability'
         model.evapProbability = content.value
+      when 'rainCountOptions'
+        # This property is a bit complex. When you set 'rainCountOptions', it activates rain counting on
+        # every month change. Result is available as 'rainCount' output. It's following the same
+        # behaviour and naming convention that was used in the original model.
+        countOptions = content.value
+        center = model.patches.patchXY countOptions.x, countOptions.y
+        optionalOutputs.rainCount = ->
+          # Calculate value only when month changes. This is following the original model behaviour.
+          return undefined if model.getFractionalMonth() != model.getMonth()
+          model.rainCount center, countOptions.dx, countOptions.dy, true, countOptions.debug
 
   getOutputs = ->
-    result = {}
+    result =
+      month: model.getMonth()
+      year: model.getYear()
+    for name, valueFunc of optionalOutputs
+      val = valueFunc()
+      # Skip if output returns undefined or null.
+      result[name] = val if val?
 
     return result
 

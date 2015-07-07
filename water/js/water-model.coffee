@@ -171,6 +171,18 @@ class WaterModel extends ABM.Model
     @stepCallback?()
     return true # avoid inadventently returning a large array of things
 
+  getFractionalMonth: ->
+    @anim.ticks / @ticksPerMonth
+
+  getMonth: ->
+    Math.floor @getFractionalMonth()
+
+  getFractionalYear: ->
+    @anim.ticks / @ticksPerYear
+
+  getYear: ->
+    Math.floor @getFractionalYear()
+
   _setupWater: (agents)->
     agents.setDefaultSize 2/@world.size  # try to keep water around 2px in size
     agents.setDefaultColor WaterModel.waterColor
