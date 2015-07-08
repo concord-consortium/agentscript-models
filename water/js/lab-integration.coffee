@@ -16,13 +16,9 @@ window.setupLabCommunication = (model) ->
 
   registerCustomFunc 'play', ->
     model.start()
-    # Notify iframe model that we received 'play' message and reacted appropriately.
-    phone.post('play.iframe-model')
 
   registerCustomFunc 'stop', ->
     model.stop()
-    # Notify iframe model that we received 'stop' message and reacted appropriately.
-    phone.post('stop.iframe-model')
 
   registerCustomFunc 'step', (content) ->
     steps = content
@@ -52,6 +48,8 @@ window.setupLabCommunication = (model) ->
           # Calculate value only when month changes. This is following the original model behaviour.
           return undefined if model.getFractionalMonth() != model.getMonth()
           model.rainCount center, countOptions.dx, countOptions.dy, true, countOptions.debug
+      when 'controls'
+        processControls(content.value)
 
   getOutputs = ->
     result =
@@ -75,4 +73,34 @@ window.setupLabCommunication = (model) ->
     phone.post 'tick',
       outputs: getOutputs()
 
+  model.startCallback = ->
+    # Notify iframe model that we received 'play' message and reacted appropriately.
+    phone.post('play.iframe-model')
+
+  model.stopCallback = ->
+    # Notify iframe model that we received 'stop' message and reacted appropriately.
+    phone.post('stop.iframe-model')
+
   phone.initialize()
+
+# Helper that hides or displays buttons, it's based on the provided hash.
+window.processControls = (options) ->
+  $controls = $('#palette-controls')
+  if options.draw
+    $controls.find('.draw-group').removeClass('hidden')
+  if options.remove
+    $controls.find('.remove-group').removeClass('hidden')
+    if options.remove != true
+      # Select given option (it will update main button).
+      $controls.find('.remove-option.' + options.remove).click()
+      # Deactivate remove mode (activated by previous click).
+      WaterControls.stopDraw()
+      # Hide options.
+      $controls.find('#remove-button-type').addClass('hidden')
+  if options.water
+    $controls.find('.water-btn').removeClass('hidden')
+  if options.irrigationWell
+    $controls.find('.irrigation-well-btn').removeClass('hidden')
+  if options.removalWell
+    $controls.find('.removal-well-btn').removeClass('hidden')
+

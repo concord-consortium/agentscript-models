@@ -128,6 +128,13 @@ class WaterModel extends ABM.Model
     for p in @patches
       p.isOnSurface = @isOnSurface(p)
       p.isOnAirSurface = @isOnAirSurface(p)
+    # Optional callback.
+    @startCallback?()
+
+  stop: ->
+    super
+    # Optional callback.
+    @stopCallback?()
 
   step: ->
     console.log @anim.toString() if @anim.ticks % 100 is 0

@@ -572,15 +572,27 @@ window.WaterControls =
       @outputGraph.reset()
       @outputGraph.addSamples @graphOptions.initialValues
 
+  getCanvasScaleX: ->
+    $canvas = $("#layers canvas")
+    $canvas.attr("width") / $canvas.width()
+
+  getCanvasScaleY: ->
+    $canvas = $("#layers canvas")
+    $canvas.attr("height") / $canvas.height()
+
   offsetX: (evt, target)->
+    scale = @getCanvasScaleX()
     if evt.originalEvent.touches?
       evt = evt.originalEvent.touches[0]
-    return if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)
+    val = if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)
+    val * scale
 
   offsetY: (evt, target)->
+    scale = @getCanvasScaleY()
     if evt.originalEvent.touches?
       evt = evt.originalEvent.touches[0]
-    return if evt.offsetY? then evt.offsetY else (evt.pageY - target.offset().top)
+    val = if evt.offsetY? then evt.offsetY else (evt.pageY - target.offset().top)
+    val * scale
 
 $(document).one 'model-ready', ->
   WaterControls.modelReady = true
