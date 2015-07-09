@@ -28,14 +28,20 @@
       width: 100%;
       height: 100%;
     }
+    #model {
+      position: absolute;
+      top: 0;
+      left: auto;
+      right: 0;
+    }
     #layers {
       top: 0;
       left: 0;
     }
     #controls {
       position: absolute;
-      top: 5px;
-      left: 12px;
+      top: -5px;
+      left: 0;
       z-index: 1000;
     }
     #buttons {
@@ -60,7 +66,12 @@
       padding: 0.3em 0.7em;
     }
     label {
+      border-radius: 4px;
       width: 3em;
+    }
+    #draw-button-type, #remove-button-type {
+      width: 1.5em;
+      height: 1.8em;
     }
     #draw-button-type-options, #remove-button-type-options {
       width: 12em;
@@ -71,11 +82,6 @@
   </style>
 </head>
 <body>
-<div id="model">
-  <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
-  <div id="layers"></div>
-  <div id="mouse-catcher"></div>
-</div>
 <div id="palette-controls">
   <div id="controls">
     <div id="buttons">
@@ -105,7 +111,7 @@
         <li><a href="#"><span class="layer-option rock4"></span><span class="label">No flow</span></a></li>
       </ul>
       <div id="remove-button-set" class="remove-group hidden">
-          <input type="checkbox" id="remove-button"/><label for="remove-button"><span class="remove-option layer"><img id="remove-icon" src="img/tool_remove.svg"/></span></label>
+        <input type="checkbox" id="remove-button"/><label for="remove-button"><span class="remove-option layer"><img id="remove-icon" src="img/tool_remove.svg"/></span></label>
         <button id="remove-button-type">Select a layer type</button>
       </div>
       <ul id="remove-button-type-options">
@@ -116,6 +122,11 @@
       </ul>
     </div>
   </div>
+</div>
+<div id="model">
+  <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+  <div id="layers"></div>
+  <div id="mouse-catcher"></div>
 </div>
 <script>
   $(document).one('controls-ready', function () {
@@ -128,13 +139,6 @@
   $(document).one('model-ready', function () {
     setupLabCommunication(APP);
   });
-
-  function adjustFontSize() {
-    var newWidth = $(window).width();
-    $('body').css('font-size', Math.min((newWidth / 50), 13) + 'px');
-  }
-  $(window).on('resize', adjustFontSize);
-  adjustFontSize();
 </script>
 </body>
 </html>
