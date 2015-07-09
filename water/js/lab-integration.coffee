@@ -91,7 +91,6 @@ layout = () ->
     margin = 6;
     $('#model').width(newWidth - controlsWidth - margin)
 
-
 # Helper that hides or displays buttons, it's based on the provided hash.
 processControls = (options) ->
   $controls = $('#palette-controls')
@@ -99,13 +98,24 @@ processControls = (options) ->
     $controls.find('.draw-group').removeClass('hidden')
   if options.remove
     $controls.find('.remove-group').removeClass('hidden')
-    if options.remove != true
+    # Single option, e.g. water, well, layer.
+    if typeof options.remove == 'string'
       # Select given option (it will update main button).
       $controls.find('.remove-option.' + options.remove).click()
       # Deactivate remove mode (activated by previous click).
       WaterControls.stopDraw()
       # Hide options.
       $controls.find('#remove-button-type').addClass('hidden')
+    # Array of enabled options.
+    if options.remove.length?
+      # First, hide all the options and then show ones that were passed in array.
+      $controls.find('.remove-option').closest('li').addClass('hidden')
+      for opt in options.remove
+        $controls.find('.remove-option.' + opt).closest('li').removeClass('hidden')
+      # Select the first provided option (it will update main button).
+      $controls.find('.remove-option.' + options.remove[0]).click()
+      # Deactivate remove mode (activated by previous click).
+      WaterControls.stopDraw()
   if options.water
     $controls.find('.water-btn').removeClass('hidden')
   if options.irrigationWell
@@ -117,4 +127,3 @@ processControls = (options) ->
   # and make sure that layout is updated when window is resized.
   $(window).off '.lab-integration'
   $(window).on 'resize.lab-integration', layout
-
