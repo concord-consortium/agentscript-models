@@ -83,8 +83,17 @@ window.setupLabCommunication = (model) ->
 
   phone.initialize()
 
+layout = () ->
+  newWidth = $(window).width()
+  $('body').css('font-size', Math.min((newWidth / 50), 13) + 'px')
+  controlsWidth = $('#controls').width()
+  if controlsWidth
+    margin = 6;
+    $('#model').width(newWidth - controlsWidth - margin)
+
+
 # Helper that hides or displays buttons, it's based on the provided hash.
-window.processControls = (options) ->
+processControls = (options) ->
   $controls = $('#palette-controls')
   if options.draw
     $controls.find('.draw-group').removeClass('hidden')
@@ -103,4 +112,9 @@ window.processControls = (options) ->
     $controls.find('.irrigation-well-btn').removeClass('hidden')
   if options.removalWell
     $controls.find('.removal-well-btn').removeClass('hidden')
+  # Call layout function, as controls have been modified.
+  layout()
+  # and make sure that layout is updated when window is resized.
+  $(window).off '.lab-integration'
+  $(window).on 'resize.lab-integration', layout
 
