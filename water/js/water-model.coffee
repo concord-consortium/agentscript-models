@@ -128,6 +128,13 @@ class WaterModel extends ABM.Model
     for p in @patches
       p.isOnSurface = @isOnSurface(p)
       p.isOnAirSurface = @isOnAirSurface(p)
+    # Optional callback.
+    @startCallback?()
+
+  stop: ->
+    super
+    # Optional callback.
+    @stopCallback?()
 
   step: ->
     console.log @anim.toString() if @anim.ticks % 100 is 0
@@ -167,7 +174,21 @@ class WaterModel extends ABM.Model
     if @anim.ticks % @ticksPerYear is 0
       $(document).trigger @constructor.YEAR_ELAPSED
 
+    # Optional hook to allow application to know a tick has completed.
+    @stepCallback?()
     return true # avoid inadventently returning a large array of things
+
+  getFractionalMonth: ->
+    @anim.ticks / @ticksPerMonth
+
+  getMonth: ->
+    Math.floor @getFractionalMonth()
+
+  getFractionalYear: ->
+    @anim.ticks / @ticksPerYear
+
+  getYear: ->
+    Math.floor @getFractionalYear()
 
   _setupWater: (agents)->
     agents.setDefaultSize 2/@world.size  # try to keep water around 2px in size

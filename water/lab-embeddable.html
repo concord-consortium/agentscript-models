@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Water Model</title>
+  <link href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+  <link href="css/water.css" rel="stylesheet" type="text/css" />
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+  <script src="../lib/agentscript/agentscript.js"></script>
+  <script src="../lib/agentscript/coffee-script.js"></script>
+  <script src="../lib/import-export.coffee" type="text/coffeescript"></script>
+  <script src="../lib/well.coffee" type="text/coffeescript"></script>
+  <script src="../lib/iframe-phone/dist/iframe-phone.js"></script>
+  <script src="js/lab-integration.coffee" type="text/coffeescript"></script>
+  <script src="js/water-model.coffee" type="text/coffeescript"></script>
+  <script src="js/water-controls.coffee" type="text/coffeescript"></script>
+  <script src="../lib/shutterbug.js/dist/shutterbug.js"></script>
+  <script type="text/javascript">Shutterbug.enable('body');</script>
+  <style >
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    #model, #layers, #layers canvas {
+      width: 100%;
+      height: 100%;
+    }
+    #model {
+      position: absolute;
+      top: 0;
+      left: auto;
+      right: 0;
+    }
+    #layers {
+      top: 0;
+      left: 0;
+    }
+    #controls {
+      position: absolute;
+      top: -5px;
+      left: 0;
+      z-index: 1000;
+    }
+    #buttons {
+      margin: 0;
+    }
+    #draw-button-set, #remove-button-set, #buttons > div {
+      display: block;
+      margin: 5px 0;
+    }
+    #irrigation-well-button-icon, #removal-well-button-icon, #remove-well-icon, #add-water-icon, #remove-water-icon, #remove-icon {
+      width: 1em;
+      height: 1em;
+    }
+    span.remove-option, span.layer-option {
+      padding-top: 0;
+    }
+    .remove-option img, .layer-option img {
+      margin-top: 0;
+      vertical-align: bottom;
+    }
+    .ui-button-text-only .ui-button-text {
+      padding: 0.3em 0.7em;
+    }
+    label {
+      border-radius: 4px;
+      width: 3em;
+    }
+    #draw-button-type, #remove-button-type {
+      width: 1.5em;
+      height: 1.8em;
+    }
+    #draw-button-type-options, #remove-button-type-options {
+      width: 12em;
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+<div id="palette-controls">
+  <div id="controls">
+    <div id="buttons">
+      <div class="water-btn hidden">
+        <input type="checkbox" id="water-button"/>
+        <label for="water-button"><img id="add-water-icon" src="img/tool_addwater.svg"/></label>
+      </div>
+      <div class="irrigation-well-btn hidden">
+        <input type="checkbox" id="irrigation-well-button"/>
+        <label for="irrigation-well-button"><img id="irrigation-well-button-icon" src="img/tool_addwellirrigation.svg"/></label>
+      </div>
+      <div class="removal-well-btn hidden">
+        <input type="checkbox" id="removal-well-button"/>
+        <label for="removal-well-button"><img id="removal-well-button-icon" src="img/tool_addwellremoval.svg"/></label>
+      </div>
+      <div id="draw-button-set" class="draw-group hidden">
+        <input type="checkbox" id="fill-button"/><label for="fill-button"><span
+          class="layer-option rock1"></span></label>
+        <button id="draw-button-type">Select a layer type</button>
+      </div>
+      <ul id="draw-button-type-options">
+        <li class="header">Permeability</li>
+        <li><a href="#"><span class="layer-option soil"></span><span class="label">Easy flow</span></a></li>
+        <li><a href="#"><span class="layer-option rock1"></span></a></li>
+        <li><a href="#"><span class="layer-option rock2"></span></a></li>
+        <li><a href="#"><span class="layer-option rock3"></span></a></li>
+        <li><a href="#"><span class="layer-option rock4"></span><span class="label">No flow</span></a></li>
+      </ul>
+      <div id="remove-button-set" class="remove-group hidden">
+        <input type="checkbox" id="remove-button"/><label for="remove-button"><span class="remove-option layer"><img id="remove-icon" src="img/tool_remove.svg"/></span></label>
+        <button id="remove-button-type">Select a layer type</button>
+      </div>
+      <ul id="remove-button-type-options">
+        <li class="header">Remove</li>
+        <li><a href="#"><span class="remove-option layer"><img id="remove-icon" src="img/tool_remove.svg"/></span><span class="label">Layer</span></a></li>
+        <li><a href="#"><span class="remove-option water"><img id="remove-water-icon" src="img/tool_removewater.svg"/></span><span class="label">Water</span></a></li>
+        <li><a href="#"><span class="remove-option well"><img id="remove-well-icon" src="img/tool_removewell.svg"/></span><span class="label">Well</span></a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div id="model">
+  <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+  <div id="layers"></div>
+  <div id="mouse-catcher"></div>
+</div>
+<script>
+  $(document).one('controls-ready', function () {
+    APP = new WaterModel("layers", 2, -200, 199, -65, 64, false);
+    APP.setRootVars();
+    WaterControls.localStoragePrefix = "water-lab-embeddable";
+    WaterControls.setup();
+  });
+
+  $(document).one('model-ready', function () {
+    setupLabCommunication(APP);
+  });
+</script>
+</body>
+</html>
