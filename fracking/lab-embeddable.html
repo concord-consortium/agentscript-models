@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Fracking Model</title>
+    <link href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    <script src="//lab.concord.org/vendor/d3/d3.js"></script>
+    <script src="../lib/agentscript/agentscript.js"></script>
+    <script src="../lib/agentscript/coffee-script.js"></script>
+    <script src="../lib/iframe-phone/dist/iframe-phone.js"></script>
+    <script src="js/lab-integration.coffee" type="text/coffeescript"></script>
+    <script src="../lib/well.coffee" type="text/coffeescript"></script>
+
+    <link href="css/fracking.css" rel="stylesheet" type="text/css" />
+    <script src="js/gas-well.coffee" type="text/coffeescript"></script>
+    <script src="js/fracking-model.coffee" type="text/coffeescript"></script>
+    <script src="js/fracking-controls.coffee" type="text/coffeescript"></script>
+    <script src="../lib/shutterbug.js/dist/shutterbug.js"></script>
+    <script type="text/javascript">Shutterbug.enable('body');</script>
+    <script src="../lib/interface.js"></script>
+    <style>
+      html, body {
+        height: 100%;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+      }
+      #model-viewport {
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      #model, #layers, #layers canvas {
+        width: 100%;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="model-viewport">
+      <div id="model">
+        <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+        <div id="layers"></div>
+        <div id="mouse-catcher"></div>
+      </div>
+    </div>
+    <script>
+      var modelReady = false, controls = null, APP = null;
+      $(document).one('fracking-model-loaded', function() {
+        APP = new FrackingModel("layers", 1.65, 0, 400, 0, 722, false);
+        APP.setRootVars();
+        // For some reason showEarthPatches doesn't work as a toggle. If the code below is executed,
+        // patches are always visible. So, it wouldn't work well as a property in lab-integration.
+        // Trying to trace it and fix it doesn't seem worth it.
+        if (window.location.hash === '#showEarthPatches') {
+          APP.showEarthPatches = true;
+          // this is inefficient
+          APP.refreshPatches = true;
+          var patches = APP.patches;
+          for (i = 0, ii = patches.length; i < ii; i++) {
+            p = patches[i];
+            APP.patchChanged(p);
+          }
+          APP.refreshPatches = false;
+        }
+        setupLabCommunication(APP);
+        updateContainerHeight();
+      });
+      $(document).on('model-ready', function() {
+        if (controls !== null) {
+          controls.setup();
+        }
+        modelReady = true;
+      });
+      $(document).one('fracking-controls-loaded', function() {
+        controls = new FrackingControls();
+        if (modelReady) {
+          controls.setup();
+          APP.start();
+        }
+      });
+      // We need to keep container height correct, as some code in fracking-controls.coffee depends on it.
+      function updateContainerHeight() {
+        var canvasHeight = $('#layers canvas').height();
+        $('#model').height(canvasHeight);
+      }
+      $(window).on('resize', updateContainerHeight);
+    </script>
+  </body>
+</html>
