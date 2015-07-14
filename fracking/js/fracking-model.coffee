@@ -191,6 +191,8 @@ class FrackingModel extends ABM.Model
     if @anim.ticks % @ticksPerYear is 0
       $(document).trigger FrackingModel.YEAR_ELAPSED
 
+    # Optional hook to allow application to know a tick has completed.
+    @stepCallback?()
     return true
 
   redraw: ->
@@ -455,6 +457,22 @@ class FrackingModel extends ABM.Model
       for y in [@airDepth..(p.y)]
         well.drillVertical()
     @redraw()
+
+  start: ->
+    super
+    # Optional callback.
+    @startCallback?()
+
+  stop: ->
+    super
+    # Optional callback.
+    @stopCallback?()
+
+  getFractionalYear: ->
+    @anim.ticks / @ticksPerYear
+
+  getYear: ->
+    Math.floor @getFractionalYear()
 
   explode: ->
     for well in @wells

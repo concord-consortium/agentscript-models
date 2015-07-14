@@ -93,7 +93,8 @@ class FrackingControls
         ABM.model.drill p
         well = ABM.model.findNearbyWell(p)
         if well?
-          depthBelowViewport = $("#model").height() - ($("#model-viewport").scrollTop() + $("#model-viewport").height()) - (well.depth*2)
+          scaleY = @getCanvasScaleY()
+          depthBelowViewport = ($("#model").height() - ($("#model-viewport").scrollTop() + $("#model-viewport").height())) * scaleY - (well.depth * 2)
           if depthBelowViewport > -200
             $("#model-viewport").animate {scrollTop: "+=" + (depthBelowViewport + 400)}, 300
       , 100
@@ -188,24 +189,26 @@ class FrackingControls
         [255, 127,   0],
         [255,   0, 255]]
 
-    @outputGraph = LabGrapher '#output-graph', outputOptions
+    if $('#output-graph').length > 0
+      @outputGraph = LabGrapher '#output-graph', outputOptions
 
-    labelInfo = ({ color: GasWell.labelColors[i], label: "Well #{i+1} Output"} for i in [0...3]).concat([{ color: [0, 0, 0], label: "Combined Output" }])
-    appendKeyToGraph 'output-graph', 50, labelInfo
+      labelInfo = ({ color: GasWell.labelColors[i], label: "Well #{i+1} Output"} for i in [0...3]).concat([{ color: [0, 0, 0], label: "Combined Output" }])
+      appendKeyToGraph 'output-graph', 50, labelInfo
 
-    # start the graph with four lines, each at 0,0
-    @outputGraph.addSamples [0, 0, 0, 0]
+      # start the graph with four lines, each at 0,0
+      @outputGraph.addSamples [0, 0, 0, 0]
 
-    $(document).on FrackingModel.YEAR_ELAPSED, =>
-      killed = [0,0,0,0]
-      killed[3] = ABM.model.killed
+      $(document).on FrackingModel.YEAR_ELAPSED, =>
+        killed = [0,0,0,0]
+        killed[3] = ABM.model.killed
+        console.log(killed[3])
 
-      for well, i in ABM.model.wells
-        killed[i] = well.killed
-        well.killed = 0
+        for well, i in ABM.model.wells
+          killed[i] = well.killed
+          well.killed = 0
 
-      ABM.model.killed = 0
-      @outputGraph.addSamples killed if killed[3] > 0
+        ABM.model.killed = 0
+        @outputGraph?.addSamples killed if killed[3] > 0
 
     if $('#contaminant-graph').length > 0
       contaminantOptions =
@@ -248,8 +251,6 @@ class FrackingControls
 
         @contaminantGraph.addSamples [baseMethane+leakedMethane, pondWaste]
 
-
-
   startStopModel: ->
     @stopModel() unless @startModel()
 
@@ -277,8 +278,8 @@ class FrackingControls
     $(".icon-pause").hide()
     $(".icon-play").show()
 
-    @outputGraph.reset()
-    @outputGraph.addSamples [0, 0, 0, 0]
+    @outputGraph?.reset()
+    @outputGraph?.addSamples [0, 0, 0, 0]
     if @contaminantGraph
       @contaminantGraph.reset()
       @contaminantGraph.addSamples [FrackingModel.baseMethaneInWater,0]
@@ -288,11 +289,23 @@ class FrackingControls
       @startModel()
     , 10
 
+  getCanvasScaleX: ->
+    $canvas = $("#layers canvas")
+    $canvas.attr("width") / $canvas.width()
+
+  getCanvasScaleY: ->
+    $canvas = $("#layers canvas")
+    $canvas.attr("height") / $canvas.height()
+
   offsetX: (evt, target)->
-    return if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)
+    scale = @getCanvasScaleX()
+    val = if evt.offsetX? then evt.offsetX else (evt.pageX - target.offset().left)
+    val * scale
 
   offsetY: (evt, target)->
-    return if evt.offsetY? then evt.offsetY else (evt.pageY - target.offset().top)
+    scale = @getCanvasScaleY()
+    val = if evt.offsetY? then evt.offsetY else (evt.pageY - target.offset().top)
+    val * scale
 
 window.FrackingControls = FrackingControls
 $(document).trigger 'fracking-controls-loaded'
