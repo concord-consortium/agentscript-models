@@ -56,13 +56,20 @@ window.WaterControls =
         icons:
           primary: "ui-icon-triangle-1-s"
       .click ->
-        menu = $("#draw-button-type-options").show().position
-          my: "left top"
-          at: "left bottom"
-          of: this
-        $(document).one 'click', ->
+        menu = $("#draw-button-type-options")
+        if menu.is(":visible")
           menu.hide()
-        return false
+          return
+        menu.show().position
+          my: "left top"
+          at: "right top"
+          of: this
+        # Set timeout is necessary, so we don't catch the same event and hide menu immediately.
+        setTimeout(->
+          $(document).off '.hideDrawOptions'
+          $(document).one 'click.hideDrawOptions', ->
+            menu.hide()
+        , 1)
       $("#draw-button-set").buttonset()
       $("#draw-button-type-options").hide().menu
         select: (evt, ui)=>
@@ -85,13 +92,20 @@ window.WaterControls =
         icons:
           primary: "ui-icon-triangle-1-s"
       .click ->
-        menu = $("#remove-button-type-options").show().position
-          my: "left top"
-          at: "left bottom"
-          of: this
-        $(document).one 'click', ->
+        menu = $("#remove-button-type-options")
+        if menu.is(":visible")
           menu.hide()
-        return false
+          return
+        menu.show().position
+          my: "left top"
+          at: "right top"
+          of: this
+        # Set timeout is necessary, so we don't catch the same event and hide menu immediately.
+        setTimeout(->
+          $(document).off '.hideRemoveOptions'
+          $(document).one 'click.hideRemoveOptions', ->
+            menu.hide()
+        , 1)
       $("#remove-button-set").buttonset()
       $("#remove-button-type-options").hide().menu
         select: (evt, ui)=>
