@@ -201,7 +201,6 @@ class FrackingControls
       $(document).on FrackingModel.YEAR_ELAPSED, =>
         killed = [0,0,0,0]
         killed[3] = ABM.model.killed
-        console.log(killed[3])
 
         for well, i in ABM.model.wells
           killed[i] = well.killed
