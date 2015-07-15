@@ -85,20 +85,8 @@
 <div id="palette-controls">
   <div id="controls">
     <div id="buttons">
-      <div class="water-btn hidden">
-        <input type="checkbox" id="water-button"/>
-        <label for="water-button"><img id="add-water-icon" src="img/tool_addwater.svg"/></label>
-      </div>
-      <div class="irrigation-well-btn hidden">
-        <input type="checkbox" id="irrigation-well-button"/>
-        <label for="irrigation-well-button"><img id="irrigation-well-button-icon" src="img/tool_addwellirrigation.svg"/></label>
-      </div>
-      <div class="removal-well-btn hidden">
-        <input type="checkbox" id="removal-well-button"/>
-        <label for="removal-well-button"><img id="removal-well-button-icon" src="img/tool_addwellremoval.svg"/></label>
-      </div>
       <div id="draw-button-set" class="draw-group hidden">
-        <input type="checkbox" id="fill-button"/><label for="fill-button"><span
+        <input type="checkbox" id="fill-button"/><label for="fill-button" title="Add layers to the model"><span
           class="layer-option rock1"></span></label>
         <button id="draw-button-type">Select a layer type</button>
       </div>
@@ -111,7 +99,7 @@
         <li><a href="#"><span class="layer-option rock4"></span><span class="label">No flow</span></a></li>
       </ul>
       <div id="remove-button-set" class="remove-group hidden">
-        <input type="checkbox" id="remove-button"/><label for="remove-button"><span class="remove-option layer"><img id="remove-icon" src="img/tool_remove.svg"/></span></label>
+        <input type="checkbox" id="remove-button"/><label for="remove-button" title="Remove components from the model"><span class="remove-option layer"><img id="remove-icon" src="img/tool_remove.svg"/></span></label>
         <button id="remove-button-type">Select a layer type</button>
       </div>
       <ul id="remove-button-type-options">
@@ -120,6 +108,18 @@
         <li><a href="#"><span class="remove-option water"><img id="remove-water-icon" src="img/tool_removewater.svg"/></span><span class="label">Water</span></a></li>
         <li><a href="#"><span class="remove-option well"><img id="remove-well-icon" src="img/tool_removewell.svg"/></span><span class="label">Well</span></a></li>
       </ul>
+      <div class="water-btn hidden">
+        <input type="checkbox" id="water-button"/>
+        <label for="water-button" title="Add water to model"><img id="add-water-icon" src="img/tool_addwater.svg"/></label>
+      </div>
+      <div class="irrigation-well-btn hidden">
+        <input type="checkbox" id="irrigation-well-button"/>
+        <label for="irrigation-well-button" title="Add flowback well"><img id="irrigation-well-button-icon" src="img/tool_addwellirrigation.svg"/></label>
+      </div>
+      <div class="removal-well-btn hidden">
+        <input type="checkbox" id="removal-well-button"/>
+        <label for="removal-well-button" title="Add non-flowback well"><img id="removal-well-button-icon" src="img/tool_addwellremoval.svg"/></label>
+      </div>
     </div>
   </div>
 </div>
