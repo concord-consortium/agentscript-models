@@ -64,6 +64,12 @@ window.setupLabCommunication = (model) ->
       result.wellsCombined = model.killed
       model.killed = 0
 
+      result.leakedMethane = model.baseMethaneInWater + model.leakedMethane
+      model.leakedMethane *= 0.6
+
+      result.pondWaste = model.pondWaste
+      model.pondWaste *= 0.6
+
     return result
 
   # Set initial output values.
