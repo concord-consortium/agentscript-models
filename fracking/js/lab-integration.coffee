@@ -41,9 +41,9 @@ window.setupLabCommunication = (model) ->
 
   getOutputs = ->
     result =
-      year: model.getYear(),
-      removeFluidPossible: false,
-      fillPossible: false,
+      year: model.getYear()
+      removeFluidPossible: false
+      fillPossible: false
       explosionPossible: false
 
     for w in model.wells
