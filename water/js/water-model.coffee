@@ -417,6 +417,11 @@ class WaterModel extends ABM.Model
           s = w.changeBreed(@spray)[0]
           s.speed = ABM.util.randomFloat @sprayIntensity
           s.heading = ABM.util.randomFloat @LEFT
+          # Increase well output without actually adding `w` to `toKill` list.
+          @killed++
+          w.well.killed++
+          w.well.totalKilled++
+
 
   suckUpWellWater: ->
     for w in @wells
