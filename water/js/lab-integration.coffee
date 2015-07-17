@@ -55,6 +55,12 @@ window.setupLabCommunication = (model) ->
     result =
       month: model.getMonth()
       year: model.getYear()
+
+    if model.getFractionalMonth() == model.getMonth()
+      for well, i in model.wells
+        result['well' + i] = well.killed
+        well.killed = 0
+
     for name, valueFunc of optionalOutputs
       val = valueFunc()
       # Skip if output returns undefined or null.
