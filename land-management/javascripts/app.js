@@ -425,8 +425,8 @@ setupGraphs = function() {
     $('#date-string').text(model.dateString);
     if (erosionGraph) {
       erosionGraph.addSamples([zone1Smoothed(model.zone1ErosionCount), zone2Smoothed(model.zone2ErosionCount)]);
+      model.resetErosionCounts();
     }
-    model.resetErosionCounts();
     if (topsoilCountGraph) {
       topsoilInZone = model.topsoilInZones();
       return topsoilCountGraph.addSamples([topsoilInZone[1], topsoilInZone[2]]);
@@ -860,6 +860,92 @@ ErosionEngine = (function() {
 window.ErosionEngine = ErosionEngine;
 });
 
+;require.register("src/lab-integration", function(exports, require, module) {
+window.setupLabCommunication = function(model) {
+  var getOutputs, makeSmoothed, phone, registerCustomFunc, registerModelFunc, zone1Smoothed, zone2Smoothed;
+  phone = iframePhone.getIFrameEndpoint();
+  registerModelFunc = function(name) {
+    phone.addListener(name, function() {
+      model[name].apply(model, arguments);
+      return model.draw();
+    });
+    return phone.post('registerScriptingAPIFunc', name);
+  };
+  registerCustomFunc = function(name, func) {
+    phone.addListener(name, func);
+    return phone.post('registerScriptingAPIFunc', name);
+  };
+  registerCustomFunc('play', function() {
+    model.start();
+    return phone.post('play.iframe-model');
+  });
+  registerCustomFunc('stop', function() {
+    model.stop();
+    return phone.post('stop.iframe-model');
+  });
+  registerCustomFunc('step', function(content) {
+    var steps;
+    steps = content;
+    while (steps--) {
+      model.step();
+    }
+    return model.draw();
+  });
+  phone.addListener('set', function(content) {
+    switch (content.name) {
+      case 'userPrecipitation':
+        return model.setUserPrecipitation(content.value);
+      case 'climate':
+        return model.setClimate(content.value);
+      case 'showErosion':
+        return model.showErosion = content.value;
+      case 'showSoilQuality':
+        return model.showSoilQuality = content.value;
+      case 'landType':
+        return model.setLandType(content.value);
+      case 'zone1Slope':
+        return model.zone1Slope = content.value;
+      case 'zone2Slope':
+        return model.zone2Slope = content.value;
+    }
+  });
+  makeSmoothed = function() {
+    var alpha, s;
+    s = null;
+    alpha = 0.3;
+    return function(x) {
+      if (s === null) {
+        return s = x;
+      } else {
+        return s = alpha * x + (1 - alpha) * s;
+      }
+    };
+  };
+  zone1Smoothed = makeSmoothed();
+  zone2Smoothed = makeSmoothed();
+  getOutputs = function() {
+    var result, topsoilInZone;
+    topsoilInZone = model.topsoilInZones();
+    result = {
+      year: model.getFractionalYear(),
+      topsoilInZone1: topsoilInZone[1],
+      topsoilInZone2: topsoilInZone[2],
+      zone1ErosionCount: zone1Smoothed(model.zone1ErosionCount),
+      zone2ErosionCount: zone2Smoothed(model.zone2ErosionCount)
+    };
+    model.resetErosionCounts();
+    return result;
+  };
+  phone.post('outputs', getOutputs());
+  $(document).on(LandManagementModel.STEP_INTERVAL_ELAPSED, function() {
+    return phone.post('tick', {
+      outputs: getOutputs()
+    });
+  });
+  return phone.initialize();
+};
+});
+
 ;require.register("src/land-generator", function(exports, require, module) {
 var BASE_LAND_COLOR, LAND, LandGenerator, SKY, SKY_BTM_COLOR, SKY_COLOR_CHANGE, SKY_TOP_COLOR, TERRACE_COLOR, TOP_LAND_COLOR;
 
@@ -1080,6 +1166,10 @@ LandManagementModel = (function(_super) {
 
   LandManagementModel.prototype.yearTick = function() {
     return this.anim.ticks % (12 * this.monthLength);
+  };
+
+  LandManagementModel.prototype.getFractionalYear = function() {
+    return this.initialYear + this.anim.ticks / (this.monthLength * 12);
   };
 
   LandManagementModel.STEP_INTERVAL_ELAPSED = 'step-interval-elapsed';
