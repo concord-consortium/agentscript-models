@@ -61,6 +61,9 @@ class LandManagementModel extends mixOf ABM.Model, LandGenerator, ErosionEngine,
   yearTick: ->
     @anim.ticks % (12 * @monthLength)
 
+  getFractionalYear: ->
+    @initialYear + @anim.ticks / (@monthLength * 12)
+
   @STEP_INTERVAL_ELAPSED: 'step-interval-elapsed'
   @MONTH_INTERVAL_ELAPSED: 'month-interval-elapsed'
 

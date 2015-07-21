@@ -245,7 +245,7 @@ do ->
         zone1Smoothed(model.zone1ErosionCount),
         zone2Smoothed(model.zone2ErosionCount)
       ]
-    model.resetErosionCounts()
+      model.resetErosionCounts()
     if topsoilCountGraph
       topsoilInZone = model.topsoilInZones()
       topsoilCountGraph.addSamples [topsoilInZone[1], topsoilInZone[2]]
