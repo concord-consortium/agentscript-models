@@ -28,7 +28,7 @@
       top: 0;
       left: 0;
     }
-    #controls {
+    #precipitation-data {
       position: absolute;
       top: auto;
       left: auto;
@@ -50,6 +50,12 @@
       right: 10px;
       bottom: 100px;
     }
+    #date {
+      color: white;
+      top: auto;
+      left: 10px;
+      bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -70,8 +76,7 @@
   <div id="layers"></div>
 </div>
 
-<div id="controls">
-  <div id="precipitation-data">
+  <div id="precipitation-data" style="display: none;">
     <div id="precipitation-bar-chart">
       <div class="bar"><div class="inner-bar"></div>J</div>
       <div class="bar"><div class="inner-bar"></div>F</div>
@@ -88,7 +93,10 @@
     </div>
     <div class="precipitation-data-title">Monthly Precipitation</div>
   </div>
-</div>
+
+  <div id="date">
+    <span id="date-string"></span>
+  </div>
 
 <span class="model-top zone-label" id="zone-1">Zone 1</span>
 <span class="model-top zone-label" id="zone-2">Zone 2</span>
@@ -101,7 +109,7 @@
     require('src/main');
     require('src/lab-integration');
 
-    window.model = new LandManagementModel("layers", 2.75, -114, 114, -70, 40, false);
+    window.model = new LandManagementModel("layers", 2.75, -114, 114, -80, 40, false);
     initControls();
 
     setupLabCommunication(model);

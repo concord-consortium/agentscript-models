@@ -33,19 +33,39 @@ window.setupLabCommunication = (model) ->
   phone.addListener 'set', (content) ->
     switch content.name
       when 'userPrecipitation'
-        model.setUserPrecipitation(content.value)
+        model.setUserPrecipitation content.value
+        updatePrecipitationBarchart model.getCurrentClimateData()
+        # Update precipitation output value
+        phone.post 'outputs', getOutputs()
       when 'climate'
-        model.setClimate(content.value)
+        model.setClimate content.value
+        updatePrecipitationBarchart model.getCurrentClimateData()
+        # Update precipitation output value
+        phone.post 'outputs', getOutputs()
       when 'showErosion'
         model.showErosion = content.value
       when 'showSoilQuality'
         model.showSoilQuality = content.value
+      when 'showSoilQuality'
+        model.showSoilQuality = content.value
+      when 'showPrecipitationGraph'
+        if content.value
+          $('#precipitation-data').show()
+        else
+          $('#precipitation-data').hide()
       when 'landType'
         model.setLandType(content.value)
+        model.reset()
       when 'zone1Slope'
         model.zone1Slope = content.value
+        model.reset()
       when 'zone2Slope'
         model.zone2Slope = content.value
+        model.reset()
+      when 'zone1Planting'
+        model.setZoneManagement 0, content.value
+      when 'zone2Planting'
+        model.setZoneManagement 1, content.value
 
   makeSmoothed = ->
     s = null
@@ -59,6 +79,7 @@ window.setupLabCommunication = (model) ->
     topsoilInZone = model.topsoilInZones()
     result =
       year: model.getFractionalYear()
+      precipitation: model.precipitation
       topsoilInZone1: topsoilInZone[1]
       topsoilInZone2: topsoilInZone[2]
       zone1ErosionCount: zone1Smoothed(model.zone1ErosionCount)

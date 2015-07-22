@@ -24,7 +24,7 @@ enableZoneSliders = (enable) ->
   $zone2Slider.slider if enable then "enable" else "disable"
   if enable then $slopeSlidersDiv.removeClass "disabled" else $slopeSlidersDiv.addClass "disabled"
 
-updatePrecipitationBarchart = (data) ->
+window.updatePrecipitationBarchart = (data) ->
   $(".inner-bar").each (i) ->
     $this = $(this)
     precip = data[i]
