@@ -91,7 +91,7 @@
   globals.require.brunch = true;
 })();
 require.register("src/controls", function(exports, require, module) {
-var $precipitationSlider, $precipitationSliderDiv, $slopeSlidersDiv, $zone1Slider, $zone2Slider, BLUE, DARK_BLUE, DARK_GREEN, DARK_MAGENTA, DARK_ORANGE, GREEN, MAGENTA, ORANGE, autoscaleBoth, enableZoneSliders, erosionGraph, reset, setupGraphs, topsoilCountGraph, updatePrecipitationBarchart, zone1Planting, zone2Planting;
+var $precipitationSlider, $precipitationSliderDiv, $slopeSlidersDiv, $zone1Slider, $zone2Slider, BLUE, DARK_BLUE, DARK_GREEN, DARK_MAGENTA, DARK_ORANGE, GREEN, MAGENTA, ORANGE, autoscaleBoth, enableZoneSliders, erosionGraph, reset, setupGraphs, topsoilCountGraph, zone1Planting, zone2Planting;
 
 MAGENTA = [255, 50, 185];
 
@@ -137,7 +137,7 @@ enableZoneSliders = function(enable) {
   }
 };
 
-updatePrecipitationBarchart = function(data) {
+window.updatePrecipitationBarchart = function(data) {
   return $(".inner-bar").each(function(i) {
     var $this, height, margin, normalized, precip;
     $this = $(this);
@@ -894,19 +894,39 @@ window.setupLabCommunication = function(model) {
   phone.addListener('set', function(content) {
     switch (content.name) {
       case 'userPrecipitation':
-        return model.setUserPrecipitation(content.value);
+        model.setUserPrecipitation(content.value);
+        updatePrecipitationBarchart(model.getCurrentClimateData());
+        return phone.post('outputs', getOutputs());
       case 'climate':
-        return model.setClimate(content.value);
+        model.setClimate(content.value);
+        updatePrecipitationBarchart(model.getCurrentClimateData());
+        return phone.post('outputs', getOutputs());
       case 'showErosion':
         return model.showErosion = content.value;
       case 'showSoilQuality':
         return model.showSoilQuality = content.value;
+      case 'showSoilQuality':
+        return model.showSoilQuality = content.value;
+      case 'showPrecipitationGraph':
+        if (content.value) {
+          return $('#precipitation-data').show();
+        } else {
+          return $('#precipitation-data').hide();
+        }
+        break;
       case 'landType':
-        return model.setLandType(content.value);
+        model.setLandType(content.value);
+        return model.reset();
       case 'zone1Slope':
-        return model.zone1Slope = content.value;
+        model.zone1Slope = content.value;
+        return model.reset();
       case 'zone2Slope':
-        return model.zone2Slope = content.value;
+        model.zone2Slope = content.value;
+        return model.reset();
+      case 'zone1Planting':
+        return model.setZoneManagement(0, content.value);
+      case 'zone2Planting':
+        return model.setZoneManagement(1, content.value);
     }
   });
   makeSmoothed = function() {
@@ -928,6 +948,7 @@ window.setupLabCommunication = function(model) {
     topsoilInZone = model.topsoilInZones();
     result = {
       year: model.getFractionalYear(),
+      precipitation: model.precipitation,
       topsoilInZone1: topsoilInZone[1],
       topsoilInZone2: topsoilInZone[2],
       zone1ErosionCount: zone1Smoothed(model.zone1ErosionCount),
