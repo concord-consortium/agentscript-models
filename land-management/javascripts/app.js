@@ -907,6 +907,13 @@ window.setupLabCommunication = function(model) {
         return model.showSoilQuality = content.value;
       case 'showSoilQuality':
         return model.showSoilQuality = content.value;
+      case 'showSoilQualityKey':
+        if (content.value) {
+          return $('#soil-key').show();
+        } else {
+          return $('#soil-key').hide();
+        }
+        break;
       case 'showPrecipitationGraph':
         if (content.value) {
           return $('#precipitation-data').show();
