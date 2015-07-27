@@ -24,7 +24,7 @@ enableZoneSliders = (enable) ->
   $zone2Slider.slider if enable then "enable" else "disable"
   if enable then $slopeSlidersDiv.removeClass "disabled" else $slopeSlidersDiv.addClass "disabled"
 
-updatePrecipitationBarchart = (data) ->
+window.updatePrecipitationBarchart = (data) ->
   $(".inner-bar").each (i) ->
     $this = $(this)
     precip = data[i]
@@ -245,7 +245,7 @@ do ->
         zone1Smoothed(model.zone1ErosionCount),
         zone2Smoothed(model.zone2ErosionCount)
       ]
-    model.resetErosionCounts()
+      model.resetErosionCounts()
     if topsoilCountGraph
       topsoilInZone = model.topsoilInZones()
       topsoilCountGraph.addSamples [topsoilInZone[1], topsoilInZone[2]]

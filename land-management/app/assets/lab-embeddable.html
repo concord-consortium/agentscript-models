@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Land Management Model</title>
+  <link href="stylesheets/app.css" rel="stylesheet" type="text/css" />
+  <!-- Downside of Brunch's simplicity: Bower assets aren't handled especially well, see https://github.com/brunch/brunch/issues/633 -->
+  <link href="bower_assets/smoothness/jquery-ui.min.css" rel="stylesheet" type="text/css" />
+  <link href="bower_assets/fontawesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+  <style>
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    #model, #layers, #layers canvas {
+      width: 100%;
+      height: 100%;
+    }
+    #model {
+      position: absolute;
+      top: 0;
+      left: auto;
+      right: 0;
+    }
+    #layers {
+      top: 0;
+      left: 0;
+    }
+    #precipitation-data {
+      position: absolute;
+      top: auto;
+      left: auto;
+      right: 10px;
+      bottom: 4px;
+    }
+    .precipitation-data-title {
+      font-size: 0.8em;
+      color: #FFF;
+    }
+    #zone-1 {
+      top: auto;
+      left: 10px;
+      bottom: 100px;
+    }
+    #zone-2 {
+      top: auto;
+      left: auto;
+      right: 10px;
+      bottom: 100px;
+    }
+    #date {
+      color: white;
+      top: auto;
+      left: 10px;
+      bottom: 10px;
+    }
+    #soil-key {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      z-index: 100;
+      font-size: 0.95em;
+    }
+    .quality-key {
+      display: inline-block;
+      width: 3em;
+      height: 1em;
+    }
+    .quality-key.good {
+      background-color: rgb(60, 51, 47);
+    }
+    .quality-key.medium {
+      background-color: rgb(135, 79, 49);
+    }
+    .quality-key.poor {
+      background-color: rgb(193, 114, 7);
+    }
+    #soil-key-link {
+      color: white;
+    }
+    #soil-key-link:hover {
+      color: #ccc;
+      cursor: pointer;
+    }
+    #soil-key-content {
+      position: relative;
+      background: #ECE9E9;
+      padding: 18px 10px 6px 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    #soil-key-content div {
+      margin-top: 6px;
+    }
+    .icon-remove-sign {
+      position: absolute;
+      right: 5px;
+      top: 5px;
+    }
+  </style>
+</head>
+<body>
+<div id="sprites">
+  <img id="grass-1-sprite" src="img/grass-1.png" />
+  <img id="grass-2-sprite" src="img/grass-2.png" />
+  <img id="brown-grass-1-sprite" src="img/brown-grass-1.png" />
+  <img id="brown-grass-2-sprite" src="img/brown-grass-2.png" />
+  <img id="wheat-1-sprite" src="img/wheat-1.png" />
+  <img id="wheat-2-sprite" src="img/wheat-2.png" />
+  <img id="tree-1-sprite" src="img/tree-1.png" />
+  <img id="tree-2-sprite" src="img/tree-2.png" />
+  <img id="tree-3-sprite" src="img/tree-3.png" />
+</div>
+
+<div id="model">
+  <canvas id="testCanvas" style="height:0;width:0;">Your browser does not support HTML5 Canvas.</canvas>
+  <div id="layers"></div>
+</div>
+
+  <div id="precipitation-data" style="display: none;">
+    <div id="precipitation-bar-chart">
+      <div class="bar"><div class="inner-bar"></div>J</div>
+      <div class="bar"><div class="inner-bar"></div>F</div>
+      <div class="bar"><div class="inner-bar"></div>M</div>
+      <div class="bar"><div class="inner-bar"></div>A</div>
+      <div class="bar"><div class="inner-bar"></div>M</div>
+      <div class="bar"><div class="inner-bar"></div>J</div>
+      <div class="bar"><div class="inner-bar"></div>J</div>
+      <div class="bar"><div class="inner-bar"></div>A</div>
+      <div class="bar"><div class="inner-bar"></div>S</div>
+      <div class="bar"><div class="inner-bar"></div>O</div>
+      <div class="bar"><div class="inner-bar"></div>N</div>
+      <div class="bar"><div class="inner-bar"></div>D</div>
+    </div>
+    <div class="precipitation-data-title">Monthly Precipitation</div>
+  </div>
+
+  <div id="date">
+    <span id="date-string"></span>
+  </div>
+
+  <div id="soil-key" style="display: none">
+    <div id="soil-key-link">Soil Quality Key</div>
+    <div id="soil-key-content" style="display: none">
+      <a class='icon-remove-sign icon-large'></a>
+      <div><span class="quality-key good"></span> Good</div>
+      <div><span class="quality-key medium"></span> Medium</div>
+      <div><span class="quality-key poor"></span> Poor</div>
+    </div>
+  </div>
+
+<span class="model-top zone-label" id="zone-1">Zone 1</span>
+<span class="model-top zone-label" id="zone-2">Zone 2</span>
+
+<script src="javascripts/vendor.js"></script>
+<script src="javascripts/app.js"></script>
+
+<script>
+  (function() {
+    require('src/main');
+    require('src/lab-integration');
+
+    window.model = new LandManagementModel("layers", 2.75, -114, 114, -80, 40, false);
+    initControls();
+
+    setupLabCommunication(model);
+    setupSoilQualityKey();
+    Shutterbug.enable('body');
+  }());
+
+  function setupSoilQualityKey() {
+    $('#soil-key-link').on('click', function () {
+      $('#soil-key-content').toggle();
+    });
+    $('#soil-key-content .icon-remove-sign').on('click', function () {
+      $('#soil-key-content').hide();
+    });
+    $('#soil-key-content').draggable();
+  }
+</script>
+
+</body>
+</html>

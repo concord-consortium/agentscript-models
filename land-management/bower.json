@@ -21,7 +21,8 @@
     "jqueryui": "~1.10.4",
     "d3": "3.x",
     "fontawesome": "3.x",
-    "simple-statistics": "^0.8"
+    "simple-statistics": "^0.8",
+    "iframe-phone": "https://github.com/concord-consortium/iframe-phone.git"
   },
   "overrides": {
     "fontawesome": {
