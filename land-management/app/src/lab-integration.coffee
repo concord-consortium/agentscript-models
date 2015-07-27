@@ -48,6 +48,11 @@ window.setupLabCommunication = (model) ->
         model.showSoilQuality = content.value
       when 'showSoilQuality'
         model.showSoilQuality = content.value
+      when 'showSoilQualityKey'
+        if content.value
+          $('#soil-key').show()
+        else
+          $('#soil-key').hide()
       when 'showPrecipitationGraph'
         if content.value
           $('#precipitation-data').show()
