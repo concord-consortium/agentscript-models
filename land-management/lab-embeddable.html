@@ -56,6 +56,48 @@
       left: 10px;
       bottom: 10px;
     }
+    #soil-key {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      z-index: 100;
+    }
+    .quality-key {
+      display: inline-block;
+      width: 3em;
+      height: 1em;
+    }
+    .quality-key.good {
+      background-color: rgb(60, 51, 47);
+    }
+    .quality-key.medium {
+      background-color: rgb(135, 79, 49);
+    }
+    .quality-key.poor {
+      background-color: rgb(193, 114, 7);
+    }
+    #soil-key-link {
+      color: white;
+    }
+    #soil-key-link:hover {
+      color: #ccc;
+      cursor: pointer;
+    }
+    #soil-key-content {
+      position: relative;
+      background: #ECE9E9;
+      padding: 18px 10px 6px 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    #soil-key-content div {
+      margin-top: 6px;
+    }
+    .icon-remove-sign {
+      position: absolute;
+      right: 5px;
+      top: 5px;
+    }
   </style>
 </head>
 <body>
@@ -98,6 +140,16 @@
     <span id="date-string"></span>
   </div>
 
+  <div id="soil-key">
+    <div id="soil-key-link">Soil Quality Key</div>
+    <div id="soil-key-content" style="display: none;">
+      <a class='icon-remove-sign icon-large'></a>
+      <div><span class="quality-key good"></span> Good</div>
+      <div><span class="quality-key medium"></span> Medium</div>
+      <div><span class="quality-key poor"></span> Poor</div>
+    </div>
+  </div>
+
 <span class="model-top zone-label" id="zone-1">Zone 1</span>
 <span class="model-top zone-label" id="zone-2">Zone 2</span>
 
@@ -113,8 +165,19 @@
     initControls();
 
     setupLabCommunication(model);
+    setupSoilQualityKey();
     Shutterbug.enable('body');
   }());
+
+  function setupSoilQualityKey() {
+    $('#soil-key-link').on('click', function () {
+      $('#soil-key-content').toggle();
+    });
+    $('#soil-key-content .icon-remove-sign').on('click', function () {
+      $('#soil-key-content').hide();
+    });
+    $('#soil-key-content').draggable();
+  }
 </script>
 
 </body>
