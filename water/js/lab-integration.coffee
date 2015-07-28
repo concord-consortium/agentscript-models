@@ -90,16 +90,16 @@ window.setupLabCommunication = (model) ->
   phone.initialize()
 
 layout = () ->
-  newWidth = $(window).width()
-  $('body').css('font-size', Math.min((newWidth / 50), 13) + 'px')
-  controlsWidth = $('#controls').width()
-  if controlsWidth
+  newHeight = $(window).height()
+  $('body').css('font-size', Math.min((newHeight / 20), 15) + 'px')
+  controlsHeight = $('#controls').height()
+  if controlsHeight
     margin = 6;
-    $('#model').width(newWidth - controlsWidth - margin)
+    $('#model').height(newHeight - controlsHeight - margin)
 
 # Helper that hides or displays buttons, it's based on the provided hash.
 processControls = (options) ->
-  $controls = $('#palette-controls')
+  $controls = $('#controls')
   if options.draw
     $controls.find('.draw-group').removeClass('hidden')
   if options.remove
