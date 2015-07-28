@@ -145,7 +145,6 @@
   $(document).one('controls-ready', function () {
     var xMin = Number(hashParam("xMin")) || -200;
     var xMax = Number(hashParam("xMax")) || 199;
-    console.log(xMin);console.log(xMax);
     APP = new WaterModel("layers", 2, xMin, xMax, -65, 64, false);
     APP.setRootVars();
     WaterControls.localStoragePrefix = "water-lab-embeddable";
