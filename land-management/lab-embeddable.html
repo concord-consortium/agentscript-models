@@ -33,28 +33,34 @@
       top: auto;
       left: auto;
       right: 10px;
-      bottom: 4px;
+      bottom: 1.8em;
     }
     .precipitation-data-title {
       font-size: 0.8em;
       color: #FFF;
     }
     #zone-1 {
-      top: auto;
-      left: 10px;
-      bottom: 100px;
+      position: static;
+      float: left;
+      margin: 2px 0 3px 10px;
     }
     #zone-2 {
-      top: auto;
-      left: auto;
-      right: 10px;
-      bottom: 100px;
+      position: static;
+      float: right;
+      margin: 2px 10px 3px 0;
+      color: rgb(138, 218, 0);
+    }
+    .zone-labels {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: #fff;
     }
     #date {
       color: white;
       top: auto;
       left: 10px;
-      bottom: 5px;
+      bottom: 1.8em;
       font-size: 1em;
     }
     #soil-key {
@@ -120,7 +126,8 @@
   <div id="layers"></div>
 </div>
 
-  <div id="precipitation-data" style="display: none;">
+  <div id="precipitation-data" style="display: 2;">
+    <div class="precipitation-data-title">Monthly Precipitation</div>
     <div id="precipitation-bar-chart">
       <div class="bar"><div class="inner-bar"></div>J</div>
       <div class="bar"><div class="inner-bar"></div>F</div>
@@ -135,7 +142,6 @@
       <div class="bar"><div class="inner-bar"></div>N</div>
       <div class="bar"><div class="inner-bar"></div>D</div>
     </div>
-    <div class="precipitation-data-title">Monthly Precipitation</div>
   </div>
 
   <div id="date">
@@ -152,8 +158,10 @@
     </div>
   </div>
 
-<span class="model-top zone-label" id="zone-1">Zone 1</span>
-<span class="model-top zone-label" id="zone-2">Zone 2</span>
+<div class="zone-labels">
+  <span class="model-top zone-label" id="zone-1">Zone 1</span>
+  <span class="model-top zone-label" id="zone-2">Zone 2</span>
+</div>
 
 <script src="javascripts/vendor.js"></script>
 <script src="javascripts/app.js"></script>
