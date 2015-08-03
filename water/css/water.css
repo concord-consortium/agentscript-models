@@ -28,13 +28,13 @@ body {
   left: 280px;
 }
 
-#draw-button-type-options, #remove-button-type-options {
+#draw-button-type-options, #remove-button-type-options, #add-wells-button-type-options {
   position: absolute;
   width: 150px;
   z-index: 15;
 }
 
-#draw-button-type-options .ui-corner-all, #remove-button-type-options .ui-corner-all {
+#draw-button-type-options .ui-corner-all, #remove-button-type-options .ui-corner-all, #add-wells-button-type-options .ui-corner-all {
   line-height: 1;
 }
 
@@ -63,7 +63,7 @@ span.layer-option {
   padding-top: 2px;
 }
 
-span.remove-option {
+span.remove-option, span.well-option {
   display: inline-block;
   width: 1.5em;
   height: 1em;
@@ -108,7 +108,7 @@ span.remove-option {
   display: inline-block;
 }
 
-#edit-button-set, #view-button-set, #remove-button-set {
+#edit-button-set, #view-button-set, #remove-button-set, #add-wells-button-set {
   display: inline-block;
   margin-left: 15px;
 }

@@ -122,6 +122,16 @@ processControls = (options) ->
       $controls.find('.remove-option.' + options.remove[0]).click()
       # Deactivate remove mode (activated by previous click).
       WaterControls.stopDraw()
+    if options.wells
+      $controls.find('.wells-group').removeClass('hidden')
+      # Single option, e.g. irrigation or removal.
+      if typeof options.wells == 'string'
+        # Select given option (it will update main button).
+        $controls.find('.well-option.' + options.wells).click()
+        # Deactivate remove mode (activated by previous click).
+        WaterControls.stopDraw()
+        # Hide options.
+        $controls.find('#add-wells-button-type').addClass('hidden')
   if options.water
     $controls.find('.water-btn').removeClass('hidden')
   if options.irrigationWell

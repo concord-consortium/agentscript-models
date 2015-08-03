@@ -1,6 +1,7 @@
 window.WaterControls =
   modelReady: false
   drawStyle: "draw"  # draw or fill
+  wellType: "irrigation" # removal or irrigation
   patchType: "rock1"
   removeType: "layer"
   countOptions:
@@ -51,30 +52,11 @@ window.WaterControls =
           @stopDraw("#fill-button")
           @drawStyle = "fill"
           @draw()
-      $("#draw-button-type").button
-        text: false
-        icons:
-          primary: "ui-icon-triangle-1-s"
-      .click ->
-        menu = $("#draw-button-type-options")
-        if menu.is(":visible")
-          menu.hide()
-          return
-        menu.show().position
-          my: "left top"
-          at: "right top"
-          of: this
-        # Set timeout is necessary, so we don't catch the same event and hide menu immediately.
-        setTimeout(->
-          $(document).off '.hideDrawOptions'
-          $(document).one 'click.hideDrawOptions', ->
-            menu.hide()
-        , 1)
       $("#draw-button-set").buttonset()
       $("#draw-button-type-options").hide().menu
         select: (evt, ui)=>
           layerOption = ui.item.find(".layer-option")
-          $("label[for='fill-button'] .ui-button-text").html(layerOption.clone())
+          $("label[for='fill-button'] .layer-option").attr("class", layerOption.attr("class"))
           @setDrawType layerOption.prop('className').split(/\s+/)
           # automatically put us into fill mode when we select a layer type
           $("#fill-button").click() unless $("#fill-button")[0].checked
@@ -87,34 +69,52 @@ window.WaterControls =
             when "water" then @removeWater()
             when "well" then @removeWell()
             else console.log("Invalid remove type: " + @removeType)
-      $("#remove-button-type").button
-        text: false
-        icons:
-          primary: "ui-icon-triangle-1-s"
-      .click ->
-        menu = $("#remove-button-type-options")
-        if menu.is(":visible")
-          menu.hide()
-          return
-        menu.show().position
-          my: "left top"
-          at: "right top"
-          of: this
-        # Set timeout is necessary, so we don't catch the same event and hide menu immediately.
-        setTimeout(->
-          $(document).off '.hideRemoveOptions'
-          $(document).one 'click.hideRemoveOptions', ->
-            menu.hide()
-        , 1)
       $("#remove-button-set").buttonset()
       $("#remove-button-type-options").hide().menu
         select: (evt, ui)=>
           layerOption = ui.item.find(".remove-option")
-          $("label[for='remove-button'] .ui-button-text").html(layerOption.clone())
+          $("label[for='remove-button'] .remove-option").attr("class", layerOption.attr("class"))
+          $("label[for='remove-button'] .remove-option img").replaceWith(layerOption.find("img").clone())
           @setRemoveType layerOption.prop('className').split(/\s+/)
           # automatically put us into fill mode when we select a layer type
           @stopDraw()
           $("#remove-button").click()
+      $("#add-wells-button").button()
+      .click =>
+        if `this.checked`
+          @stopDraw("#add-wells-button")
+          @drill(@wellType)
+      $("#add-wells-button-set").buttonset()
+      $("#add-wells-button-type-options").hide().menu
+        select: (evt, ui)=>
+          wellOption = ui.item.find(".well-option")
+          $("label[for='add-wells-button'] .well-option").attr("class", wellOption.attr("class"))
+          $("label[for='add-wells-button'] .well-option img").replaceWith(wellOption.find("img").clone())
+          @setWellType wellOption.prop('className').split(/\s+/)
+          @stopDraw()
+          $("#add-wells-button").click()
+
+      $("#draw-button-type, #remove-button-type, #add-wells-button-type").button
+        text: false
+        icons:
+          primary: "ui-icon-triangle-1-s"
+      .click ->
+        id = $(this).attr("id")
+        menu = $("#" + id + "-options")
+        if menu.is(":visible")
+          menu.hide()
+          return
+        menu.show().position
+          my: "left bottom"
+          at: "right bottom"
+          of: this
+        # Set timeout is necessary, so we don't catch the same event and hide menu immediately.
+        setTimeout(->
+          $(document).off '.' + id
+          $(document).one 'click.' + id, ->
+            menu.hide()
+        , 1)
+
       $('#follow-water-button').button(
         label: "Follow Water Droplet"
       ).click ->
@@ -256,6 +256,14 @@ window.WaterControls =
       @removeType = "well"
     else
       console.log "Invalid remove option!", types
+
+  setWellType: (types = [])->
+    if $.inArray("irrigation", types) > -1
+      @wellType = "irrigation"
+    else if $.inArray("removal", types) > -1
+      @wellType = "removal"
+    else
+      console.log "Invalid well option!", types
 
   startType: null
   fillBelow: (x,y,points)->
@@ -402,6 +410,7 @@ window.WaterControls =
 
   stopDraw: (source, alsoStopModel=true)->
     $("#fill-button").click() if source isnt "#fill-button" and $("#fill-button")[0]?.checked
+    $("#add-wells-button").click() if source isnt "#add-wells-button" and $("#add-wells-button")[0]?.checked
     $("#remove-button").click() if source isnt "#remove-button" and $("#remove-button")[0]?.checked
     $("#erase-button").click() if source isnt "#erase-button" and $("#erase-button")[0]?.checked
     $("#irrigation-well-button").click() if source isnt "#irrigation-well-button" and $("#irrigation-well-button")[0]?.checked
