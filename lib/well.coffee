@@ -64,10 +64,12 @@ class Well
   # overridden in GasWell
   getLabelColor: (id) ->
     switch id
-      when 1 then [200,0,0]
-      when 2 then [50,255,20]
-      when 3 then [0,0,255]
-      else [255,255,255]
+      when 1 then [0, 0, 255]
+      when 2 then [255, 0, 102]
+      when 3 then [0, 0, 0]
+      when 4 then [204, 51, 255]
+      when 5 then [255, 102, 0]
+      else [255, 255, 255]
 
   length: ->
     Math.abs(@x - @head.x) + Math.abs(@depth - @head.y)
