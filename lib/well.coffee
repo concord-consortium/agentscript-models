@@ -186,6 +186,7 @@ class Well
     ABM.util.removeItem @model.wells, @
     @eraseUI()
     @model.redraw()
+    --Well.COUNT
 
   # a check to see if the well is still properly situated.
   # Basically, it just makes sure that the well head patch is on a valid type,
