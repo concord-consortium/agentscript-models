@@ -57,8 +57,8 @@ window.setupLabCommunication = (model) ->
       year: model.getYear()
 
     if model.getFractionalMonth() == model.getMonth()
-      for well, i in model.wells
-        result['well' + i] = well.killed
+      for well in model.wells
+        result['well' + well.id] = well.killed
         well.killed = 0
 
     for name, valueFunc of optionalOutputs
@@ -86,6 +86,12 @@ window.setupLabCommunication = (model) ->
   model.stopCallback = ->
     # Notify iframe model that we received 'stop' message and reacted appropriately.
     phone.post('stop.iframe-model')
+
+  model.wellRemovedCallback = (id) ->
+    # Mak sure that we reset well output back to 0 once it's removed.
+    outputs = {}
+    outputs['well' + id] = 0
+    phone.post 'outputs', outputs
 
   phone.initialize()
 
