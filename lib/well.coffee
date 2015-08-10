@@ -1,5 +1,5 @@
 class Well
-  @COUNT: 0
+  @TAKEN_IDS: {}
   id: 0
   x: 0
   depth: 0
@@ -30,9 +30,17 @@ class Well
   # NOTE: relative urls are relative to the model html location!
   @WELL_IMG: ABM.util.importImage 'img/fracking_well.png'
 
+  # Returns min, available ID of a well.
+  @getId: ->
+    id = 1
+    while Well.TAKEN_IDS[id]
+      id++
+    Well.TAKEN_IDS[id] = true
+    id
+
   constructor: (@model, @x, @depth)->
     # set these here so all Well instances don't share the same arrays
-    @id = ++Well.COUNT
+    @id = Well.getId()
     @head = {x: 0, y: 0}
     @patches = []
     @walls = []
@@ -186,7 +194,8 @@ class Well
     ABM.util.removeItem @model.wells, @
     @eraseUI()
     @model.redraw()
-    --Well.COUNT
+    @model.wellRemovedCallback?(@id)
+    Well.TAKEN_IDS[@id] = false
 
   # a check to see if the well is still properly situated.
   # Basically, it just makes sure that the well head patch is on a valid type,
