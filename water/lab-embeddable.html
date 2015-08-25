@@ -58,8 +58,14 @@
     #irrigation-well-button-icon, #removal-well-button-icon, #remove-well-icon, #add-water-icon, #remove-water-icon, #remove-icon {
       height: 1.2em;
     }
+    #irrigation-well-button-icon, #removal-well-button-icon, #remove-well-icon {
+      width: auto;
+    }
     #remove-icon {
       margin-top: 3px;
+    }
+    span.remove-option, span.well-option {
+      text-align: center;
     }
     label span.remove-option, label span.layer-option, label span.well-option {
       padding-top: 0;
@@ -121,14 +127,14 @@
       <input type="checkbox" id="add-wells-button"/>
       <label for="add-wells-button" title="Add wells to the model">
         Add well
-        <span class="well-option layer"><img id="irrigation-well-button-icon" src="img/tool_addwellirrigation.svg"/></span>
+        <span class="well-option layer"><img id="irrigation-well-button-icon" src="img/tool-well-flowback.png"/></span>
       </label>
       <button id="add-wells-button-type">Select a well type</button>
     </div>
     <ul id="add-wells-button-type-options">
       <li class="header">Wells</li>
-      <li><a href="#"><span class="well-option irrigation"><img id="irrigation-well-button-icon" src="img/tool_addwellirrigation.svg"/></span><span class="label">Flowback well</span></a></li>
-      <li><a href="#"><span class="well-option removal"><img id="removal-well-button-icon" src="img/tool_addwellremoval.svg"/></span><span class="label">Non-flowback well</span></a></li>
+      <li><a href="#"><span class="well-option irrigation"><img id="irrigation-well-button-icon" src="img/tool-well-flowback.png"/></span><span class="label">Flowback well</span></a></li>
+      <li><a href="#"><span class="well-option removal"><img id="removal-well-button-icon" src="img/tool-well-non-flowback.png"/></span><span class="label">Non-flowback well</span></a></li>
     </ul>
     <div class="water-btn hidden">
       <input type="checkbox" id="water-button"/>
@@ -146,7 +152,7 @@
       <li class="header">Remove</li>
       <li><a href="#"><span class="remove-option layer"><img id="remove-icon" src="img/tool_remove.svg"/></span><span class="label">Layer</span></a></li>
       <li><a href="#"><span class="remove-option water"><img id="remove-water-icon" src="img/tool_removewater.svg"/></span><span class="label">Water</span></a></li>
-      <li><a href="#"><span class="remove-option well"><img id="remove-well-icon" src="img/tool_removewell.svg"/></span><span class="label">Well</span></a></li>
+      <li><a href="#"><span class="remove-option well"><img id="remove-well-icon" src="img/tool-remove-well.png"/></span><span class="label">Well</span></a></li>
     </ul>
   </div>
 </div>
