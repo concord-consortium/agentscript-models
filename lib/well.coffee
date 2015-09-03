@@ -63,7 +63,7 @@ class Well
 
   # extended in GasWell
   drawLabel: ->
-    p = @model.patches.patchXY(@head.x, @head.y + 1)
+    p = @model.patches.patchXY(@head.x, @head.y + 4)
     p.label = "" + @id
     @addPatch p
     @drawContext.labelColor = @getLabelColor @id

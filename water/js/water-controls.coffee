@@ -369,7 +369,7 @@ window.WaterControls =
   erase: ->
     target = $("#mouse-catcher")
     target.show()
-    target.css('cursor', 'url("img/cursor_remove.cur"), default')
+    target.css('cursor', 'url("img/new-cursors/remove.cur"), default')
     target.bind 'mousedown touchstart', (evt)=>
       # get the patch under the cursor,
       # find all the contiguous patches of the same type,
@@ -439,7 +439,7 @@ window.WaterControls =
   drill: (type='irrigation')->
     target = $("#mouse-catcher")
     target.show()
-    target.css('cursor', 'url("img/cursor_addwell' + type + '.cur"), default')
+    target.css('cursor', 'url("img/new-cursors/' + type + '.cur"), default')
     target.bind 'mousedown touchstart', (evt)=>
       return if @timerId?
       if evt? and evt.preventDefault?
@@ -460,7 +460,7 @@ window.WaterControls =
   removeWell: ->
     target = $("#mouse-catcher")
     target.show()
-    target.css('cursor', 'url("img/cursor_removewell.cur"), default')
+    target.css('cursor', 'url("img/new-cursors/remove-well.cur"), default')
     target.bind 'mousedown touchstart', (evt)=>
       # get the patch under the cursor,
       # check if there's a nearby well. If so, remove it.
@@ -475,7 +475,7 @@ window.WaterControls =
     mouseDown = false
     touchStart = null
     target.show()
-    target.css('cursor', 'url("img/cursor_addwater.cur"), default')
+    target.css('cursor', 'url("img/new-cursors/water.cur"), default')
     target.bind 'mousedown touchstart', (evt)=>
       return if @timerId?
       if evt? and evt.preventDefault?
@@ -518,7 +518,7 @@ window.WaterControls =
     mouseDown = false
     touchStart = null
     target.show()
-    target.css('cursor', 'url("img/cursor_removewater.cur"), default')
+    target.css('cursor', 'url("img/new-cursors/remove-water.cur"), default')
     target.bind 'mousedown touchstart', (evt)=>
       return if @timerId?
       if evt? and evt.preventDefault?
