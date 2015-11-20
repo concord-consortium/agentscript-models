@@ -281,7 +281,7 @@ class WaterModel extends ABM.Model
       # look within an N patch radius of us for a well patch
       near = @patches.patchRect p, 5, 10, true
       for pn in near
-        if pn.isWell
+        if pn? && pn.isWell
           return pn.well
     return null
 
