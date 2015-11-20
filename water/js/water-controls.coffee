@@ -233,6 +233,11 @@ window.WaterControls =
       @outputGraph.addSamples [count]
 
 
+  logAction: (action, data) ->
+    # noop by default.
+    # This function can be replaced by client code by something meaningful
+    # (e.g. logging to the parent window).
+
   setDrawType: (colors = [])->
     if $.inArray("rock1", colors) > -1
       @patchType = "rock1"
@@ -440,6 +445,10 @@ window.WaterControls =
     target = $("#mouse-catcher")
     target.show()
     target.css('cursor', 'url("img/new-cursors/' + type + '.cur"), default')
+    # Keep patch (coords in fact) in the outer scope so they can be reused by logging code.
+    patch = null
+    wellPresent = null
+    shouldLog = false
     target.bind 'mousedown touchstart', (evt)=>
       return if @timerId?
       if evt? and evt.preventDefault?
@@ -449,13 +458,27 @@ window.WaterControls =
       ABM.model.newWellType = switch type
         when "irrigation" then IrrigationWell
         else WaterRemovalWell
+      wellPresent = null
+      shouldLog = true
       @timerId = setInterval =>
-        p = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
-        ABM.model.drill p
+        patch = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
+        # Check whether well is present just once, at the beginning of drilling. Check explicitly if wellPresent
+        # equals to null and make sure that null is not assigned to it (but true / false instead).
+        wellPresent = ABM.model.findNearbyWell(patch) != null if wellPresent == null
+        ABM.model.drill patch
       , 100
     .bind 'mouseup mouseleave touchend', =>
       clearInterval @timerId if @timerId?
       @timerId = null
+      if shouldLog && patch?
+        well = ABM.model.findNearbyWell(patch)
+        if well
+          typeCap = type[0].toUpperCase() + type.slice(1)
+          actionName = if wellPresent then "#{typeCap}WellModified" else "#{typeCap}WellAdded"
+          @logAction(actionName, {id: well.id, x: well.x, y: well.depth})
+        # It's quite important, as this handler is also called on mouse leave => can be called multiple times.
+        shouldLog = false
+
 
   removeWell: ->
     target = $("#mouse-catcher")

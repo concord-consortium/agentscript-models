@@ -1,6 +1,10 @@
-window.setupLabCommunication = (model) ->
+window.setupLabCommunication = (model, controls) ->
   phone = iframePhone.getIFrameEndpoint()
   optionalOutputs = {}
+
+  # Setup logging.
+  controls.logAction = (action, data) =>
+    phone.post('log', {action: action, data: data})
 
   # Register Scripting API functions.
   registerModelFunc = (name) ->
