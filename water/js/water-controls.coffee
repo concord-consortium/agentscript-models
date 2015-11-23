@@ -291,6 +291,8 @@ window.WaterControls =
     mouseDown = false
     cStart = null
     touchStart = null
+    changedCount = 0
+    actionStart = null
     drawEvt = (evt)=>
       if evt? and evt.preventDefault?
         evt.preventDefault()
@@ -330,6 +332,8 @@ window.WaterControls =
       for c in points
         p = ABM.model.patches.patchXY c.x, c.y
         if p?
+          if p.type != @patchType
+            changedCount += 1
           p.type = @patchType
           if p.isWell
             wellsToRevalidate.push p.well
@@ -342,25 +346,40 @@ window.WaterControls =
       ABM.model.refreshPatches = false
       cStart = cEnd
       return false
+    log = () =>
+      @logAction('LayerAdded', {
+        type: @patchType,
+        points: changedCount,
+        area: changedCount / ABM.model.getArea(),
+        time: (Date.now() - actionStart) / 1000
+      })
     target.show()
     target.css('cursor', 'url("img/cursor_add.cur"), default')
     target.bind 'mousedown touchstart', (evt)->
       mouseDown = true
+      changedCount = 0
       if evt.originalEvent.touches?
         t = evt.originalEvent.touches[0]
         touchStart = document.elementFromPoint(t.pageX,t.pageY)
       drawEvt(evt)
+      actionStart = Date.now()
     target.bind 'mouseup touchend', =>
       mouseDown = false
       cStart = null
       touchStart = null
       @startType = null
+      if changedCount
+        log()
+        changedCount = 0
     target.bind 'mouseleave', (evt)=>
       drawEvt(evt)
       mouseDown = false
       cStart = null
       touchStart = null
       @startType = null
+      if changedCount
+        log()
+        changedCount = 0
     target.bind 'mousemove', drawEvt
     target.bind 'touchmove', (evt)=>
       if touchStart?
@@ -399,9 +418,11 @@ window.WaterControls =
             return fillTypes[x]
         fillTypes[x] = "sky"
         return fillTypes[x]
+      changedCount = 0
       while patches.length > 0
         patch = patches.shift()
         continue if patch.type isnt originalPatchType
+        changedCount += 1
         fType = findFillType(patch)
         patch.type = fType
         if patch.isWell
@@ -415,6 +436,7 @@ window.WaterControls =
       ABM.model.refreshPatches = true
       ABM.model.draw()
       ABM.model.refreshPatches = false
+      @logAction("LayerRemoved", {type: originalPatchType, patches: changedCount, area: changedCount / ABM.model.getArea()})
 
   stopDraw: (source, alsoStopModel=true)->
     $("#fill-button").click() if source isnt "#fill-button" and $("#fill-button")[0]?.checked
@@ -502,6 +524,8 @@ window.WaterControls =
     lastWaterEvt = null
     mouseDown = false
     touchStart = null
+    waterAdded = 0
+    actionStart = null
     target.show()
     target.css('cursor', 'url("img/new-cursors/water.cur"), default')
     target.bind 'mousedown touchstart', (evt)=>
@@ -515,9 +539,10 @@ window.WaterControls =
       if evt.originalEvent.touches?
         t = evt.originalEvent.touches[0]
         touchStart = document.elementFromPoint(t.pageX,t.pageY)
-      @_placeWater(evt, target)
+      waterAdded = @_placeWater(evt, target)
+      actionStart = Date.now()
       @timerId = setInterval =>
-        @_placeWater(lastWaterEvt, target)
+        waterAdded += @_placeWater(lastWaterEvt, target)
       , 10
     .bind 'mousemove touchmove', (evt)=>
       lastWaterEvt = evt if mouseDown
@@ -539,12 +564,17 @@ window.WaterControls =
       clearInterval @timerId if @timerId?
       @timerId = null
       touchStart = null
+      if waterAdded
+        @logAction("WaterAdded", {patches: waterAdded, time: (Date.now() - actionStart) / 1000})
+        waterAdded = 0
 
   removeWater: ->
     target = $("#mouse-catcher")
     lastWaterEvt = null
     mouseDown = false
     touchStart = null
+    waterRemoved = 0
+    actionStart = null
     target.show()
     target.css('cursor', 'url("img/new-cursors/remove-water.cur"), default')
     target.bind 'mousedown touchstart', (evt)=>
@@ -558,9 +588,10 @@ window.WaterControls =
       if evt.originalEvent.touches?
         t = evt.originalEvent.touches[0]
         touchStart = document.elementFromPoint(t.pageX,t.pageY)
-      @_removeWater(evt, target)
+      waterRemoved = @_removeWater(evt, target)
+      actionStart = Date.now()
       @timerId = setInterval =>
-        @_removeWater(lastWaterEvt, target)
+        waterRemoved += @_removeWater(lastWaterEvt, target)
       , 10
     .bind 'mousemove touchmove', (evt)=>
       lastWaterEvt = evt if mouseDown
@@ -582,27 +613,34 @@ window.WaterControls =
       clearInterval @timerId if @timerId?
       @timerId = null
       touchStart = null
+      if waterRemoved
+        @logAction("WaterRemoved", {patches: waterRemoved, time: (Date.now() - actionStart) / 1000})
+        waterRemoved = 0
 
-  _placeWater: (evt, target)->
+  _placeWater: (evt, target) ->
     p = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
     rect = ABM.model.patches.patchRect p, 5, 5, true
     for pa in ABM.util.shuffle(rect)
       if pa? and pa.agentsHere().length == 0
-        ABM.model.rain.create 1, (drop)->
+        ABM.model.rain.create 1, (drop) ->
           drop.moveTo pa
           ABM.model.draw()
-        break
+        return 1
+    return 0
 
   _removeWater: (evt, target)->
     p = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
     rect = ABM.model.patches.patchRect p, 5, 5, true
+    removedWater = 0
     for pa in ABM.util.shuffle(rect)
       if pa? and (agents = pa.agentsHere()).length != 0
         for a in agents
           if a.breed is ABM.model.rain
             a.die()
+            removedWater += 1
         ABM.model.draw()
-        break
+        return removedWater
+    return removedWater
 
   startStopModel: ->
     if ABM.model.anim.animStop

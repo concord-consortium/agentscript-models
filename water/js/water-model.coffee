@@ -190,6 +190,9 @@ class WaterModel extends ABM.Model
   getYear: ->
     Math.floor @getFractionalYear()
 
+  getArea: ->
+    (@patches.maxX - @patches.minX) * (@patches.maxY - @patches.minY)
+
   _setupWater: (agents)->
     agents.setDefaultSize 2/@world.size  # try to keep water around 2px in size
     agents.setDefaultColor WaterModel.waterColor
