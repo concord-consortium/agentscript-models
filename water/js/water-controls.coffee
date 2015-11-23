@@ -1,3 +1,6 @@
+capitalize = (string) ->
+  string[0].toUpperCase() + string.slice(1)
+
 window.WaterControls =
   modelReady: false
   drawStyle: "draw"  # draw or fill
@@ -473,7 +476,7 @@ window.WaterControls =
       if shouldLog && patch?
         well = ABM.model.findNearbyWell(patch)
         if well
-          typeCap = type[0].toUpperCase() + type.slice(1)
+          typeCap = capitalize(type)
           actionName = if wellPresent then "#{typeCap}WellModified" else "#{typeCap}WellAdded"
           @logAction(actionName, {id: well.id, x: well.x, y: well.depth})
         # It's quite important, as this handler is also called on mouse leave => can be called multiple times.
@@ -490,7 +493,9 @@ window.WaterControls =
       originalPatch = ABM.model.patches.patchAtPixel @offsetX(evt, target), @offsetY(evt, target)
       return unless originalPatch?
       well = ABM.model.findNearbyWell originalPatch
-      well.remove() if well?
+      if well?
+        @logAction("WellRemoved", {id: well.id})
+        well.remove()
 
   addWater: ->
     target = $("#mouse-catcher")
