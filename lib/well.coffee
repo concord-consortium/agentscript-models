@@ -28,7 +28,7 @@ class Well
 
   # some graphical images
   # NOTE: relative urls are relative to the model html location!
-  @WELL_IMG: ABM.util.importImage 'img/fracking_well.png'
+  @WELL_IMG: ABM.util.importImage ''
 
   # Returns min, available ID of a well.
   @getId: ->
