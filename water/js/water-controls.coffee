@@ -1,7 +1,3 @@
-wellType2Label =
-  irrigation: 'Flowback'
-  removal: 'Non-flowback'
-
 window.WaterControls =
   modelReady: false
   drawStyle: "draw"  # draw or fill
@@ -499,8 +495,7 @@ window.WaterControls =
       if shouldLog && patch?
         well = ABM.model.findNearbyWell(patch)
         if well
-          type = wellType2Label[type]
-          actionName = if wellWasPresent then "#{type}WellModified" else "#{type}WellAdded"
+          actionName = if wellWasPresent then "#{well.type}WellModified" else "#{well.type}WellAdded"
           @logAction(actionName, {id: well.id, x: well.x, y: well.depth})
         # It's quite important, as this handler is also called on mouse leave => can be called multiple times.
         shouldLog = false
@@ -517,8 +512,7 @@ window.WaterControls =
       return unless originalPatch?
       well = ABM.model.findNearbyWell originalPatch
       if well?
-        type = wellType2Label[well.type]
-        @logAction("#{type}WellRemoved", {id: well.id})
+        @logAction("#{well.type}WellRemoved", {id: well.id})
         well.remove()
 
   addWater: ->

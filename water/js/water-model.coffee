@@ -535,10 +535,12 @@ class WaterModel extends ABM.Model
 class WaterRemovalWell extends Well
   @WELL_HEAD_TYPES: ["sky"]
   @WELL_IMG: ABM.util.importImage 'img/new-icons/nonflow-s.png'
+  type: 'Non-flowback'
 
 class IrrigationWell extends Well
   @WELL_HEAD_TYPES: ["sky"]
   @WELL_IMG: ABM.util.importImage 'img/new-icons/flowback-s.png'
+  type: 'Flowback'
 
 class TileControl
   tileData: null
