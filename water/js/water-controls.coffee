@@ -1,5 +1,6 @@
-capitalize = (string) ->
-  string[0].toUpperCase() + string.slice(1)
+wellType2Label =
+  irrigation: 'Flowback'
+  removal: 'Non-flowback'
 
 window.WaterControls =
   modelReady: false
@@ -472,7 +473,7 @@ window.WaterControls =
     target.css('cursor', 'url("img/new-cursors/' + type + '.cur"), default')
     # Keep patch (coords in fact) in the outer scope so they can be reused by logging code.
     patch = null
-    wellPresent = null
+    wellWasPresent = null
     shouldLog = false
     target.bind 'mousedown touchstart', (evt)=>
       return if @timerId?
@@ -483,13 +484,13 @@ window.WaterControls =
       ABM.model.newWellType = switch type
         when "irrigation" then IrrigationWell
         else WaterRemovalWell
-      wellPresent = null
+      wellWasPresent = null
       shouldLog = true
       @timerId = setInterval =>
         patch = ABM.model.patches.patchAtPixel(@offsetX(evt, target), @offsetY(evt, target))
-        # Check whether well is present just once, at the beginning of drilling. Check explicitly if wellPresent
+        # Check whether well is present just once, at the beginning of drilling. Check explicitly if wellWasPresent
         # equals to null and make sure that null is not assigned to it (but true / false instead).
-        wellPresent = ABM.model.findNearbyWell(patch) != null if wellPresent == null
+        wellWasPresent = ABM.model.findNearbyWell(patch) != null if wellWasPresent == null
         ABM.model.drill patch
       , 100
     .bind 'mouseup mouseleave touchend', =>
@@ -498,8 +499,8 @@ window.WaterControls =
       if shouldLog && patch?
         well = ABM.model.findNearbyWell(patch)
         if well
-          typeCap = capitalize(type)
-          actionName = if wellPresent then "#{typeCap}WellModified" else "#{typeCap}WellAdded"
+          type = wellType2Label[type]
+          actionName = if wellWasPresent then "#{type}WellModified" else "#{type}WellAdded"
           @logAction(actionName, {id: well.id, x: well.x, y: well.depth})
         # It's quite important, as this handler is also called on mouse leave => can be called multiple times.
         shouldLog = false
@@ -516,7 +517,8 @@ window.WaterControls =
       return unless originalPatch?
       well = ABM.model.findNearbyWell originalPatch
       if well?
-        @logAction("WellRemoved", {id: well.id})
+        type = wellType2Label[well.type]
+        @logAction("#{type}WellRemoved", {id: well.id})
         well.remove()
 
   addWater: ->
