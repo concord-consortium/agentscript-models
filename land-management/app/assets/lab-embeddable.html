@@ -23,6 +23,13 @@
       top: 0;
       left: auto;
       right: 0;
+      /*
+          display: table-cell fixes scaling issues in Lab on iPad.
+          Can't tell why, but other models that specify display: table-cell
+          work just fine in Lab (e.g. global-climate).
+          See: https://www.pivotaltracker.com/story/show/101711824
+        */
+      display: table-cell;
     }
     #layers {
       top: 0;
