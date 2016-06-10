@@ -38,6 +38,9 @@ window.setupLabCommunication = (model, controls) ->
     switch content.name
       when 'template'
         model.setTemplate content.value
+      when 'images'
+        model.clearImageLayer()
+        model.drawImage(img.name, img.x, img.y, img.scale) for img in content.value
       when 'rainProbability'
         model.rainProbability = content.value
       when 'evapProbability'

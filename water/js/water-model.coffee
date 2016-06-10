@@ -50,6 +50,12 @@ class WaterModel extends ABM.Model
       return tile
     super
 
+  loadShapeFromElement: (shapeName, elementId, scale=0.1, flipHorizontal=false) ->
+    img = document.getElementById elementId
+    if img then ABM.shapes.add shapeName, false, (ctx) ->
+      ctx.scale (if flipHorizontal then -scale else scale), -scale
+      ctx.drawImage img, 0, 0
+
   setup: ->
     @_toRedraw = []
     @_toKill = []
@@ -67,12 +73,17 @@ class WaterModel extends ABM.Model
 
     @setCacheAgentsHere()
 
+    @loadShapeFromElement "city", "city-sprite", 0.1
+    @loadShapeFromElement "farm", "farm-sprite"
     @agentBreeds "rain wellWater evap spray"
 
     @setupRain()
     @setupEvap()
     @setupWellWater()
     @setupSpray()
+
+    # Add additional layer for static images.
+    @imgContext = @addContext "images", 0
 
     # init all the patches as sky color
     # unless we have a template to load
@@ -105,6 +116,18 @@ class WaterModel extends ABM.Model
     for p in @patches
       p.color = [205, 237, 252]
       p.type = "sky"
+
+  drawImage: (imgName, x=0, y=0, scale=0.1) ->
+    # Images are expected to be present in DOM with following ID: <imgName>-sprite
+    img = document.getElementById(imgName + '-sprite')
+    @imgContext.save()
+    @imgContext.translate(x, y)
+    @imgContext.scale(scale, -scale)
+    @imgContext.drawImage(img, 0, 0)
+    @imgContext.restore()
+
+  clearImageLayer: ->
+    @imgContext.clearRect(@patches.minX, @patches.minY, @patches.maxX - @patches.minX, @patches.maxY - @patches.minY)
 
   redraw: ->
     redrawSet = ABM.util.clone @_toRedraw
