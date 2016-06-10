@@ -235,7 +235,7 @@ class Well
 
   _createDrawContext: ->
     return @model.contexts.wells if @model.contexts.wells?
-    ctx = @model.addContext "wells", 2
+    ctx = @model.addContext "wells", 5
     # mirror the drawing context's text and label settings
     ctx.font         = @model.contexts.drawing.font
     ctx.textAlign    = @model.contexts.drawing.textAlign
