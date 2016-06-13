@@ -63,11 +63,42 @@ class Well
 
   # extended in GasWell
   drawLabel: ->
-    p = @model.patches.patchXY(@head.x, @head.y + 4)
-    p.label = "" + @id
-    @addPatch p
-    @drawContext.labelColor = @getLabelColor @id
-    p.drawLabel(@drawContext)
+    ctx = @drawContext
+
+    ctx.save()
+    ctx.translate @head.x, @head.y
+    ctx.scale 1/ABM.patches.size, -1/ABM.patches.size
+    ctx.translate 0, -40
+
+    ctx.save()
+    ctx.scale 0.64, 0.8
+    ctx.fillStyle = 'white'
+
+    ctx.beginPath()
+    ctx.moveTo 0, 20
+    ctx.lineTo -12, 4
+    ctx.lineTo 12, 4
+    ctx.lineTo 0, 20
+    ctx.fill()
+    ctx.closePath()
+
+    ctx.beginPath()
+    ctx.arc 0, 0, 13, 2 * Math.PI, false
+    ctx.fill()
+    ctx.closePath()
+
+    ctx.fillStyle = ABM.util.colorStr @getLabelColor @id
+    ctx.beginPath()
+    ctx.arc 0, 0, 10, 2 * Math.PI, false
+    ctx.fill()
+    ctx.closePath()
+    ctx.restore()
+
+    ctx.font = '12px "Helvetica Neue", Helvetica, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillStyle = 'white'
+    ctx.fillText '' + @id, 0, 0
+    ctx.restore()
 
   # overridden in GasWell
   getLabelColor: (id) ->
