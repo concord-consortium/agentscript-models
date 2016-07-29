@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Air Pollution Model</title>
+    <!-- Style adjustments, so model works fine in fullscreen mode: -->
+    <style>
+      html {
+        height: 100%;
+      }
+      body {
+        height: 100%;
+        overflow: hidden;
+        margin: 0;
+      }
+      #content, #layers, #layers canvas {
+        width: 95%;
+        height: 100%;
+      }
+      #layers {
+        top: 0px;
+        left: 0px;
+      }
+
+      #air-temperature {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 4.5%;
+        height: 100%;
+        min-width: 1em;
+      }
+
+      #label {
+        color: #eeeeee;
+        z-index: 2;
+        position: absolute;
+        width: 200px;
+        height: 1em;
+        left: 0%;
+        bottom: 20px;
+        -ms-transform: rotate(-90deg); /* IE 9 */
+        -webkit-transform: rotate(-90deg); /* Chrome, Safari, Opera */
+        transform: rotate(-90deg);
+        -ms-transform-origin: left top 0;
+        -webkit-transform-origin: left top 0;
+        transform-origin: left top 0;
+      }
+
+      #lower-air-temperature {
+        position: absolute;
+        background: rgb(242,46,49);
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: 42%;
+      }
+
+      #temperature-scale {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: rgb(50,181,252);
+        background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzMyYjVmYyIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjQyJSIgc3RvcC1jb2xvcj0iI2YyMmUzMSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjU2JSIgc3RvcC1jb2xvcj0iIzIwN2NjYSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM3ZGI5ZTgiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+        background: -moz-linear-gradient(top,  rgb(50,181,252) 0%, rgb(242,46,49) 42%, rgb(32,124,202) 56%, rgb(125,185,232) 100%);
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgb(50,181,252)), color-stop(42%,rgb(242,46,49)), color-stop(56%,rgb(32,124,202)), color-stop(100%,rgb(125,185,232)));
+        background: -webkit-linear-gradient(top,  rgb(50,181,252) 0%,rgb(242,46,49) 42%,rgb(32,124,202) 56%,rgb(125,185,232) 100%);
+        background: -o-linear-gradient(top,  rgb(50,181,252) 0%,rgb(242,46,49) 42%,rgb(32,124,202) 56%,rgb(125,185,232) 100%);
+        background: -ms-linear-gradient(top,  rgb(50,181,252) 0%,rgb(242,46,49) 42%,rgb(32,124,202) 56%,rgb(125,185,232) 100%);
+        background: linear-gradient(to bottom,  rgb(50,181,252) 0%,rgb(242,46,49) 42%,rgb(32,124,202) 56%,rgb(125,185,232) 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#32b5fc', endColorstr='#7db9e8',GradientType=0 );
+
+      }
+    </style>
+
+    <script src="javascripts/vendor.js"></script>
+    <script src="javascripts/app.js"></script>
+
+    <script>
+      $(document).ready(function() {
+        require('src/lab-integration');
+
+        var APP=new AirPollutionModel("layers", 1, 0, 599, 0, 359, true),
+            controls = new AirPollutionControls();
+
+        controls.setupAirTempIndicator();
+
+        setupLabCommunication(APP);
+
+        Shutterbug.enable('body');
+      });
+    </script>
+  </head>
+  <body>
+    <div id="content">
+      <div id="model">
+        <canvas id="canvas" >Your browser does not support HTML5 Canvas.</canvas>
+        <div id="layers"></div>
+      </div>
+      <div id="air-temperature">
+        <div id="label">Temperatura del aire</div>
+        <div id="temperature-scale"></div>
+        <div id="lower-air-temperature"></div>
+      </div>
+    </div>
+  </body>
+</html>
