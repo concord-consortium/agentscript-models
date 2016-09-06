@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Air Pollution Model</title>
+    <script type="text/javascript" src="../lib/agentscript/agentscript.js"></script>
+    <script type="text/javascript" src="../lib/agentscript/coffee-script.js"></script>
+    <link href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet" type="text/css" />
+    <link href="css/layout.css" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+      html {
+        height: 100%;
+      }
+      body {
+        height: 100%;
+        overflow: hidden;
+        margin: 0;
+      }
+      #content, #model, #layers, #layers canvas {
+        width: 100%;
+        height: 100%;
+      }
+      #layers {
+        top: 0px;
+        left: 0px;
+      }
+      #model {
+        /*
+          display: table-cell fixes scaling issues in Lab on iPad.
+          Can't tell why, but other models that specify display: table-cell
+          work just fine in Lab (e.g. global-climate).
+          See: https://www.pivotaltracker.com/story/show/101711824
+        */
+        display: table-cell;
+      }
+    </style>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="../lib/jquery.ui.touch-punch.min.js"></script>
+    <script type="text/javascript" src="../lib/iframe-phone/dist/iframe-phone.js"></script>
+    <script type="text/coffeescript" src="js/air-pollution-aerial-model-es.coffee"></script>
+    <script type="text/coffeescript" src="js/lab-integration.coffee"></script>
+    <script type="text/javascript">
+      var modelLoaded = $.Deferred(),
+          labIntegrationLoaded = $.Deferred();
+
+      $.when(modelLoaded,labIntegrationLoaded).done(function() {
+        model = new AirPollutionAerial("layers", 3, 0, 225, 0, 135, false);
+
+        setupLabCommunication(model);
+      });
+    </script>
+    <script type="text/javascript" src="../lib/shutterbug.js/dist/shutterbug.js"></script>
+    <script type="text/javascript">Shutterbug.enable('#content');</script>
+  </head>
+  <body>
+    <div id="content">
+      <div id="model">
+        <canvas id="canvas" >Your browser does not support HTML5 Canvas.</canvas>
+        <div id="layers"></div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      // requestAnimationFrame polyfill by Erik Möller
+      // fixes from Paul Irish and Tino Zijdel
+
+      (function() {
+          var lastTime = 0;
+          var vendors = ['ms', 'moz', 'webkit', 'o'];
+          for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+              window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+              window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+                                         || window[vendors[x]+'CancelRequestAnimationFrame'];
+          }
+
+          if (!window.requestAnimationFrame)
+              window.requestAnimationFrame = function(callback, element) {
+                  var currTime = new Date().getTime();
+                  var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                  var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+                    timeToCall);
+                  lastTime = currTime + timeToCall;
+                  return id;
+              };
+
+          if (!window.cancelAnimationFrame)
+              window.cancelAnimationFrame = function(id) {
+                  clearTimeout(id);
+              };
+      }());
+    </script>
+    <script type="text/javascript">
+
+      function offsetX(evt) {
+        return evt.pageX - $(evt.target).offset().left;
+      }
+
+      function offsetY(evt) {
+        return evt.pageY - $(evt.target).offset().top;
+      }
+
+      function pctX(evt) {
+        return offsetX(evt) / evt.target.clientWidth;
+      }
+
+      function pctY(evt) {
+        // invert the percentage, since Agentscript has 0,0 at the bottom-left not top-left
+        return 1 - offsetY(evt) / evt.target.clientHeight;
+      }
+
+      function patch(evt) {
+        var width  = model.patches.maxX - model.patches.minX,
+            height = model.patches.maxY - model.patches.minY,
+            x = Math.floor(pctX(evt) * width + model.patches.minX),
+            y = Math.floor(pctY(evt) * height + model.patches.minY);
+        console.log("Click", pctX(evt), pctY(evt), x, y);
+        return model.patches.patchXY(x, y);
+      }
+
+      $('#layers').bind('mousedown', function (evt) {
+        var p = patch(evt);
+        model.addFactoryTo(p);
+      });
+    </script>
+  </body>
+</html>
