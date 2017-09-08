@@ -103,6 +103,7 @@ class ImportExport
     objVals = [breed]
     for own prop of obj
       continue if prop == "breed"
+      continue if prop == "sprite"
       if @skipProperties.indexOf(prop) == -1 and skip.indexOf(prop) == -1 and prop[0] != '_'
         if props.indexOf(prop) == -1
           props.push(prop)
