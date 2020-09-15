@@ -3,10 +3,6 @@ sudo: false
 dist: trusty
 rvm:
 - 1.9.3
-script: mkdir -p deploy/agentscript && cp -r !(deploy) deploy/agentscript/
+script: mkdir -p deploy && cp -r !(deploy) deploy/
 install: bundle install --without dev
-after_success: if [ "$TRAVIS_BRANCH" == "production" ]; then disable_parallel_processing=true bundle exec s3_website push --site deploy; fi
-env:
-  global:
-  - secure: Qh6OyqAp+5jfJp/XGOtprYUrrnzCYSOqEGpRYAUBU6NmPpzA4uK6gILhQNcqmID5WC4B80k24gPAXhMUzeSlJ8otz1zavUwCIVVpGO3CfUEstDE1XuY9XP9h5hvUpoki4odDjjV2xyMs7SwPkPdH51LXQ8yyM08UGXuRsi3KhZ4=
-  - secure: OwPaznU8bpE9yEddaoewNqTg3ZEz0Cz//NyNM8l0R807/k6w+QFfKLJ1YNjfK4yH0dfRdsl3W3+dWknZK1qbUVyc05K2ENc1J14nXSHNzw+kl5QuT2nZUDK2JF/78gK61qZA64pjUwLlK++vCEl1Lkv6nOUTYJMd5fJkkzQYgPo=
+after_success: if [ "$TRAVIS_BRANCH" == "production" ]; then ./s3_deploy.sh; fi
