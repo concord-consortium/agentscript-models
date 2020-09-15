@@ -2,6 +2,7 @@
 
 cp index.html public/index.html
 cp Gemfile public/Gemfile
+cp s3_deploy.sh public/s3_deploy.sh
 cp s3_website.yml public/s3_website.yml
 cp .travis.yml public/.travis.yml
 
