@@ -1,3 +1,16 @@
+hashParam = (name) ->
+  hash = document.location.hash.substring(1)
+  # rm #
+  result = null
+  if hash == ''
+    return null
+  hash.split('&').forEach (prop) ->
+    nameValue = prop.split('=')
+    if nameValue[0] == name
+      result = nameValue[1]
+    return
+  result
+
 class WaterModel extends ABM.Model
   @waterColor: [0, 0, 255, 0.8]
   DOWN:  ABM.util.degToRad(270)
@@ -32,7 +45,7 @@ class WaterModel extends ABM.Model
   @YEAR_ELAPSED:  "modelYearElapsed"
 
   tileDefs: [
-    {name: 'soil',  url: 'img/tile_soil_01.png'},
+    {name: 'soil',  url: if hashParam('greenSoil') then 'img/tile_grass_01.png' else 'img/tile_soil_01.png'},
     {name: 'rock1', url: 'img/tile_sand_01.png'},
     {name: 'rock2', url: 'img/tile_clay_01.png'},
     {name: 'rock3', url: 'img/tile_gravel_01.png'},
