@@ -1,4 +1,4 @@
 source "http://rubygems.org"
 
-gem "rack",               "~> 1.5.2"
+gem "rack",               "~> 2.1.4"
 gem "rack-nocache",       "~> 0.1.0"
