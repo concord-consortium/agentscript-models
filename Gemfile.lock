@@ -1,7 +1,8 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.3.5)
+    addressable (2.8.1)
+      public_suffix (>= 2.0.2, < 6.0)
     aws-sdk (1.8.5)
       json (~> 1.4)
       nokogiri (>= 1.4.4)
@@ -20,7 +21,7 @@ GEM
       multipart-post (~> 1.2.0)
     faraday_middleware (0.9.0)
       faraday (>= 0.7.4, < 0.9)
-    ffi (1.9.2)
+    ffi (1.15.5)
     filey-diff (1.4.2)
     gh (0.13.0)
       addressable
@@ -47,6 +48,7 @@ GEM
       coderay (~> 1.0.5)
       method_source (~> 0.8)
       slop (~> 3.4)
+    public_suffix (5.0.0)
     pusher-client (0.4.0)
       websocket (~> 1.0.0)
     s3_website (1.5.0)
