@@ -20,7 +20,7 @@ GEM
       multipart-post (~> 1.2.0)
     faraday_middleware (0.9.0)
       faraday (>= 0.7.4, < 0.9)
-    ffi (1.9.2)
+    ffi (1.13.1)
     filey-diff (1.4.2)
     gh (0.13.0)
       addressable
